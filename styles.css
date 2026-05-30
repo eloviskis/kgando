@@ -1148,6 +1148,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   display: flex; align-items: center; gap: 10px;
   color: #fff; font-size: 22px; font-weight: 800;
   text-shadow: 1px 1px 3px rgba(0,0,0,.2);
+  min-width: 0; flex-shrink: 1;
 }
 .landing-brand-mark {
   width: 42px; height: 42px; background: var(--primary);
@@ -1737,12 +1738,15 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 @media (max-width: 600px) {
-  .landing-header { padding: 0 16px; }
-  .landing-nav { gap: 8px; }
-  .landing-lang-btn { padding: 6px 10px; font-size: 16px; }
-  .landing-nav-install.pwa-install-ready { font-size: 11px; padding: 8px 10px; max-width: 140px; white-space: normal; text-align: center; line-height: 1.2; }
-  .landing-login-btn { padding: 8px 14px; font-size: 13px; }
-  .landing-register-btn { padding: 8px 14px; font-size: 13px; }
+  .landing-header { padding: 0 12px; }
+  .landing-nav { gap: 6px; flex-shrink: 0; }
+  .landing-lang-btn { padding: 6px 9px; font-size: 15px; }
+  .landing-nav-install.pwa-install-ready { font-size: 11px; padding: 7px 9px; max-width: 120px; white-space: normal; text-align: center; line-height: 1.2; }
+  .landing-login-btn { padding: 7px 12px; font-size: 12px; }
+  .landing-register-btn { padding: 7px 12px; font-size: 12px; }
+  .landing-brand { font-size: 17px; gap: 8px; }
+  .landing-brand small { display: none; }
+  .landing-brand-mark { width: 34px; height: 34px; font-size: 15px; border-radius: 9px; }
   .landing-hero { padding: 60px 16px 48px; }
   .landing-hero__title { font-size: 32px; }
   .landing-hero__sub { font-size: 15px; }

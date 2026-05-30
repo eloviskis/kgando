@@ -730,7 +730,8 @@ async function apiFetch(path, options = {}) {
       showToast(t('error.session'));
       setTimeout(() => logout(), 1500);
     }
-    if (res.status === 401 || res.status === 403) {
+    // 401 = token inválido/expirado → logout. 403 = sem permissão → apenas erro, sem logout
+    if (res.status === 401) {
       showToast(t('error.sessionOut'));
       setTimeout(() => logout(), 1500);
     }
