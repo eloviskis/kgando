@@ -2,7 +2,7 @@
   "name": "Kgando BETA — A Rede Social do Trono",
   "short_name": "Kgando",
   "description": "Rede social retrô e humorística para registrar operações, avaliar banheiros e participar de comunidades.",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

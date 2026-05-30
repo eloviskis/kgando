@@ -495,6 +495,7 @@ window.LOCALES.pt = {
   'landing.heroCta':     '💩 Entrar no trono — é grátis',
   'landing.cta2':        'Já tenho conta',
   'landing.installBtn':  '📱 Instale aqui, seu cagão!',
+  'landing.installHint': 'Use o menu do navegador (⋮) e toque em "Instalar app" ou "Adicionar à tela inicial".',
   'landing.mockTime':    'há 2 min',
   'landing.mockTitle':   'A operação das 9h no escritório 🏢',
   'landing.mockLikes':   '❤️ 24 curtidas',

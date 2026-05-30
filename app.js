@@ -446,7 +446,7 @@ async function showLandingPage() {
   
   // Atualizar bandeira de idioma na landing page
   applyShellTranslations();
-  syncInstallButtons();
+  scheduleInstallSync();
   
   // Carregar stats reais e atualizar
   try {
@@ -481,7 +481,7 @@ function buildLandingHTML() {
         </div>
         <nav class="landing-nav">
           <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">${flag}</button>
-          <button class="landing-nav-install" type="button" data-action="install-app" hidden>${t('landing.installBtn')}</button>
+          <button class="landing-nav-install" type="button" data-action="install-app">${t('landing.installBtn')}</button>
           <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">${t('landing.login')}</button>
           <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">${t('landing.registerFree')}</button>
         </nav>
@@ -497,7 +497,7 @@ function buildLandingHTML() {
           <div class="landing-hero__actions">
             <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')">${t('landing.heroCta')}</button>
             <button class="landing-cta-secondary" type="button" onclick="window._landingAuth('login')">${t('landing.cta2')}</button>
-            <button id="landingInstallBtn" class="landing-cta-install" type="button" data-action="install-app" hidden>${t('landing.installBtn')}</button>
+            <button id="landingInstallBtn" class="landing-cta-install" type="button" data-action="install-app">${t('landing.installBtn')}</button>
           </div>
         </div>
         <div class="landing-hero__visual">
@@ -766,17 +766,56 @@ function bindEvents() {
 function setupPWA() {
   if (window.__pwaSetup) return;
   window.__pwaSetup = true;
+
+  if (window.__deferredPWAEvent) deferredPWA = window.__deferredPWAEvent;
+
   registerServiceWorker();
+
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPWA = e;
+    window.__deferredPWAEvent = e;
+    try { sessionStorage.setItem('kgando:pwaInstall', '1'); } catch (_) {}
     syncInstallButtons();
   });
+
+  document.addEventListener('kgando:pwa-ready', syncInstallButtons);
+  window.addEventListener('pageshow', syncInstallButtons);
+
+  window.addEventListener('appinstalled', () => {
+    deferredPWA = null;
+    window.__deferredPWAEvent = null;
+    try { sessionStorage.removeItem('kgando:pwaInstall'); } catch (_) {}
+    hideInstallButtons();
+  });
+
+  syncInstallButtons();
+}
+
+function isPWAInstallAvailable() {
+  if (deferredPWA || window.__deferredPWAEvent) return true;
+  try { return sessionStorage.getItem('kgando:pwaInstall') === '1'; } catch (_) { return false; }
 }
 
 function syncInstallButtons() {
-  if (!deferredPWA) return;
-  document.querySelectorAll('[data-action="install-app"]').forEach(btn => { btn.hidden = false; });
+  if (window.__deferredPWAEvent && !deferredPWA) deferredPWA = window.__deferredPWAEvent;
+  if (!isPWAInstallAvailable()) return;
+  document.querySelectorAll('[data-action="install-app"]').forEach(btn => {
+    btn.hidden = false;
+    btn.classList.add('pwa-install-ready');
+  });
+}
+
+function hideInstallButtons() {
+  document.querySelectorAll('[data-action="install-app"]').forEach(btn => {
+    btn.classList.remove('pwa-install-ready');
+    btn.hidden = true;
+  });
+}
+
+function scheduleInstallSync() {
+  syncInstallButtons();
+  [50, 200, 800, 2000].forEach(ms => setTimeout(syncInstallButtons, ms));
 }
 
 function handleClick(e) {
@@ -793,9 +832,24 @@ function handleClick(e) {
     return;
   }
 
-  if (action === 'install-app' && deferredPWA) {
-    deferredPWA.prompt();
-    deferredPWA.userChoice.then(() => { deferredPWA = null; });
+  if (action === 'install-app') {
+    const promptEvent = deferredPWA || window.__deferredPWAEvent;
+    if (promptEvent) {
+      promptEvent.prompt();
+      promptEvent.userChoice.then(({ outcome }) => {
+        deferredPWA = null;
+        window.__deferredPWAEvent = null;
+        if (outcome === 'accepted') {
+          try { sessionStorage.removeItem('kgando:pwaInstall'); } catch (_) {}
+          hideInstallButtons();
+        } else {
+          // Mantém botões visíveis — o navegador pode reenviar o evento depois
+          syncInstallButtons();
+        }
+      }).catch(() => syncInstallButtons());
+    } else if (isPWAInstallAvailable()) {
+      showToast(t('landing.installHint'));
+    }
     return;
   }
   if (action === 'logout') { logout(); return; }

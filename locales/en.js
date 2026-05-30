@@ -495,6 +495,7 @@ window.LOCALES.en = {
   'landing.heroCta':     '💩 Enter the throne — it\'s free',
   'landing.cta2':        'I already have an account',
   'landing.installBtn':  '📱 Install it here, you pooper!',
+  'landing.installHint': 'Use the browser menu (⋮) and tap "Install app" or "Add to Home Screen".',
   'landing.mockTime':    '2 min ago',
   'landing.mockTitle':   'The 9am office operation 🏢',
   'landing.mockLikes':   '❤️ 24 likes',

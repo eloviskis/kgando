@@ -12,10 +12,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=39">
+  <link rel="stylesheet" href="styles.css?v=40">
+  <!-- Captura beforeinstallprompt o mais cedo possível (antes do app.js carregar) -->
+  <script>
+  (function () {
+    var KEY = 'kgando:pwaInstall';
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__deferredPWAEvent = e;
+      try { sessionStorage.setItem(KEY, '1'); } catch (_) {}
+      document.dispatchEvent(new CustomEvent('kgando:pwa-ready'));
+    });
+    window.addEventListener('appinstalled', function () {
+      window.__deferredPWAEvent = null;
+      try { sessionStorage.removeItem(KEY); } catch (_) {}
+    });
+  })();
+  </script>
   <!-- i18n locale files — carregados antes de app.js -->
-  <script src="locales/pt.js?v=39"></script>
-  <script src="locales/en.js?v=39"></script>
+  <script src="locales/pt.js?v=40"></script>
+  <script src="locales/en.js?v=40"></script>
 </head>
 <body>
   <a class="skip-link" href="#pageRoot">Pular para o conteúdo</a>
@@ -173,7 +189,7 @@
   <div id="notifOverlay" hidden onclick="closeNotifPanel()" style="position:fixed;inset:0;z-index:2998;"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-  <script src="app.js?v=39" defer></script>
+  <script src="app.js?v=40" defer></script>
 
   <!-- Rodapé legal discreto -->
   <footer class="site-footer">
