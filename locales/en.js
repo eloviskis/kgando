@@ -135,6 +135,8 @@ window.LOCALES.en = {
   'notifPref.title':           'Notification Preferences',
   'notifPref.desc':            'Choose which notifications you want to receive in the app and by email.',
   'notifPref.event':           'Event',
+  'notifPref.app':             'App',
+  'notifPref.email':           'Email',
   'notifPref.saved':           'Preferences saved!',
   'notifPref.loginRequired':   'Log in to manage preferences.',
   'notifPref.friend_request':  'Friend request',
@@ -440,6 +442,19 @@ window.LOCALES.en = {
   'error.loadRanking': 'Could not load the ranking.',
   'error.session':     'Session expired. Logging in again…',
   'error.sessionOut':  'Session expired. Please log in again.',
+
+  /* ── Bug Report ── */
+  'bug.title':             '🐛 Report Bug',
+  'bug.desc':              'Describe the bug below. The screenshot has been automatically captured.',
+  'bug.noScreenshot':      'Screenshot not available.',
+  'bug.placeholder':       'Describe what happened, what you expected to happen...',
+  'bug.cancel':            'Cancel',
+  'bug.submit':            '🚀 Submit Bug',
+  'bug.sending':           'Sending…',
+  'bug.capturing':         '🐛 Capturing screen…',
+  'bug.required':          'Please describe the bug.',
+  'bug.success':           'Bug reported! Thank you! 💩',
+  'bug.error':             'Error sending.',
 
   /* ── Review card ── */
   'review.delete': 'Review deleted.',

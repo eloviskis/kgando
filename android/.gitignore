@@ -1,6 +1,7 @@
 app/build/
 .gradle/
 *.keystore
+.env.keystore
 fastlane/play_store_key.json
 fastlane/report.xml
 fastlane/screenshots/

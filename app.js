@@ -2685,12 +2685,12 @@ async function renderSettingsPage(root) {
         <label class="notif-pref-toggle-wrap">
           <input type="checkbox" data-pref="${key}" data-channel="app" ${appOn ? 'checked' : ''}>
           <span class="notif-pref-toggle-slider"></span>
-          <span class="notif-pref-toggle-caption">App</span>
+          <span class="notif-pref-toggle-caption">${t('notifPref.app') || 'App'}</span>
         </label>
         <label class="notif-pref-toggle-wrap">
           <input type="checkbox" data-pref="${key}" data-channel="email" ${emailOn ? 'checked' : ''}>
           <span class="notif-pref-toggle-slider"></span>
-          <span class="notif-pref-toggle-caption">Email</span>
+          <span class="notif-pref-toggle-caption">${t('notifPref.email') || 'Email'}</span>
         </label>
       </div>
     </div>`;
@@ -3238,7 +3238,7 @@ window.handleResetPassword = async function(e) {
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    btn.textContent = '🐛 Capturando tela…';
+    btn.textContent = t('bug.capturing') || '🐛 Capturando tela…';
 
     let screenshotDataUrl = null;
     try {
@@ -3250,7 +3250,7 @@ window.handleResetPassword = async function(e) {
       console.warn('[BUG-REPORT] html2canvas error:', e.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = '🐛 Achei um Bug! QUE MER**!';
+      btn.textContent = t('shell.footer.bugReport') || '🐛 Achei um Bug! QUE MER**!';
     }
 
     // Criar overlay + modal
@@ -3258,14 +3258,14 @@ window.handleResetPassword = async function(e) {
     overlay.className = 'bug-modal-overlay';
     overlay.innerHTML = `
       <div class="bug-modal">
-        <h3>🐛 Reportar Bug</h3>
-        <p>Descreva o bug abaixo. O screenshot já foi capturado automaticamente.</p>
-        ${screenshotDataUrl ? `<img src="${screenshotDataUrl}" class="bug-screenshot-preview" alt="Screenshot">` : '<p style="color:var(--muted);font-size:12px">Screenshot não disponível.</p>'}
-        <textarea id="bugDescInput" placeholder="Descreva o que aconteceu, o que esperava que acontecesse..."></textarea>
+        <h3>${t('bug.title') || '🐛 Reportar Bug'}</h3>
+        <p>${t('bug.desc') || 'Descreva o bug abaixo. O screenshot já foi capturado automaticamente.'}</p>
+        ${screenshotDataUrl ? `<img src="${screenshotDataUrl}" class="bug-screenshot-preview" alt="Screenshot">` : `<p style="color:var(--muted);font-size:12px">${t('bug.noScreenshot') || 'Screenshot não disponível.'}</p>`}
+        <textarea id="bugDescInput" placeholder="${t('bug.placeholder') || 'Descreva o que aconteceu, o que esperava que acontecesse...'}"></textarea>
         <p id="bugReportError" style="color:#c0392b;font-size:13px;margin:0 0 12px;display:none"></p>
         <div class="bug-modal-actions">
-          <button class="btn-secondary" id="bugCancelBtn" type="button">Cancelar</button>
-          <button class="primary-action" id="bugSubmitBtn" type="button" style="padding:12px">🚀 Enviar Bug</button>
+          <button class="btn-secondary" id="bugCancelBtn" type="button">${t('bug.cancel') || 'Cancelar'}</button>
+          <button class="primary-action" id="bugSubmitBtn" type="button" style="padding:12px">${t('bug.submit') || '🚀 Enviar Bug'}</button>
         </div>
       </div>`;
 
@@ -3279,12 +3279,12 @@ window.handleResetPassword = async function(e) {
       const errEl = overlay.querySelector('#bugReportError');
       const submitBtn = overlay.querySelector('#bugSubmitBtn');
       if (!description && !screenshotDataUrl) {
-        errEl.textContent = 'Por favor, descreva o bug.';
+        errEl.textContent = t('bug.required') || 'Por favor, descreva o bug.';
         errEl.style.display = '';
         return;
       }
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Enviando…';
+      submitBtn.textContent = t('bug.sending') || 'Enviando…';
       try {
         await apiFetch('/bug-reports', {
           method: 'POST',
@@ -3297,12 +3297,12 @@ window.handleResetPassword = async function(e) {
           }),
         });
         overlay.remove();
-        showToast('Bug reportado! Obrigado! 💩');
+        showToast(t('bug.success') || 'Bug reportado! Obrigado! 💩');
       } catch (e) {
-        errEl.textContent = e.message || 'Erro ao enviar.';
+        errEl.textContent = e.message || (t('bug.error') || 'Erro ao enviar.');
         errEl.style.display = '';
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Enviar Bug';
+        submitBtn.textContent = t('bug.submit') || '🚀 Enviar Bug';
       }
     });
   });
