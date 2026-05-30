@@ -3105,25 +3105,45 @@ const NOTIF_ICONS = {
 
 let notifPollInterval = null;
 
+let lastNotifCount = 0;
+
 async function loadNotifCount() {
   if (!currentUser) return;
   try {
     const data = await apiFetch('/notifications?limit=1');
     const badge = document.getElementById('notifBadge');
     if (!badge) return;
-    if (data.unread > 0) {
-      badge.textContent = data.unread > 99 ? '99+' : data.unread;
+    
+    const newCount = data.unread;
+    
+    if (newCount > 0) {
+      badge.textContent = newCount > 99 ? '99+' : newCount;
       badge.hidden = false;
+      
+      // Animação e toast quando há novas notificações
+      if (newCount > lastNotifCount && lastNotifCount > 0) {
+        badge.classList.add('badge-pulse');
+        setTimeout(() => badge.classList.remove('badge-pulse'), 1000);
+        
+        // Toast discreto
+        const diff = newCount - lastNotifCount;
+        const msg = CURRENT_LANG === 'pt' 
+          ? `${diff} nova${diff > 1 ? 's' : ''} notificação${diff > 1 ? 'ões' : ''} 🔔`
+          : `${diff} new notification${diff > 1 ? 's' : ''} 🔔`;
+        showToast(msg);
+      }
     } else {
       badge.hidden = true;
     }
+    
+    lastNotifCount = newCount;
   } catch { /* silencioso */ }
 }
 
 function startNotifPolling() {
   loadNotifCount();
   if (notifPollInterval) clearInterval(notifPollInterval);
-  notifPollInterval = setInterval(loadNotifCount, 30000); // a cada 30s
+  notifPollInterval = setInterval(loadNotifCount, 10000); // a cada 10s
 }
 
 function toggleNotifPanel() {
