@@ -1556,13 +1556,22 @@ async function renderNewPage(root) {
 }
 
 async function submitReview(form, reviewId = null) {
+  console.log('submitReview chamado com reviewId:', reviewId);
   const btn = form.querySelector('button[type=submit]');
+  if (!btn) {
+    console.error('Botão de submit não encontrado!');
+    return;
+  }
+  
   const isEdit = !!reviewId;
+  console.log('É edição?', isEdit);
   btn.disabled = true; 
   btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? 'Salvando…' : 'Saving…') : 'Publicando…';
   const body = Object.fromEntries(new FormData(form));
+  console.log('Form data coletado:', body);
 
   if (!body.quality || !body.duration || !body.relief || !body.smell) {
+    console.error('Campos obrigatórios faltando:', { quality: body.quality, duration: body.duration, relief: body.relief, smell: body.smell });
     showToast(t('new.error'));
     btn.disabled = false; 
     btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
@@ -1576,11 +1585,15 @@ async function submitReview(form, reviewId = null) {
   try {
     console.log('Submitting review:', { isEdit, reviewId, body });
     if (isEdit) {
+      console.log('Chamando API PUT para /reviews/' + reviewId);
       const result = await apiFetch(`/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify(body) });
       console.log('Edit result:', result);
       showToast(CURRENT_LANG === 'pt' ? 'Avaliação atualizada! 💩' : 'Review updated! 💩');
+      console.log('Toast exibido, fechando modal...');
       document.getElementById('modalHost').innerHTML = '';
+      console.log('Renderizando app...');
       await renderApp();
+      console.log('Edição concluída com sucesso!');
     } else {
       await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
       showToast(t('new.success'));
@@ -1595,7 +1608,9 @@ async function submitReview(form, reviewId = null) {
       document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   } catch (err) {
-    showToast(err.message);
+    console.error('Erro ao salvar review:', err);
+    const errorMsg = err.message || 'Erro desconhecido';
+    showToast('❌ ' + errorMsg);
     btn.disabled = false; 
     btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
   }
@@ -1715,12 +1730,20 @@ async function openEditReviewModal(reviewId) {
 
     // Submit handler
     const form = document.getElementById('editReviewForm');
+    console.log('Form de edição criado, reviewId:', reviewId);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      await submitReview(form, reviewId);
+      console.log('Submit do form de edição disparado!');
+      try {
+        await submitReview(form, reviewId);
+      } catch(err) {
+        console.error('Erro ao submeter edição:', err);
+        showToast('Erro ao salvar: ' + err.message);
+      }
     });
 
   } catch(e) {
+    console.error('Erro ao abrir modal de edição:', e);
     host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
   }
 }
