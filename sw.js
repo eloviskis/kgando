@@ -1,4 +1,4 @@
-const CACHE_NAME = "kgando-shell-v27";
+const CACHE_NAME = "kgando-shell-v28";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -37,6 +37,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Requisições de API nunca devem ser cacheadas — sempre vai à rede
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith("/api/")) return;
 
   if (event.request.mode === "navigate") {
     event.respondWith(
