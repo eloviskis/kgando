@@ -897,6 +897,18 @@ function handleClick(e) {
     root.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
+  if (action === 'show-user-reviews') {
+    openUserReviewsModal(el.dataset.userId, el.dataset.userName);
+    return;
+  }
+  if (action === 'show-user-likes') {
+    openUserLikesModal(el.dataset.userId, el.dataset.userName);
+    return;
+  }
+  if (action === 'show-user-parcas') {
+    openUserParcasModal(el.dataset.userId, el.dataset.userName);
+    return;
+  }
   if (action === 'open-review-modal') {
     openReviewModal();
     return;
@@ -990,9 +1002,18 @@ async function renderMiniProfile() {
     <div class="panel-title">@${esc(currentUser.username)}</div>
     ${moodObj ? `<div class="panel-mood">${moodObj.icon} ${moodObj.label}</div>` : ''}
     <div class="panel-stats">
-      <div><div class="stat-num">${currentUser.reviews_count || 0}</div><div class="stat-lbl">cagadas</div></div>
-      <div><div class="stat-num">${parcasCount}</div><div class="stat-lbl">parças</div></div>
-      <div><div class="stat-num">${currentUser.likes_total  || 0}</div><div class="stat-lbl">curtidas</div></div>
+      <button class="panel-stat-btn" data-action="show-user-reviews" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
+        <div class="stat-num">${currentUser.reviews_count || 0}</div>
+        <div class="stat-lbl">cagadas</div>
+      </button>
+      <button class="panel-stat-btn" data-action="show-user-parcas" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
+        <div class="stat-num">${parcasCount}</div>
+        <div class="stat-lbl">parças</div>
+      </button>
+      <button class="panel-stat-btn" data-action="show-user-likes" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
+        <div class="stat-num">${currentUser.likes_total  || 0}</div>
+        <div class="stat-lbl">curtidas</div>
+      </button>
     </div>
   `;
 }
@@ -1206,18 +1227,18 @@ async function renderHomePage(root) {
             }
             <div class="owai-badges">${badgesHTML}</div>
             <div class="owai-stats-bar">
-              <div class="owai-stat">
+              <button class="owai-stat" data-action="show-user-reviews" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
                 <div class="owai-stat-num">${currentUser.reviews_count || userReviews.length || 0}</div>
                 <div class="owai-stat-lbl">${t('home.reviews')}</div>
-              </div>
-              <div class="owai-stat">
+              </button>
+              <button class="owai-stat" data-action="show-user-likes" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
                 <div class="owai-stat-num">${currentUser.likes_total || 0}</div>
                 <div class="owai-stat-lbl">${t('home.likes')}</div>
-              </div>
-              <div class="owai-stat">
+              </button>
+              <button class="owai-stat" type="button" style="cursor:default">
                 <div class="owai-stat-num">${badges.length}</div>
                 <div class="owai-stat-lbl">${t('home.badges')}</div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -1915,9 +1936,18 @@ async function renderProfilePage(root, userId) {
           <div class="profile-username">@${esc(user.username)}</div>
           ${user.bio ? `<div class="profile-bio">${esc(user.bio)}</div>` : ''}
           <div class="profile-hero-stats">
-            <div class="profile-stat"><div class="num">${user.reviews_count || 0}</div><div class="lbl">${t('profile.reviews')}</div></div>
-            <div class="profile-stat"><div class="num">${user.likes_total || 0}</div><div class="lbl">${t('profile.likes')}</div></div>
-            <div class="profile-stat"><div class="num">${friends.length}</div><div class="lbl">${t('profile.parcas')}</div></div>
+            <button class="profile-stat" data-action="show-user-reviews" data-user-id="${uid}" data-user-name="${esc(user.display_name)}" type="button">
+              <div class="num">${user.reviews_count || 0}</div>
+              <div class="lbl">${t('profile.reviews')}</div>
+            </button>
+            <button class="profile-stat" data-action="show-user-likes" data-user-id="${uid}" data-user-name="${esc(user.display_name)}" type="button">
+              <div class="num">${user.likes_total || 0}</div>
+              <div class="lbl">${t('profile.likes')}</div>
+            </button>
+            <button class="profile-stat" data-action="show-user-parcas" data-user-id="${uid}" data-user-name="${esc(user.display_name)}" type="button">
+              <div class="num">${friends.length}</div>
+              <div class="lbl">${t('profile.parcas')}</div>
+            </button>
           </div>
           ${isSelf
             ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
@@ -2070,6 +2100,89 @@ function openTestimonialModal(userId, userName) {
       host.innerHTML = '';
     } catch(err) { showToast(err.message); btn.disabled = false; btn.textContent = t('testimonial.btn'); }
   });
+}
+
+async function openUserReviewsModal(userId, userName) {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal modal--wide">
+        <div class="modal-header">
+          <h2>💩 ${CURRENT_LANG === 'pt' ? 'Avaliações de' : 'Reviews by'} ${esc(userName)}</h2>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  try {
+    const reviews = await apiFetch(`/users/${userId}/reviews`);
+    const body = host.querySelector('.modal-body');
+    if (!reviews || reviews.length === 0) {
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhuma avaliação ainda.' : 'No reviews yet.'}</p>`;
+    } else {
+      body.innerHTML = `<div class="feed">${reviews.map(r => reviewCard(r)).join('')}</div>`;
+    }
+  } catch(e) {
+    host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
+  }
+}
+
+async function openUserLikesModal(userId, userName) {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal modal--wide">
+        <div class="modal-header">
+          <h2>❤️ ${CURRENT_LANG === 'pt' ? 'Curtidas de' : 'Likes by'} ${esc(userName)}</h2>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  try {
+    const reviews = await apiFetch(`/users/${userId}/reviews`);
+    const sorted = [...reviews].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+    const body = host.querySelector('.modal-body');
+    if (!sorted || sorted.length === 0) {
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhuma avaliação curtida ainda.' : 'No liked reviews yet.'}</p>`;
+    } else {
+      body.innerHTML = `<div class="feed">${sorted.map(r => reviewCard(r)).join('')}</div>`;
+    }
+  } catch(e) {
+    host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
+  }
+}
+
+async function openUserParcasModal(userId, userName) {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>👥 ${CURRENT_LANG === 'pt' ? 'Parças de' : 'Friends of'} ${esc(userName)}</h2>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  try {
+    const friends = await apiFetch(`/friends/of/${userId}`);
+    const body = host.querySelector('.modal-body');
+    if (!friends || friends.length === 0) {
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhum parça ainda.' : 'No friends yet.'}</p>`;
+    } else {
+      body.innerHTML = `
+        <div class="friends-grid">
+          ${friends.map(f => `
+            <button class="friend-chip" data-action="view-profile" data-user-id="${f.id}" type="button">
+              <div class="avatar avatar--small${avCls(f.avatar_text)}" style="${avBg(f.avatar_text,f.avatar_color)};pointer-events:none">${avTxt(f.avatar_text)}</div>
+              <span>${esc(f.display_name)}</span>
+            </button>`).join('')}
+        </div>`;
+    }
+  } catch(e) {
+    host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
+  }
 }
 
 async function renderScrapsWidget(userId) {

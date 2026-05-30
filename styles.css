@@ -300,6 +300,22 @@ img { max-width: 100%; }
   display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
   padding-top: 14px; border-top: 2px dashed var(--primary);
 }
+.panel-stat-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  text-align: center;
+}
+.panel-stat-btn:hover {
+  background: rgba(139, 69, 19, 0.08);
+  transform: scale(1.05);
+}
+.panel-stat-btn:active {
+  transform: scale(1);
+}
 .stat-num   { font-size: 20px; font-weight: 800; color: var(--secondary); }
 .stat-lbl   { font-size: 10px; color: var(--muted); text-transform: uppercase; }
 
@@ -704,7 +720,22 @@ img { max-width: 100%; }
 .profile-hero-stats {
   display: flex; gap: 20px; flex-wrap: wrap;
 }
-.profile-stat { text-align: center; }
+.profile-stat { 
+  text-align: center; 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.profile-stat:hover {
+  background: rgba(139, 69, 19, 0.08);
+  transform: translateY(-2px);
+}
+.profile-stat:active {
+  transform: translateY(0);
+}
 .profile-stat .num { font-size: 22px; font-weight: 800; color: var(--secondary); }
 .profile-stat .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; }
 
@@ -1419,7 +1450,22 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
   margin-top: 16px; padding-top: 16px; border-top: 2px dashed var(--primary);
 }
-.owai-stat { text-align: center; }
+.owai-stat { 
+  text-align: center; 
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.owai-stat:hover:not([style*="cursor:default"]) {
+  background: rgba(139, 69, 19, 0.08);
+  transform: translateY(-2px);
+}
+.owai-stat:active:not([style*="cursor:default"]) {
+  transform: translateY(0);
+}
 .owai-stat-num { font-size: 22px; font-weight: 800; color: var(--secondary); line-height: 1; }
 .owai-stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
 .owai-edit-btn {
