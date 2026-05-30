@@ -1009,6 +1009,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   background: var(--surface);
   display: flex; align-items: center; justify-content: center;
   flex-wrap: wrap; gap: 6px 16px;
+  margin-top: 40px;
+  position: relative;
+  z-index: 1;
 }
 .site-footer a {
   color: var(--muted); text-decoration: none; font-weight: 600;
@@ -1474,11 +1477,25 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     grid-template-columns: 1fr;
     margin-top: calc(var(--topbar-h) + 8px);
     padding: 0 12px;
-    margin-bottom: 80px;
+    margin-bottom: 20px;
   }
   .left-rail  { display: none; }
   .right-rail { display: none; }
   .bottom-nav { display: block; }
+  
+  /* ── Footer responsivo ── */
+  .site-footer {
+    padding: 16px 12px 90px;
+    margin-top: 24px;
+    gap: 8px 12px;
+    font-size: 11px;
+  }
+  .bug-report-btn {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    justify-content: center;
+  }
 
   /* ── Topbar ── */
   .topbar { padding: 0 10px; }
@@ -1538,6 +1555,18 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   .people-grid { grid-template-columns: 1fr 1fr; }
   .bottom-nav-item { font-size: 9px; padding: 4px 4px; }
   .bottom-nav-item .icon { font-size: 20px; }
+  
+  .site-footer {
+    padding: 12px 8px 85px;
+    font-size: 10px;
+    gap: 6px 8px;
+  }
+  .site-footer span {
+    width: 100%;
+  }
+  .bug-report-btn {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 600px) {
