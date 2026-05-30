@@ -288,6 +288,7 @@ window.LOCALES.pt = {
   'scraps.sending': 'Enviando…',
   'scraps.success': 'Recado enviado! ✉',
   'scraps.deleted': 'Recado deletado.',
+  'scraps.deleteConfirm': 'Deletar este recado?',
 
   /* ── Cagões (Pessoas) ── */
   'people.title':   '👥 Cagões',
@@ -317,6 +318,7 @@ window.LOCALES.pt = {
   'profile.friendReqs': '🔔 Pedidos de amizade',
   'profile.addFriend': '💩 Ser parça de Cocô!',
   'profile.removeFriend': '🚫 Deixar de ser parça de Cocô!',
+  'profile.removeFriendConfirm': 'Deixar de ser parça de Cocô? 💔',
   'profile.friendPending': '⏳ Pedido enviado!',
   'profile.friendSent': 'Pedido de parça de Cocô enviado! 💩',
   'profile.friendAccepted': 'Vocês agora são parças de Cocô! 💩🤝',
@@ -366,6 +368,7 @@ window.LOCALES.pt = {
   'testimonial.success':'Depoimento enviado! 💬',
   'testimonial.write': 'Escreva algo!',
   'testimonial.delete': 'Depoimento deletado.',
+  'testimonial.deleteConfirm': 'Deletar depoimento?',
 
   /* ── Convites ── */
   'invite.title':     '📨 Convidar para o Kgando',
@@ -462,6 +465,8 @@ window.LOCALES.pt = {
 
   /* ── Review card ── */
   'review.delete': 'Review deletada.',
+  'review.deleteConfirm': 'Deletar esta review?',
+  'review.commentDeleteConfirm': 'Deletar este comentário?',
   'review.liked':  'Curtida adicionada! 💩',
   'review.unliked': 'Curtida removida.',
   'review.commented': 'Comentário publicado! 💬',

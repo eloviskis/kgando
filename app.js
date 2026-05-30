@@ -792,14 +792,14 @@ function handleClick(e) {
     return;
   }
   if (action === 'delete-review') {
-    if (!confirm('Deletar esta review?')) return;
+    if (!confirm(t('review.deleteConfirm'))) return;
     apiFetch(`/reviews/${el.dataset.id}`, { method: 'DELETE' })
       .then(() => { el.closest('.review-card')?.remove(); showToast(t('review.delete')); })
       .catch(err => showToast(err.message));
     return;
   }
   if (action === 'delete-comment') {
-    if (!confirm('Deletar este comentário?')) return;
+    if (!confirm(t('review.commentDeleteConfirm'))) return;
     const { id, reviewId: rid } = el.dataset;
     apiFetch(`/reviews/${rid}/comments/${id}`, { method: 'DELETE' })
       .then(() => {
@@ -812,7 +812,7 @@ function handleClick(e) {
     return;
   }
   if (action === 'delete-scrap') {
-    if (!confirm('Deletar este recado?')) return;
+    if (!confirm(t('scraps.deleteConfirm'))) return;
     apiFetch(`/scraps/${el.dataset.id}`, { method: 'DELETE' })
       .then(() => { el.closest('.scrap-card')?.remove(); showToast(t('scraps.deleted')); })
       .catch(err => showToast(err.message));
@@ -831,7 +831,7 @@ function handleClick(e) {
     return;
   }
   if (action === 'remove-friend') {
-    if (!confirm('Deixar de ser parça de Cocô? 💔')) return;
+    if (!confirm(t('profile.removeFriendConfirm'))) return;
     apiFetch(`/friends/${el.dataset.userId}`, { method: 'DELETE' })
       .then(() => { showToast(t('profile.friendRemoved')); renderApp(); })
       .catch(err => showToast(err.message));
@@ -856,7 +856,7 @@ function handleClick(e) {
     return;
   }
   if (action === 'delete-testimonial') {
-    if (!confirm('Deletar depoimento?')) return;
+    if (!confirm(t('testimonial.deleteConfirm'))) return;
     apiFetch(`/testimonials/${el.dataset.id}`, { method: 'DELETE' })
       .then(() => { el.closest('.testimonial-card')?.remove(); showToast(t('testimonial.delete')); })
       .catch(err => showToast(err.message));
@@ -1754,8 +1754,8 @@ async function submitScrap(form) {
     document.getElementById('modalHost').innerHTML = '';
   } catch (err) {
     showToast(err.message);
+    btn.disabled = false; btn.textContent = t('scraps.btn');
   }
-  btn.disabled = false; btn.textContent = 'Enviar ✉';
 }
 
 function openSendScrapModal(userId, userName) {
@@ -2575,7 +2575,7 @@ async function openTopicModal(communityId, topicId) {
         <button class="submit-btn" style="width:auto;padding:12px 18px" id="replyBtn">Responder</button>
       </div>`;
 
-    document.getElementById('replyBtn').addEventListener('click', async () => {
+    const submitReply = async () => {
       const content = document.getElementById('replyInput').value.trim();
       if (!content) return;
       const btn = document.getElementById('replyBtn');
@@ -2598,6 +2598,14 @@ async function openTopicModal(communityId, topicId) {
         showToast(t('comm.replied'));
         btn.disabled = false;
       } catch(err) { showToast(err.message); btn.disabled = false; }
+    };
+
+    document.getElementById('replyBtn').addEventListener('click', submitReply);
+    document.getElementById('replyInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitReply();
+      }
     });
   } catch(e) { showToast(e.message); host.innerHTML = ''; }
 }

@@ -288,6 +288,7 @@ window.LOCALES.en = {
   'scraps.sending': 'Sending…',
   'scraps.success': 'Message sent! ✉',
   'scraps.deleted': 'Message deleted.',
+  'scraps.deleteConfirm': 'Delete this message?',
 
   /* ── Poopers (People) ── */
   'people.title':   '👥 Poopers',
@@ -317,6 +318,7 @@ window.LOCALES.en = {
   'profile.friendReqs': '🔔 Friend requests',
   'profile.addFriend': '💩 Be a Poop Pal!',
   'profile.removeFriend': '🚫 Remove Poop Pal',
+  'profile.removeFriendConfirm': 'Remove Poop Pal? 💔',
   'profile.friendPending': '⏳ Request sent!',
   'profile.friendSent': 'Poop Pal request sent! 💩',
   'profile.friendAccepted': 'You are now Poop Pals! 💩🤝',
@@ -366,6 +368,7 @@ window.LOCALES.en = {
   'testimonial.success':'Testimonial sent! 💬',
   'testimonial.write': 'Write something!',
   'testimonial.delete': 'Testimonial deleted.',
+  'testimonial.deleteConfirm': 'Delete testimonial?',
 
   /* ── Invites ── */
   'invite.title':     '📨 Invite to Kgando',
@@ -462,6 +465,8 @@ window.LOCALES.en = {
 
   /* ── Review card ── */
   'review.delete': 'Review deleted.',
+  'review.deleteConfirm': 'Delete this review?',
+  'review.commentDeleteConfirm': 'Delete this comment?',
   'review.liked':  'Like added! 💩',
   'review.unliked': 'Like removed.',
   'review.commented': 'Comment posted! 💬',
