@@ -46,14 +46,23 @@ window.toggleLangFromAuth = function() {
 function applyShellTranslations() {
   const lang = CURRENT_LANG;
   const flag = lang === 'en' ? '🇺🇸' : '🇧🇷';
+  console.log('[applyShellTranslations] lang:', lang, 'flag:', flag);
 
   // Botão de bandeira no app
   const langBtn = document.getElementById('langToggleBtn');
-  if (langBtn) langBtn.textContent = flag;
+  if (langBtn) {
+    langBtn.textContent = flag;
+    console.log('[applyShellTranslations] langToggleBtn updated:', flag);
+  }
 
   // Botão de bandeira no modal de autenticação
   const authLangFlag = document.getElementById('authLangFlag');
-  if (authLangFlag) authLangFlag.textContent = flag;
+  if (authLangFlag) {
+    authLangFlag.textContent = flag;
+    console.log('[applyShellTranslations] authLangFlag updated:', flag);
+  } else {
+    console.log('[applyShellTranslations] authLangFlag element NOT FOUND');
+  }
 
   // Tagline da marca
   const brandSmall = document.querySelector('.brand small');
@@ -424,12 +433,26 @@ function initApp() {
 
 /* ── Auth helpers ───────────────────────────────── */
 function showAuthModal() {
+  console.log('[showAuthModal] Opening auth modal');
   const overlay = document.getElementById('authOverlay');
   overlay.style.display = 'flex';
   // Fechar ao clicar no fundo escuro
   overlay.onclick = (e) => { if (e.target === overlay) hideAuthModal(); };
   // Atualizar bandeira de idioma
+  console.log('[showAuthModal] Calling applyShellTranslations');
   applyShellTranslations();
+  
+  // Force flag update after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    const authLangFlag = document.getElementById('authLangFlag');
+    const flag = CURRENT_LANG === 'en' ? '🇺🇸' : '🇧🇷';
+    if (authLangFlag) {
+      authLangFlag.textContent = flag;
+      console.log('[showAuthModal] Forced flag update:', flag);
+    } else {
+      console.error('[showAuthModal] authLangFlag still not found after delay');
+    }
+  }, 100);
 }
 function hideAuthModal() {
   document.getElementById('authOverlay').style.display = 'none';
@@ -475,7 +498,7 @@ function buildLandingHTML() {
         <div class="landing-brand">
           <div class="landing-brand-mark">🚽</div>
           <div>
-            <strong>Kgando</strong>
+            <strong>Kgando <span style="font-size:0.6em;color:#FF6B6B;font-weight:900;letter-spacing:1px;">BETA</span></strong>
             <small>rede social do trono</small>
           </div>
         </div>
