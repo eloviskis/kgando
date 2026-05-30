@@ -84,6 +84,12 @@ router.put('/:id/read', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// DELETE /api/notifications — limpar todas as notificações do usuário
+router.delete('/', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM notifications WHERE user_id=?').run(req.user.id);
+  res.json({ ok: true });
+});
+
 // DELETE /api/notifications/:id — apagar notificação
 router.delete('/:id', requireAuth, (req, res) => {
   db.prepare('DELETE FROM notifications WHERE id=? AND user_id=?').run(req.params.id, req.user.id);

@@ -1394,6 +1394,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .notif-panel__header strong { flex: 1; font-size: 15px; }
 .notif-read-all { font-size: 11px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
 .notif-read-all:hover { background: rgba(139,69,19,.1); }
+.notif-clear-all { font-size: 14px; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; color: var(--muted); transition: all 0.2s; }
+.notif-clear-all:hover { background: rgba(192, 57, 43, 0.1); color: #c0392b; transform: scale(1.1); }
 .notif-close { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--muted); padding: 4px 6px; border-radius: 6px; }
 .notif-close:hover { background: var(--border); }
 .notif-list { max-height: 420px; overflow-y: auto; }

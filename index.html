@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=30">
   <!-- i18n locale files — carregados antes de app.js -->
   <script src="locales/pt.js"></script>
   <script src="locales/en.js"></script>
@@ -162,7 +162,10 @@
   <div id="notifPanel" class="notif-panel" hidden>
     <div class="notif-panel__header">
       <strong id="notifTitle">Notificações</strong>
-      <button type="button" onclick="window.markAllNotifsRead()" class="notif-read-all" id="notifMarkAll">Marcar todas como lidas</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" onclick="window.markAllNotifsRead()" class="notif-read-all" id="notifMarkAll">Marcar todas como lidas</button>
+        <button type="button" onclick="window.clearAllNotifications()" class="notif-clear-all" id="notifClearAll" title="Limpar todas">🗑️</button>
+      </div>
       <button type="button" class="notif-close" onclick="closeNotifPanel()" id="notifCloseBtn">✕</button>
     </div>
     <div id="notifList" class="notif-list"><div class="spinner"></div></div>
@@ -170,7 +173,7 @@
   <div id="notifOverlay" hidden onclick="closeNotifPanel()" style="position:fixed;inset:0;z-index:2998;"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-  <script src="app.js?v=29" defer></script>
+  <script src="app.js?v=30" defer></script>
 
   <!-- Rodapé legal discreto -->
   <footer class="site-footer">

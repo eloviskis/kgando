@@ -3578,6 +3578,24 @@ window.markAllNotifsRead = async function() {
   showToast(t('notif.allRead'));
 };
 
+window.clearAllNotifications = async function() {
+  const msg = CURRENT_LANG === 'pt' 
+    ? 'Tem certeza que deseja limpar todas as notificações?' 
+    : 'Are you sure you want to clear all notifications?';
+  if (!confirm(msg)) return;
+  
+  try {
+    await apiFetch('/notifications', { method: 'DELETE' });
+    const badge = document.getElementById('notifBadge');
+    if (badge) badge.hidden = true;
+    const list = document.getElementById('notifList');
+    if (list) list.innerHTML = '<p class="notif-empty">🔔 ' + (CURRENT_LANG === 'pt' ? 'Nenhuma notificação ainda.' : 'No notifications yet.') + '</p>';
+    showToast(CURRENT_LANG === 'pt' ? '🗑️ Notificações limpas!' : '🗑️ Notifications cleared!');
+  } catch(err) {
+    showToast(err.message);
+  }
+};
+
 /* ── Forgot / Reset password ──────────────────────────────────────────── */
 window.showForgotPassword = function(show = true) {
   document.getElementById('loginForm').style.display   = show ? 'none' : '';
