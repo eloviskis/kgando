@@ -1220,6 +1220,22 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   font-family: inherit; transition: background .2s;
 }
 .landing-cta-secondary:hover { background: rgba(255,255,255,.24); }
+.landing-cta-install {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  color: #fff; border: none;
+  padding: 16px 28px; border-radius: 16px; font-size: 16px; font-weight: 800;
+  font-family: inherit; transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 4px 16px rgba(255, 71, 87, 0.4);
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+.landing-cta-install:hover { 
+  transform: translateY(-3px) scale(1.05); 
+  box-shadow: 0 8px 24px rgba(255, 71, 87, 0.6); 
+}
+@keyframes pulseSoft {
+  0%, 100% { box-shadow: 0 4px 16px rgba(255, 71, 87, 0.4); }
+  50% { box-shadow: 0 4px 24px rgba(255, 71, 87, 0.7); }
+}
 
 /* Hero mock card */
 .landing-hero__visual { display: flex; justify-content: center; }

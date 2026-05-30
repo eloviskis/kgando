@@ -495,6 +495,7 @@ function buildLandingHTML() {
           <div class="landing-hero__actions">
             <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')">💩 Entrar no trono — é grátis</button>
             <button class="landing-cta-secondary" type="button" onclick="window._landingAuth('login')">Já tenho conta</button>
+            <button id="landingInstallBtn" class="landing-cta-install" type="button" data-action="install-app" hidden>${t('landing.installBtn')}</button>
           </div>
         </div>
         <div class="landing-hero__visual">
@@ -759,6 +760,8 @@ function bindEvents() {
     e.preventDefault(); deferredPWA = e;
     const btn = document.getElementById('installButton');
     if (btn) btn.hidden = false;
+    const landingBtn = document.getElementById('landingInstallBtn');
+    if (landingBtn) landingBtn.hidden = false;
   });
 }
 

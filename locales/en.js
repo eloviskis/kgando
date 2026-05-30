@@ -518,4 +518,5 @@ window.LOCALES.en = {
   'landing.feat5.desc':  'Poop avatar, badges, testimonials and much more.',
   'landing.feat6.title': 'Messages & Friends',
   'landing.feat6.desc':  'Connect with other poopers and exchange messages.',
+  'landing.installBtn':  '📱 Install it here, you pooper!',
 };

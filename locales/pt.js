@@ -518,4 +518,5 @@ window.LOCALES.pt = {
   'landing.feat5.desc':  'Avatar de cocô, badges, depoimentos e muito mais.',
   'landing.feat6.title': 'Recados & Amizades',
   'landing.feat6.desc':  'Conecte-se com outros cagadores e troque recados.',
+  'landing.installBtn':  '📱 Instale aqui, seu cagão!',
 };
