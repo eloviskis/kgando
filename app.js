@@ -909,6 +909,10 @@ function handleClick(e) {
     openUserParcasModal(el.dataset.userId, el.dataset.userName);
     return;
   }
+  if (action === 'share-profile') {
+    shareProfile(el.dataset.userId, el.dataset.userName);
+    return;
+  }
   if (action === 'open-review-modal') {
     openReviewModal();
     return;
@@ -1171,6 +1175,12 @@ async function renderDefaultRightRail(rail) {
 function renderPage() {
   const root = document.getElementById('pageRoot');
   root.innerHTML = `<div class="spinner"></div>`;
+  
+  // Parse query params para perfil compartilhado
+  const hash = location.hash.slice(1);
+  const [page, query] = hash.split('?');
+  const params = new URLSearchParams(query);
+  
   switch (currentPage) {
     case 'home':        renderHomePage(root);        break;
     case 'new':         renderNewPage(root);          break;
@@ -1178,7 +1188,10 @@ function renderPage() {
     case 'communities': renderCommunitiesPage(root);  break;
     case 'scraps':      renderScrapsPage(root);       break;
     case 'people':      renderPeoplePage(root);       break;
-    case 'profile':     renderProfilePage(root);      break;
+    case 'profile':     
+      const userId = params.get('id');
+      renderProfilePage(root, userId);
+      break;
     case 'ranking':     renderRankingPage(root);      break;
     case 'settings':    renderSettingsPage(root);     break;
     default:            renderHomePage(root);
@@ -1961,11 +1974,15 @@ async function renderProfilePage(root, userId) {
             ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
                 <button class="btn-secondary" data-action="edit-profile" type="button">${t('profile.edit')}</button>
                 <button class="btn-secondary" data-action="invite-friend" type="button">${t('profile.invite')}</button>
+                <button class="btn-secondary" data-action="share-profile" data-user-id="${uid}" data-user-name="${esc(user.display_name)}" type="button">🔗 ${CURRENT_LANG === 'pt' ? 'Compartilhar' : 'Share'}</button>
                </div>
                <div style="margin-top:10px;font-size:12px;color:var(--muted)">
                  ${user.is_public !== 0 ? t('profile.public') : t('profile.private')}
                </div>`
-            : actionBtns}
+            : `${actionBtns}
+               <div style="margin-top:14px">
+                 <button class="btn-secondary" data-action="share-profile" data-user-id="${uid}" data-user-name="${esc(user.display_name)}" type="button" style="width:100%">🔗 ${CURRENT_LANG === 'pt' ? 'Compartilhar perfil' : 'Share profile'}</button>
+               </div>`}
         </div>
       </div>
 
@@ -2190,6 +2207,48 @@ async function openUserParcasModal(userId, userName) {
     }
   } catch(e) {
     host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
+  }
+}
+
+async function shareProfile(userId, userName) {
+  const profileUrl = `https://kgando.com/#profile?id=${userId}`;
+  const shareData = {
+    title: `Perfil de ${userName} - Kgando`,
+    text: `Veja o perfil de ${userName} no Kgando 💩`,
+    url: profileUrl
+  };
+
+  try {
+    // Tenta usar Web Share API (mobile)
+    if (navigator.share) {
+      await navigator.share(shareData);
+      showToast(CURRENT_LANG === 'pt' ? 'Compartilhado!' : 'Shared!');
+    } else {
+      // Fallback: copia para clipboard
+      await navigator.clipboard.writeText(profileUrl);
+      showToast(CURRENT_LANG === 'pt' ? 'Link copiado! 📋' : 'Link copied! 📋');
+    }
+  } catch (err) {
+    // Se der erro, mostra o link em um modal
+    if (err.name !== 'AbortError') {
+      const host = document.getElementById('modalHost');
+      host.innerHTML = `
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2>🔗 ${CURRENT_LANG === 'pt' ? 'Compartilhar Perfil' : 'Share Profile'}</h2>
+              <button class="modal-close" data-action="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+              <p style="margin-bottom:12px;font-size:14px">${CURRENT_LANG === 'pt' ? 'Link do perfil:' : 'Profile link:'}</p>
+              <input type="text" value="${profileUrl}" readonly style="width:100%;padding:12px;border:2px solid var(--primary);border-radius:8px;font-size:13px;font-family:monospace" onclick="this.select()">
+              <button class="submit-btn" style="margin-top:12px" onclick="navigator.clipboard.writeText('${profileUrl}').then(() => { showToast('${CURRENT_LANG === 'pt' ? 'Link copiado!' : 'Link copied!'}'); document.getElementById('modalHost').innerHTML = ''; })">
+                ${CURRENT_LANG === 'pt' ? '📋 Copiar Link' : '📋 Copy Link'}
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
   }
 }
 
