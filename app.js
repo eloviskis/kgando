@@ -1123,15 +1123,15 @@ async function renderHomeRightRail(rail) {
 
   rail.innerHTML = `
     <div class="widget">
-      <div class="widget-title">★ Ranking da semana</div>
+      <div class="widget-title">${t('home.weeklyRanking')}</div>
       ${rankHTML}
     </div>
     <div class="widget">
-      <div class="widget-title">🏅 Seus badges</div>
+      <div class="widget-title">${t('home.yourBadges')}</div>
       ${badgesHTML}
     </div>
     <div class="widget">
-      <div class="widget-title">🚽 Banheiros em destaque</div>
+      <div class="widget-title">${t('home.featuredBathrooms')}</div>
       ${bathList}
     </div>
   `;
@@ -1165,7 +1165,7 @@ async function renderDefaultRightRail(rail) {
 
   rail.innerHTML = `
     <div class="widget">
-      <div class="widget-title">🚽 Banheiros em destaque</div>
+      <div class="widget-title">${t('home.featuredBathrooms')}</div>
       ${bathList}
     </div>
     <div class="widget">

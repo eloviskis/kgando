@@ -205,6 +205,9 @@ window.LOCALES.pt = {
   'home.likes':      'Curtidas',
   'home.badges':     'Badges',
   'home.noBadges':   'Nenhum badge ainda — continue avaliando!',
+  'home.weeklyRanking': '★ Ranking da semana',
+  'home.yourBadges':    '🏅 Seus badges',
+  'home.featuredBathrooms': '🚽 Banheiros em destaque',
 
   /* ── Nova avaliação ── */
   'new.title':     '💩 Nova Avaliação',

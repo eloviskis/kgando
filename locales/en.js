@@ -205,6 +205,9 @@ window.LOCALES.en = {
   'home.likes':      'Likes',
   'home.badges':     'Badges',
   'home.noBadges':   'No badges yet — keep rating!',
+  'home.weeklyRanking': '★ Weekly Ranking',
+  'home.yourBadges':    '🏅 Your badges',
+  'home.featuredBathrooms': '🚽 Featured Bathrooms',
 
   /* ── New review ── */
   'new.title':     '💩 New Review',
