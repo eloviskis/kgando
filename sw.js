@@ -1,9 +1,14 @@
-const CACHE_NAME = "kgando-shell-v21";
+const CACHE_NAME = "kgando-shell-v22";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./legal.css",
+  "./legal-page.js",
+  "./privacidade.html",
+  "./termos.html",
+  "./exclusao.html",
   "./manifest.webmanifest",
   "./assets/icon.svg",
   "./assets/icon-maskable.svg",

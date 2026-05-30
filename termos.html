@@ -5,155 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Termos de Serviço — Kgando</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --brown: #8B4513; --tan: #D4A574; --bg: #F5E6D3; --card: #FFF8F0; --text: #4A3728; --muted: #7A6558; }
-    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
-    header { background: linear-gradient(135deg, var(--brown), #71411d); padding: 16px 24px; display: flex; align-items: center; gap: 14px; }
-    header a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-size: 18px; font-weight: 800; }
-    .mark { width: 36px; height: 36px; background: var(--tan); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .container { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
-    .badge { display: inline-block; background: rgba(139,69,19,.1); color: var(--brown); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
-    h1 { font-size: 32px; font-weight: 800; color: var(--brown); margin-bottom: 8px; }
-    .meta { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
-    .card { background: var(--card); border-radius: 20px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(139,69,19,.1); }
-    h2 { font-size: 18px; font-weight: 800; color: var(--brown); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    h2::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--tan); border-radius: 2px; }
-    p { margin-bottom: 14px; font-size: 15px; }
-    ul { padding-left: 20px; margin-bottom: 14px; }
-    li { margin-bottom: 8px; font-size: 15px; }
-    a { color: var(--brown); font-weight: 700; }
-    strong { font-weight: 700; }
-    .highlight { background: rgba(212,165,116,.15); border-left: 4px solid var(--tan); padding: 14px 18px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
-    .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-    .do { background: rgba(107,191,89,.1); border-radius: 12px; padding: 16px; }
-    .dont { background: rgba(231,76,60,.1); border-radius: 12px; padding: 16px; }
-    .do strong { color: #3a7a2a; }
-    .dont strong { color: #c0392b; }
-    .do li, .dont li { font-size: 13px; margin-bottom: 6px; }
-    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid rgba(139,69,19,.1); }
-    footer a { color: var(--brown); text-decoration: none; font-weight: 600; margin: 0 10px; }
-    @media (max-width: 600px) { .do-dont { grid-template-columns: 1fr; } }
-  </style>
+  <link rel="stylesheet" href="/legal.css?v=38">
+  <script src="/locales/pt.js?v=38"></script>
+  <script src="/locales/en.js?v=38"></script>
+  <script src="/legal-page.js?v=38" defer></script>
 </head>
-<body>
+<body data-page-title="legal.terms.pageTitle">
 
 <header>
   <a href="/"><div class="mark">🚽</div><span>Kgando</span></a>
+  <button id="legalLangFlag" class="legal-lang-btn" type="button" onclick="window.toggleLegalLang()" data-i18n-title="legal.common.langTitle">🇧🇷</button>
 </header>
 
 <div class="container">
-  <span class="badge">Legal</span>
-  <h1>Termos de Serviço</h1>
-  <p class="meta">Última atualização: 29 de maio de 2026 · Ao usar o Kgando, você concorda com estes termos.</p>
+  <span class="badge" data-i18n="legal.common.badgeLegal">Legal</span>
+  <h1 data-i18n="legal.terms.title">Termos de Serviço</h1>
+  <p class="meta" data-i18n="legal.terms.meta">Última atualização: 29 de maio de 2026 · Ao usar o Kgando, você concorda com estes termos.</p>
 
   <div class="card">
-    <h2>1. Aceitação dos termos</h2>
-    <p>Ao criar uma conta ou usar o <strong>Kgando</strong>, você concorda com estes Termos de Serviço e com nossa <a href="/privacidade">Política de Privacidade</a>. Se não concordar, não use a plataforma.</p>
-    <div class="highlight">O Kgando é uma plataforma de humor e entretenimento. Todo o conteúdo é de caráter descontraído e bem-humorado. Não leve muito a sério. 😄</div>
+    <h2 class="bar" data-i18n="legal.terms.s1.title">1. Aceitação dos termos</h2>
+    <p data-i18n-html="legal.terms.s1.body"></p>
+    <div class="highlight" data-i18n="legal.terms.s1.highlight"></div>
   </div>
 
   <div class="card">
-    <h2>2. Elegibilidade</h2>
+    <h2 class="bar" data-i18n="legal.terms.s2.title">2. Elegibilidade</h2>
     <ul>
-      <li>Você deve ter <strong>pelo menos 13 anos</strong> para usar o Kgando</li>
-      <li>Menores de 18 anos devem ter autorização dos responsáveis</li>
-      <li>Cada pessoa pode ter apenas <strong>uma conta ativa</strong></li>
-      <li>Contas criadas por bots ou scripts automatizados não são permitidas</li>
+      <li data-i18n-html="legal.terms.s2.li1"></li>
+      <li data-i18n="legal.terms.s2.li2"></li>
+      <li data-i18n-html="legal.terms.s2.li3"></li>
+      <li data-i18n="legal.terms.s2.li4"></li>
     </ul>
   </div>
 
   <div class="card">
-    <h2>3. O que você pode e não pode fazer</h2>
+    <h2 class="bar" data-i18n="legal.terms.s3.title">3. O que você pode e não pode fazer</h2>
     <div class="do-dont">
       <div class="do">
-        <strong>✅ Permitido</strong>
+        <strong data-i18n="legal.terms.s3.doTitle">✅ Permitido</strong>
         <ul>
-          <li>Criar avaliações engraçadas e honestas</li>
-          <li>Interagir com outros usuários de forma respeitosa</li>
-          <li>Criar e participar de comunidades temáticas</li>
-          <li>Usar humor e criatividade nas postagens</li>
-          <li>Indicar amigos com códigos de convite</li>
+          <li data-i18n="legal.terms.s3.do1"></li>
+          <li data-i18n="legal.terms.s3.do2"></li>
+          <li data-i18n="legal.terms.s3.do3"></li>
+          <li data-i18n="legal.terms.s3.do4"></li>
+          <li data-i18n="legal.terms.s3.do5"></li>
         </ul>
       </div>
       <div class="dont">
-        <strong>🚫 Proibido</strong>
+        <strong data-i18n="legal.terms.s3.dontTitle">🚫 Proibido</strong>
         <ul>
-          <li>Assédio, bullying ou ameaças a outros usuários</li>
-          <li>Conteúdo de ódio por raça, gênero, religião, etc.</li>
-          <li>Spam, conteúdo repetitivo ou automatizado</li>
-          <li>Informações falsas ou enganosas</li>
-          <li>Conteúdo sexual explícito ou violento</li>
-          <li>Dados pessoais de terceiros sem consentimento</li>
-          <li>Tentativas de hackear ou explorar a plataforma</li>
+          <li data-i18n="legal.terms.s3.dont1"></li>
+          <li data-i18n="legal.terms.s3.dont2"></li>
+          <li data-i18n="legal.terms.s3.dont3"></li>
+          <li data-i18n="legal.terms.s3.dont4"></li>
+          <li data-i18n="legal.terms.s3.dont5"></li>
+          <li data-i18n="legal.terms.s3.dont6"></li>
+          <li data-i18n="legal.terms.s3.dont7"></li>
         </ul>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>4. Conteúdo do usuário</h2>
-    <p>Você mantém a propriedade do conteúdo que publica. Ao publicar, você nos concede uma <strong>licença não-exclusiva, gratuita e mundial</strong> para exibir, armazenar e distribuir esse conteúdo dentro da plataforma.</p>
-    <p>Você é <strong>totalmente responsável</strong> pelo conteúdo que publica. Não publique nada que infrinja direitos de terceiros, leis brasileiras ou estes termos.</p>
+    <h2 class="bar" data-i18n="legal.terms.s4.title">4. Conteúdo do usuário</h2>
+    <p data-i18n-html="legal.terms.s4.p1"></p>
+    <p data-i18n-html="legal.terms.s4.p2"></p>
   </div>
 
   <div class="card">
-    <h2>5. Moderação e suspensões</h2>
-    <p>Reservamos o direito de, a nosso critério:</p>
+    <h2 class="bar" data-i18n="legal.terms.s5.title">5. Moderação e suspensões</h2>
+    <p data-i18n="legal.terms.s5.intro">Reservamos o direito de, a nosso critério:</p>
     <ul>
-      <li>Remover qualquer conteúdo que viole estes termos</li>
-      <li>Suspender ou banir contas que violem as regras</li>
-      <li>Investigar denúncias de abuso</li>
+      <li data-i18n="legal.terms.s5.li1"></li>
+      <li data-i18n="legal.terms.s5.li2"></li>
+      <li data-i18n="legal.terms.s5.li3"></li>
     </ul>
-    <p>Contas banidas não têm direito a reembolso de qualquer natureza. Em casos graves, podemos reportar às autoridades competentes.</p>
+    <p data-i18n="legal.terms.s5.body"></p>
   </div>
 
   <div class="card">
-    <h2>6. Disponibilidade do serviço</h2>
-    <p>O Kgando é oferecido <strong>"como está"</strong>, sem garantias de disponibilidade ininterrupta. Podemos:</p>
+    <h2 class="bar" data-i18n="legal.terms.s6.title">6. Disponibilidade do serviço</h2>
+    <p data-i18n-html="legal.terms.s6.intro"></p>
     <ul>
-      <li>Realizar manutenções programadas ou de emergência</li>
-      <li>Modificar, adicionar ou remover funcionalidades</li>
-      <li>Encerrar o serviço com aviso prévio de 30 dias</li>
+      <li data-i18n="legal.terms.s6.li1"></li>
+      <li data-i18n="legal.terms.s6.li2"></li>
+      <li data-i18n="legal.terms.s6.li3"></li>
     </ul>
-    <p>Não somos responsáveis por danos causados por indisponibilidade do serviço.</p>
+    <p data-i18n="legal.terms.s6.body"></p>
   </div>
 
   <div class="card">
-    <h2>7. Limitação de responsabilidade</h2>
-    <p>O Kgando não se responsabiliza por:</p>
+    <h2 class="bar" data-i18n="legal.terms.s7.title">7. Limitação de responsabilidade</h2>
+    <p data-i18n="legal.terms.s7.intro">O Kgando não se responsabiliza por:</p>
     <ul>
-      <li>Conteúdo publicado por usuários</li>
-      <li>Danos indiretos, incidentais ou consequentes</li>
-      <li>Perda de dados por falhas técnicas (recomendamos manter backup)</li>
-      <li>Ações de terceiros na plataforma</li>
+      <li data-i18n="legal.terms.s7.li1"></li>
+      <li data-i18n="legal.terms.s7.li2"></li>
+      <li data-i18n="legal.terms.s7.li3"></li>
+      <li data-i18n="legal.terms.s7.li4"></li>
     </ul>
   </div>
 
   <div class="card">
-    <h2>8. Encerramento de conta</h2>
-    <p>Você pode encerrar sua conta a qualquer momento pela <a href="/exclusao">página de exclusão de dados</a>. Após a exclusão, seus dados serão removidos conforme nossa <a href="/privacidade">Política de Privacidade</a>.</p>
-    <p>Podemos encerrar contas inativas por mais de 24 meses, com aviso prévio.</p>
+    <h2 class="bar" data-i18n="legal.terms.s8.title">8. Encerramento de conta</h2>
+    <p data-i18n-html="legal.terms.s8.p1"></p>
+    <p data-i18n="legal.terms.s8.p2"></p>
   </div>
 
   <div class="card">
-    <h2>9. Lei aplicável</h2>
-    <p>Estes termos são regidos pelas leis da <strong>República Federativa do Brasil</strong>. Disputas serão resolvidas no foro da comarca de <strong>São Paulo/SP</strong>.</p>
+    <h2 class="bar" data-i18n="legal.terms.s9.title">9. Lei aplicável</h2>
+    <p data-i18n-html="legal.terms.s9.body"></p>
   </div>
 
   <div class="card">
-    <h2>10. Contato</h2>
-    <p>Dúvidas sobre estes termos? Fale conosco em <strong>estou@kgando.com</strong> ou acesse nossa <a href="/exclusao">página de contato</a>.</p>
+    <h2 class="bar" data-i18n="legal.terms.s10.title">10. Contato</h2>
+    <p data-i18n-html="legal.terms.s10.body"></p>
   </div>
 </div>
 
 <footer>
   <a href="/">Kgando</a>
-  <a href="/privacidade">Privacidade</a>
-  <a href="/termos">Termos</a>
-  <a href="/exclusao">Exclusão de dados</a>
+  <a href="/privacidade" data-i18n="landing.privacy">Privacidade</a>
+  <a href="/termos" data-i18n="landing.terms">Termos</a>
+  <a href="/exclusao" data-i18n="landing.dataDeletion">Exclusão de dados</a>
   <br><br>
-  © 2026 Kgando. Todos os direitos reservados.
+  <span data-i18n="legal.common.footerCopy">© 2026 Kgando. Todos os direitos reservados.</span>
 </footer>
 
 </body>

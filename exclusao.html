@@ -5,172 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exclusão de Dados — Kgando</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --brown: #8B4513; --tan: #D4A574; --bg: #F5E6D3; --card: #FFF8F0; --text: #4A3728; --muted: #7A6558; --danger: #E74C3C; --success: #6BBF59; }
-    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
-    header { background: linear-gradient(135deg, var(--brown), #71411d); padding: 16px 24px; display: flex; align-items: center; gap: 14px; }
-    header a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-size: 18px; font-weight: 800; }
-    .mark { width: 36px; height: 36px; background: var(--tan); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .container { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
-    .badge { display: inline-block; background: rgba(139,69,19,.1); color: var(--brown); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
-    h1 { font-size: 32px; font-weight: 800; color: var(--brown); margin-bottom: 8px; }
-    .meta { font-size: 14px; color: var(--muted); margin-bottom: 40px; }
-    .card { background: var(--card); border-radius: 20px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(139,69,19,.1); }
-    h2 { font-size: 18px; font-weight: 800; color: var(--brown); margin-bottom: 16px; }
-    p { margin-bottom: 14px; font-size: 15px; }
-    ul { padding-left: 20px; margin-bottom: 14px; }
-    li { margin-bottom: 8px; font-size: 15px; }
-    a { color: var(--brown); font-weight: 700; }
-
-    /* Steps */
-    .steps { display: flex; flex-direction: column; gap: 16px; }
-    .step { display: flex; gap: 16px; align-items: flex-start; }
-    .step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--brown); color: #fff; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-    .step-body strong { display: block; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
-    .step-body span { font-size: 14px; color: var(--muted); }
-
-    /* Form */
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-    .inp { width: 100%; padding: 13px 16px; border: 2px solid var(--bg); border-radius: 12px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 15px; transition: border-color .2s; }
-    .inp:focus { outline: none; border-color: var(--tan); }
-    textarea.inp { resize: vertical; min-height: 100px; }
-    select.inp { cursor: pointer; }
-    .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--brown), #A0522D); color: #fff; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer; transition: transform .2s; }
-    .btn-submit:hover { transform: translateY(-2px); }
-    .btn-submit:disabled { opacity: .6; transform: none; cursor: not-allowed; }
-    #formMsg { margin-top: 14px; padding: 13px 16px; border-radius: 12px; font-size: 14px; font-weight: 700; display: none; }
-    .msg-ok  { background: rgba(107,191,89,.15); color: #2d7a1f; }
-    .msg-err { background: rgba(231,76,60,.15); color: #c0392b; }
-
-    .info-box { background: rgba(212,165,116,.15); border-left: 4px solid var(--tan); padding: 14px 18px; border-radius: 0 12px 12px 0; margin: 16px 0; font-size: 14px; }
-
-    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid rgba(139,69,19,.1); }
-    footer a { color: var(--brown); text-decoration: none; font-weight: 600; margin: 0 10px; }
-  </style>
+  <link rel="stylesheet" href="/legal.css?v=38">
+  <script src="/locales/pt.js?v=38"></script>
+  <script src="/locales/en.js?v=38"></script>
+  <script src="/legal-page.js?v=38" defer></script>
 </head>
-<body>
+<body data-page-title="legal.deletion.pageTitle">
 
 <header>
   <a href="/"><div class="mark">🚽</div><span>Kgando</span></a>
+  <button id="legalLangFlag" class="legal-lang-btn" type="button" onclick="window.toggleLegalLang()" data-i18n-title="legal.common.langTitle">🇧🇷</button>
 </header>
 
-<div class="container">
-  <span class="badge">Seus direitos</span>
-  <h1>Exclusão de Dados</h1>
-  <p class="meta">Conforme a Lei Geral de Proteção de Dados (LGPD), você tem o direito de solicitar a exclusão dos seus dados pessoais a qualquer momento.</p>
+<div class="container container--narrow">
+  <span class="badge" data-i18n="legal.common.badgeRights">Seus direitos</span>
+  <h1 data-i18n="legal.deletion.title">Exclusão de Dados</h1>
+  <p class="meta meta--lg" data-i18n="legal.deletion.meta">Conforme a Lei Geral de Proteção de Dados (LGPD), você tem o direito de solicitar a exclusão dos seus dados pessoais a qualquer momento.</p>
 
-  <!-- O que será excluído -->
   <div class="card">
-    <h2>📋 O que será excluído</h2>
-    <p>Ao solicitar a exclusão completa da sua conta, removemos permanentemente:</p>
+    <h2 data-i18n="legal.deletion.s1.title">📋 O que será excluído</h2>
+    <p data-i18n="legal.deletion.s1.intro">Ao solicitar a exclusão completa da sua conta, removemos permanentemente:</p>
     <ul>
-      <li>Seu perfil (nome, e-mail, foto de perfil)</li>
-      <li>Todas as avaliações e comentários publicados</li>
-      <li>Recados (scraps) enviados e recebidos</li>
-      <li>Participação em comunidades</li>
-      <li>Curtidas e interações</li>
-      <li>Associação com login Google (se houver)</li>
+      <li data-i18n="legal.deletion.s1.li1"></li>
+      <li data-i18n="legal.deletion.s1.li2"></li>
+      <li data-i18n="legal.deletion.s1.li3"></li>
+      <li data-i18n="legal.deletion.s1.li4"></li>
+      <li data-i18n="legal.deletion.s1.li5"></li>
+      <li data-i18n="legal.deletion.s1.li6"></li>
     </ul>
-    <div class="info-box">⏱️ O prazo para exclusão completa é de <strong>até 15 dias úteis</strong> após a confirmação da solicitação.</div>
+    <div class="info-box" data-i18n-html="legal.deletion.s1.info"></div>
   </div>
 
-  <!-- Como excluir pela plataforma -->
   <div class="card">
-    <h2>⚡ Exclusão imediata (recomendado)</h2>
-    <p>Se você ainda tem acesso à sua conta, pode excluí-la diretamente:</p>
+    <h2 data-i18n="legal.deletion.s2.title">⚡ Exclusão imediata (recomendado)</h2>
+    <p data-i18n="legal.deletion.s2.intro">Se você ainda tem acesso à sua conta, pode excluí-la diretamente:</p>
     <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Faça login no Kgando</strong><span>Acesse kgando.com e entre com sua conta</span></div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Acesse seu perfil</strong><span>Clique na sua foto ou nome no topo da página</span></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Vá em Configurações</strong><span>Clique em "Editar perfil" e role até o final</span></div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Clique em "Excluir minha conta"</strong><span>Confirme a exclusão — esta ação é irreversível</span></div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong data-i18n="legal.deletion.s2.step1t"></strong><span data-i18n="legal.deletion.s2.step1d"></span></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong data-i18n="legal.deletion.s2.step2t"></strong><span data-i18n="legal.deletion.s2.step2d"></span></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong data-i18n="legal.deletion.s2.step3t"></strong><span data-i18n="legal.deletion.s2.step3d"></span></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong data-i18n="legal.deletion.s2.step4t"></strong><span data-i18n="legal.deletion.s2.step4d"></span></div></div>
     </div>
   </div>
 
-  <!-- Formulário -->
   <div class="card">
-    <h2>📨 Solicitar por formulário</h2>
-    <p>Se não consegue acessar sua conta ou prefere solicitar por aqui:</p>
+    <h2 data-i18n="legal.deletion.s3.title">📨 Solicitar por formulário</h2>
+    <p data-i18n="legal.deletion.s3.intro">Se não consegue acessar sua conta ou prefere solicitar por aqui:</p>
 
-    <form id="deleteForm" onsubmit="submitForm(event)">
+    <form id="deleteForm" onsubmit="window.submitDeletionForm(event)">
       <div class="form-group">
-        <label>Tipo de solicitação</label>
+        <label data-i18n="legal.deletion.form.type">Tipo de solicitação</label>
         <select class="inp" name="tipo" required>
-          <option value="">Selecione…</option>
-          <option value="exclusao_conta">Exclusão completa da conta e dados</option>
-          <option value="exclusao_parcial">Exclusão de dados específicos</option>
-          <option value="portabilidade">Portabilidade / exportação dos meus dados</option>
-          <option value="correcao">Correção de dados incorretos</option>
-          <option value="duvida">Dúvida sobre meus dados</option>
+          <option value="" data-i18n="legal.deletion.form.typePh">Selecione…</option>
+          <option value="exclusao_conta" data-i18n="legal.deletion.form.opt1">Exclusão completa da conta e dados</option>
+          <option value="exclusao_parcial" data-i18n="legal.deletion.form.opt2">Exclusão de dados específicos</option>
+          <option value="portabilidade" data-i18n="legal.deletion.form.opt3">Portabilidade / exportação dos meus dados</option>
+          <option value="correcao" data-i18n="legal.deletion.form.opt4">Correção de dados incorretos</option>
+          <option value="duvida" data-i18n="legal.deletion.form.opt5">Dúvida sobre meus dados</option>
         </select>
       </div>
       <div class="form-group">
-        <label>E-mail da conta</label>
-        <input class="inp" type="email" name="email" placeholder="email@exemplo.com" required>
+        <label data-i18n="legal.deletion.form.email">E-mail da conta</label>
+        <input class="inp" type="email" name="email" data-i18n-placeholder="legal.deletion.form.emailPh" placeholder="email@exemplo.com" required>
       </div>
       <div class="form-group">
-        <label>Nome de usuário (se lembrar)</label>
-        <input class="inp" type="text" name="username" placeholder="@seu_usuario">
+        <label data-i18n="legal.deletion.form.user">Nome de usuário (se lembrar)</label>
+        <input class="inp" type="text" name="username" data-i18n-placeholder="legal.deletion.form.userPh" placeholder="@seu_usuario">
       </div>
       <div class="form-group">
-        <label>Descrição (opcional)</label>
-        <textarea class="inp" name="mensagem" placeholder="Descreva sua solicitação com mais detalhes…"></textarea>
+        <label data-i18n="legal.deletion.form.msg">Descrição (opcional)</label>
+        <textarea class="inp" name="mensagem" data-i18n-placeholder="legal.deletion.form.msgPh" placeholder="Descreva sua solicitação com mais detalhes…"></textarea>
       </div>
-      <button class="btn-submit" type="submit" id="btnSubmit">Enviar solicitação</button>
+      <button class="btn-submit" type="submit" id="btnSubmit" data-i18n="legal.deletion.form.submit">Enviar solicitação</button>
       <div id="formMsg"></div>
     </form>
   </div>
 
-  <!-- Contato direto -->
   <div class="card">
-    <h2>📬 Contato direto</h2>
-    <p>Você também pode enviar um e-mail diretamente para o nosso encarregado de dados (DPO):</p>
-    <p style="font-size:18px;font-weight:800;color:var(--brown)">estou@kgando.com</p>
-    <p style="font-size:13px;color:var(--muted)">Respondemos em até 5 dias úteis.</p>
+    <h2 data-i18n="legal.deletion.s4.title">📬 Contato direto</h2>
+    <p data-i18n="legal.deletion.s4.intro">Você também pode enviar um e-mail diretamente para o nosso encarregado de dados (DPO):</p>
+    <p class="contact-email">estou@kgando.com</p>
+    <p class="contact-note" data-i18n="legal.deletion.s4.note">Respondemos em até 5 dias úteis.</p>
   </div>
 </div>
 
 <footer>
   <a href="/">Kgando</a>
-  <a href="/privacidade">Privacidade</a>
-  <a href="/termos">Termos</a>
-  <a href="/exclusao">Exclusão de dados</a>
+  <a href="/privacidade" data-i18n="landing.privacy">Privacidade</a>
+  <a href="/termos" data-i18n="landing.terms">Termos</a>
+  <a href="/exclusao" data-i18n="landing.dataDeletion">Exclusão de dados</a>
   <br><br>
-  © 2026 Kgando. Todos os direitos reservados.
+  <span data-i18n="legal.common.footerCopy">© 2026 Kgando. Todos os direitos reservados.</span>
 </footer>
 
-<script>
-async function submitForm(e) {
-  e.preventDefault();
-  const btn = document.getElementById('btnSubmit');
-  const msg = document.getElementById('formMsg');
-  btn.disabled = true;
-  btn.textContent = 'Enviando…';
-
-  const data = Object.fromEntries(new FormData(e.target));
-
-  try {
-    const res = await fetch('/api/data-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (res.ok) {
-      msg.className = 'msg-ok'; msg.style.display = 'block';
-      msg.textContent = '✅ Solicitação enviada com sucesso! Responderemos em até 5 dias úteis no e-mail informado.';
-      e.target.reset();
-    } else {
-      throw new Error();
-    }
-  } catch {
-    msg.className = 'msg-err'; msg.style.display = 'block';
-    msg.textContent = '❌ Erro ao enviar. Tente novamente ou envie um e-mail para estou@kgando.com';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Enviar solicitação';
-  }
-}
-</script>
 </body>
 </html>
