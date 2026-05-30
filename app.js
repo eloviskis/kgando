@@ -1555,7 +1555,15 @@ async function submitReview(form) {
   try {
     await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
     showToast(t('new.success'));
-    navigateTo('home');
+    // Atualiza contador de reviews do usuário
+    if (currentUser) {
+      currentUser.reviews_count = (currentUser.reviews_count || 0) + 1;
+    }
+    // Força reload da página home
+    currentPage = 'home';
+    history.pushState(null, '', '#home');
+    await renderApp();
+    document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showToast(err.message);
     btn.disabled = false; btn.textContent = 'Publicar Avaliação 💩';
@@ -3171,6 +3179,20 @@ function showToast(msg, ms = 3000) {
   t._timer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
+function showOrkutNotif(msg, ms = 4000) {
+  let notif = document.getElementById('orkutNotif');
+  if (!notif) {
+    notif = document.createElement('div');
+    notif.id = 'orkutNotif';
+    notif.className = 'orkut-notif';
+    document.body.appendChild(notif);
+  }
+  notif.innerHTML = `<div class="orkut-notif-content">${esc(msg)}</div>`;
+  notif.classList.add('show');
+  clearTimeout(notif._timer);
+  notif._timer = setTimeout(() => notif.classList.remove('show'), ms);
+}
+
 /* ── Helpers ────────────────────────────────────── */
 function esc(str) {
   if (str == null) return '';
@@ -3233,17 +3255,17 @@ async function loadNotifCount() {
       badge.textContent = newCount > 99 ? '99+' : newCount;
       badge.hidden = false;
       
-      // Animação e toast quando há novas notificações
+      // Animação e notificação estilo Orkut quando há novas notificações
       if (newCount > lastNotifCount && lastNotifCount > 0) {
         badge.classList.add('badge-pulse');
         setTimeout(() => badge.classList.remove('badge-pulse'), 1000);
         
-        // Toast discreto
+        // Notificação discreta no canto direito (estilo Orkut)
         const diff = newCount - lastNotifCount;
         const msg = CURRENT_LANG === 'pt' 
           ? `${diff} nova${diff > 1 ? 's' : ''} notificação${diff > 1 ? 'ões' : ''} 🔔`
           : `${diff} new notification${diff > 1 ? 's' : ''} 🔔`;
-        showToast(msg);
+        showOrkutNotif(msg);
       }
     } else {
       badge.hidden = true;

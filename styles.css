@@ -924,6 +924,46 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Notificação estilo Orkut (canto direito) */
+.orkut-notif {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 3500;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: none;
+}
+.orkut-notif.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.orkut-notif-content {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+  color: #fff;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(139, 69, 19, 0.4), 0 2px 8px rgba(0,0,0,.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  min-width: 250px;
+  text-align: center;
+}
+@media (max-width: 768px) {
+  .orkut-notif {
+    right: 10px;
+    top: 70px;
+  }
+  .orkut-notif-content {
+    min-width: auto;
+    max-width: calc(100vw - 20px);
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+}
+
 /* ── Modal host ─────────────────────────────────── */
 .modal-host { position: fixed; inset: 0; z-index: 2000; pointer-events: none; }
 .modal-overlay {
