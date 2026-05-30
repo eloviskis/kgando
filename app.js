@@ -481,7 +481,6 @@ function buildLandingHTML() {
         </div>
         <nav class="landing-nav">
           <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">${flag}</button>
-          <button class="landing-nav-install" type="button" data-action="install-app">${t('landing.installBtn')}</button>
           <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">${t('landing.login')}</button>
           <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">${t('landing.registerFree')}</button>
         </nav>
