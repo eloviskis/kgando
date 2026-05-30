@@ -1574,8 +1574,10 @@ async function submitReview(form, reviewId = null) {
   if (!body.sticker)     delete body.sticker;
 
   try {
+    console.log('Submitting review:', { isEdit, reviewId, body });
     if (isEdit) {
-      await apiFetch(`/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify(body) });
+      const result = await apiFetch(`/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify(body) });
+      console.log('Edit result:', result);
       showToast(CURRENT_LANG === 'pt' ? 'Avaliação atualizada! 💩' : 'Review updated! 💩');
       document.getElementById('modalHost').innerHTML = '';
       await renderApp();
@@ -1626,22 +1628,22 @@ async function openEditReviewModal(reviewId) {
           <label class="form-label">${t('new.quality')} <span class="form-sublabel">(1 a 5 💩)</span></label>
           <div class="emoji-rating">
             ${getQualityOptions().map(o => `
-              <button type="button" class="emoji-btn${review.quality === o.value ? ' active' : ''}" data-field="quality" data-value="${o.value}">
+              <button type="button" class="emoji-btn${Number(review.quality) === o.value ? ' active' : ''}" data-field="quality" data-value="${o.value}">
                 ${o.icon}<small>${o.label}</small>
               </button>`).join('')}
           </div>
-          <input type="hidden" name="quality" id="fQuality" value="${review.quality}" required>
+          <input type="hidden" name="quality" id="fQuality" value="${review.quality || ''}" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">${t('new.duration')}</label>
           <div class="emoji-rating">
             ${getDurationOptions().map(o => `
-              <button type="button" class="emoji-btn${review.duration === o.value ? ' active' : ''}" data-field="duration" data-value="${o.value}">
+              <button type="button" class="emoji-btn${Number(review.duration) === o.value ? ' active' : ''}" data-field="duration" data-value="${o.value}">
                 ${o.icon}<small>${o.label}</small>
               </button>`).join('')}
           </div>
-          <input type="hidden" name="duration" id="fDuration" value="${review.duration}" required>
+          <input type="hidden" name="duration" id="fDuration" value="${review.duration || ''}" required>
         </div>
 
         <div class="form-group">

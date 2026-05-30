@@ -102,8 +102,8 @@ router.put('/:id', requireAuth, (req, res) => {
 
   // Se o banheiro mudou, atualizar ratings
   if (bathroom_id && bathroom_id !== rev.bathroom_id) {
-    const scoreMap = { good: 5, ok: 3, bad: 1, light: 5, satisfied: 3, incomplete: 1, roses: 5, neutral: 3, toxic: 1 };
-    const q = scoreMap[quality] || 3;
+    const scoreMap = { light: 5, satisfied: 3, incomplete: 1, roses: 5, neutral: 3, toxic: 1 };
+    const q = quality; // quality já é um número de 1 a 5
     const r = scoreMap[relief]  || 3;
     const s = scoreMap[smell]   || 3;
     const avg = Math.round((q + r + s) / 3 * 10) / 10;
