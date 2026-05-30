@@ -1,0 +1,41 @@
+# Dependências
+node_modules/
+api/node_modules/
+
+# Banco de dados (dados de produção)
+api/data/*.db
+api/data/*.db-shm
+api/data/*.db-wal
+
+# Variáveis de ambiente (segredos)
+.env
+api/.env
+**/.env
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# PM2
+.pm2/
+
+# Android / build
+android/.gradle/
+android/app/build/
+android/build/
+*.keystore
+*.jks
+
+# Deploy scripts com dados sensíveis
+deploy/
+
+# Arquivos temporários
+*.tmp
+*.bak
+
+# Planos (internos do Cursor)
+*.plan.md

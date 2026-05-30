@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="PooP.it">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="40" x2="448" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4A574"/>
+      <stop offset="0.52" stop-color="#B8956A"/>
+      <stop offset="1" stop-color="#8B4513"/>
+    </linearGradient>
+    <linearGradient id="seat" x1="150" y1="140" x2="362" y2="396" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#FFF0D9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="398" cy="116" r="38" fill="#FFD700"/>
+  <path d="M155 172c0-35 28-63 63-63h76c35 0 63 28 63 63v27H155v-27z" fill="#FFF8F0"/>
+  <path d="M130 205h252v69c0 70-56 127-126 127S130 344 130 274v-69z" fill="url(#seat)"/>
+  <ellipse cx="256" cy="251" rx="73" ry="51" fill="#8B4513" opacity="0.22"/>
+  <path d="M189 394h134l-18 49h-98l-18-49z" fill="#FFF8F0"/>
+  <path d="M164 169h184" stroke="#6B340F" stroke-width="22" stroke-linecap="round"/>
+  <path d="M224 286c20 20 44 20 64 0" stroke="#6B340F" stroke-width="18" stroke-linecap="round" fill="none"/>
+  <text x="256" y="474" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900" fill="#FFF8F0">P.it</text>
+</svg>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kgando — Painel Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #D4A574; --primary-dark: #B8956A;
+      --secondary: #8B4513; --bg: #F5E6D3; --card: #FFF8F0;
+      --text: #4A3728; --muted: #7A6558;
+      --success: #6BBF59; --danger: #E74C3C; --warn: #F39C12;
+      --shadow: 0 4px 15px rgba(139,69,19,.15); --radius: 16px;
+    }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Login ── */
+    #loginOverlay {
+      position: fixed; inset: 0; background: linear-gradient(135deg,var(--secondary),#71411d);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .login-box { background: var(--card); border-radius: 24px; padding: 40px 36px; width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .login-box h1 { font-size: 28px; font-weight: 800; color: var(--secondary); margin-bottom: 6px; }
+    .login-box p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .inp { width: 100%; padding: 12px 16px; border: 2px solid var(--bg); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+    .inp:focus { outline: none; border-color: var(--primary); }
+    .inp[type=number] { appearance: textfield; }
+    .btn-primary { width: 100%; padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg,var(--secondary),#A0522D); color: #fff; font-size: 15px; font-weight: 800; transition: transform .2s; }
+    .btn-primary:hover { transform: translateY(-2px); }
+    #loginError { color: var(--danger); font-size: 13px; margin-top: 8px; }
+
+    /* ── App ── */
+    #app { display: none; }
+    .topbar {
+      background: linear-gradient(135deg,var(--secondary),#71411d); padding: 0 24px; height: 60px;
+      position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(0,0,0,.2);
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 18px; font-weight: 800; }
+    .topbar-brand-mark { width: 36px; height: 36px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .pill { background: rgba(255,255,255,.15); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .btn-ghost { background: rgba(255,255,255,.15); color: #fff; border: none; padding: 7px 14px; border-radius: 14px; font-size: 12px; font-weight: 700; transition: background .2s; }
+    .btn-ghost:hover { background: rgba(255,255,255,.28); }
+
+    .layout { display: flex; min-height: calc(100vh - 60px); }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 210px; background: var(--card); padding: 16px 10px; border-right: 2px solid var(--primary); flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; }
+    .nav-btn { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 12px; background: none; border: none; color: var(--text); font-size: 13px; font-weight: 700; width: 100%; text-align: left; transition: background .15s; }
+    .nav-btn:hover { background: var(--bg); }
+    .nav-btn.active { background: var(--secondary); color: #fff; }
+    .nav-btn .icon { font-size: 16px; width: 22px; text-align: center; }
+
+    /* ── Content ── */
+    .content { flex: 1; padding: 24px; overflow-y: auto; }
+    .page-title { font-size: 22px; font-weight: 800; color: var(--secondary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .stat-card-icon { font-size: 26px; margin-bottom: 8px; }
+    .stat-card-num { font-size: 30px; font-weight: 800; color: var(--secondary); line-height: 1; }
+    .stat-card-lbl { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; }
+    .stat-card-sub { font-size: 11px; color: var(--success); font-weight: 700; margin-top: 2px; }
+
+    /* ── Chart ── */
+    .activity-card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; }
+    .activity-title { font-size: 14px; font-weight: 700; color: var(--secondary); margin-bottom: 14px; }
+    .chart { display: flex; align-items: flex-end; gap: 6px; height: 72px; }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .chart-bar { width: 100%; background: linear-gradient(to top,var(--secondary),var(--primary)); border-radius: 4px 4px 0 0; min-height: 4px; }
+    .chart-day { font-size: 10px; color: var(--muted); }
+
+    /* ── Table toolbar ── */
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .search-input { padding: 9px 14px; border: 2px solid var(--bg); border-radius: 12px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 13px; width: 260px; }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .count-badge { background: var(--primary); color: var(--secondary); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+    .ml-auto { margin-left: auto; }
+    .btn-create { background: var(--secondary); color: #fff; border: none; padding: 9px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px; transition: opacity .2s; }
+    .btn-create:hover { opacity: .85; }
+
+    /* ── Table ── */
+    .table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: linear-gradient(135deg,var(--primary),var(--primary-dark)); color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 11px 14px; text-align: left; letter-spacing: .4px; }
+    td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(212,165,116,.07); }
+
+    .avatar-cell { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 11px; flex-shrink: 0; }
+    .user-cell { display: flex; align-items: center; gap: 8px; }
+    .user-cell-info strong { font-size: 13px; display: block; }
+    .user-cell-info span { font-size: 11px; color: var(--muted); }
+
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+    .badge-ban { background: rgba(231,76,60,.15); color: var(--danger); }
+    .badge-ok  { background: rgba(107,191,89,.15); color: var(--success); }
+
+    .actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .btn-sm { padding: 4px 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: 700; transition: .15s; white-space: nowrap; }
+    .btn-edit { background: rgba(212,165,116,.2); color: var(--secondary); }
+    .btn-edit:hover { background: var(--primary); color: #fff; }
+    .btn-ban { background: rgba(243,156,18,.15); color: var(--warn); }
+    .btn-ban:hover { background: var(--warn); color: #fff; }
+    .btn-delete { background: rgba(231,76,60,.1); color: var(--danger); }
+    .btn-delete:hover { background: var(--danger); color: #fff; }
+    .btn-pwd { background: rgba(139,69,19,.1); color: var(--secondary); }
+    .btn-pwd:hover { background: var(--secondary); color: #fff; }
+
+    .spinner { width: 34px; height: 34px; border: 4px solid var(--bg); border-top-color: var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; padding: 36px; color: var(--muted); font-size: 13px; font-style: italic; }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal { background: var(--card); border-radius: 20px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,.3); max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 18px; font-weight: 800; color: var(--secondary); margin-bottom: 18px; }
+    .form-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; margin-top: 12px; display: block; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    .btn-cancel { padding: 10px 18px; border-radius: 12px; border: 2px solid var(--bg); background: none; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .btn-save { padding: 10px 22px; border-radius: 12px; border: none; background: var(--secondary); color: #fff; font-size: 13px; font-weight: 800; }
+    .btn-save:hover { opacity: .85; }
+    select.inp { cursor: pointer; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--secondary); color: #fff; padding: 11px 22px; border-radius: 22px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; z-index: 9999; transition: opacity .3s, transform .3s; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .sidebar { display: none; } }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:10px">🚽</div>
+    <h1>Kgando Admin</h1>
+    <p>Painel administrativo</p>
+    <input id="adminKey" class="inp" type="password" placeholder="Admin Key" autocomplete="off">
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <p id="loginError"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-mark">🚽</div>
+      <span>Kgando <strong>Admin</strong></span>
+    </div>
+    <div class="topbar-right">
+      <span class="pill">● Online</span>
+      <button class="btn-ghost" onclick="doLogout()">Sair ↩</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <button class="nav-btn active" data-section="dashboard" onclick="nav('dashboard',this)"><span class="icon">📊</span>Dashboard</button>
+      <button class="nav-btn" data-section="users"     onclick="nav('users',this)"><span class="icon">👤</span>Usuários</button>
+      <button class="nav-btn" data-section="reviews"   onclick="nav('reviews',this)"><span class="icon">💩</span>Reviews</button>
+      <button class="nav-btn" data-section="comments"  onclick="nav('comments',this)"><span class="icon">💬</span>Comentários</button>
+      <button class="nav-btn" data-section="bathrooms" onclick="nav('bathrooms',this)"><span class="icon">🚽</span>Banheiros</button>
+      <button class="nav-btn" data-section="communities" onclick="nav('communities',this)"><span class="icon">☷</span>Comunidades</button>
+      <button class="nav-btn" data-section="scraps"    onclick="nav('scraps',this)"><span class="icon">✉</span>Scraps</button>
+      <button class="nav-btn" data-section="invites"   onclick="nav('invites',this)"><span class="icon">📨</span>Convites</button>
+    </nav>
+    <main class="content" id="content"><div class="spinner"></div></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/admin';
+let ADMIN_KEY = '';
+
+// ── Auth ────────────────────────────────────────────────
+async function doLogin() {
+  const key = document.getElementById('adminKey').value.trim();
+  if (!key) return;
+  try {
+    const res = await fetch(`${API}/stats`, { headers: { 'X-Admin-Key': key } });
+    if (!res.ok) throw new Error();
+    ADMIN_KEY = key;
+    localStorage.setItem('kgando_admin_key', key);
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    nav('dashboard');
+  } catch { document.getElementById('loginError').textContent = 'Chave inválida.'; }
+}
+function doLogout() { ADMIN_KEY = ''; localStorage.removeItem('kgando_admin_key'); location.reload(); }
+document.getElementById('adminKey').addEventListener('keydown', e => e.key === 'Enter' && doLogin());
+const saved = localStorage.getItem('kgando_admin_key');
+if (saved) { document.getElementById('adminKey').value = saved; doLogin(); }
+
+// ── API ──────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts, headers: { 'X-Admin-Key': ADMIN_KEY, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || res.statusText);
+  return json;
+}
+
+// ── Toast ────────────────────────────────────────────────
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.background = err ? '#E74C3C' : '#8B4513';
+  el.classList.add('show'); clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Nav ──────────────────────────────────────────────────
+function nav(name, btn) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  (btn || document.querySelector(`[data-section="${name}"]`))?.classList.add('active');
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="spinner"></div>';
+     ({ dashboard: renderDashboard, users: renderUsers, reviews: renderReviews,
+     comments: renderComments, bathrooms: renderBathrooms,
+     communities: renderCommunities, scraps: renderScraps,
+     invites: renderInvites })[name]?.(el);
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+async function renderDashboard(el) {
+  const d = await api('/stats').catch(() => null);
+  if (!d) { el.innerHTML = '<p class="empty">Erro ao carregar.</p>'; return; }
+  const maxC = Math.max(...d.activityLast7.map(x => x.count), 1);
+  const bars = d.activityLast7.map(x =>
+    `<div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${Math.max(4, Math.round(x.count/maxC*68))}px" title="${x.count}"></div>
+      <span class="chart-day">${x.day.slice(5)}</span>
+    </div>`).join('') || '<span style="color:var(--muted);font-size:13px">Sem dados</span>';
+
+  el.innerHTML = `
+    <div class="page-title">📊 Dashboard</div>
+    <div class="stats-grid">
+      ${statCard('👤','Usuários',d.users,d.newUsersToday)}
+      ${statCard('💩','Reviews',d.reviews,d.newReviewsToday)}
+      ${statCard('🚽','Banheiros',d.bathrooms)}
+      ${statCard('☷','Comunidades',d.communities)}
+      ${statCard('❤️','Curtidas',d.likes)}
+      ${statCard('💬','Comentários',d.comments)}
+      ${statCard('✉','Scraps',d.scraps)}
+      ${statCard('🚫','Banidos',d.banned)}
+    </div>
+    <div class="activity-card">
+      <div class="activity-title">📈 Reviews — últimos 7 dias</div>
+      <div class="chart">${bars}</div>
+    </div>`;
+}
+function statCard(icon, label, num, today=0) {
+  return `<div class="stat-card">
+    <div class="stat-card-icon">${icon}</div>
+    <div class="stat-card-num">${num}</div>
+    <div class="stat-card-lbl">${label}</div>
+    ${today > 0 ? `<div class="stat-card-sub">+${today} hoje</div>` : ''}
+  </div>`;
+}
+
+// ── Usuários ─────────────────────────────────────────────
+async function renderUsers(el, q='') {
+  const users = await api(`/users${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">👤 Usuários</div>
+    <div class="toolbar">
+      <input class="search-input" type="search" placeholder="Buscar nome, usuário, e-mail…" value="${esc(q)}"
+             oninput="renderUsers(document.getElementById('content'),this.value)">
+      <span class="count-badge">${users.length}</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Usuário</th><th>E-mail</th><th>Reviews</th><th>Status</th><th>Cadastro</th><th>Ações</th></tr></thead>
+      <tbody>${users.length ? users.map(u => `<tr>
+        <td><div class="user-cell">
+          <div class="avatar-cell" style="background:${esc(u.avatar_color)}">${esc(u.avatar_text)}</div>
+          <div class="user-cell-info"><strong>${esc(u.display_name)}</strong><span>@${esc(u.username)}</span></div>
+        </div></td>
+        <td style="color:var(--muted)">${esc(u.email)}</td>
+        <td>${u.reviews_count} <small style="color:var(--muted)">/ ❤️${u.likes_total}</small></td>
+        <td>${u.banned_at ? '<span class="badge badge-ban">Banido</span>' : '<span class="badge badge-ok">Ativo</span>'}</td>
+        <td style="font-size:11px;color:var(--muted)">${fmtDate(u.created_at)}</td>
+        <td><div class="actions">
+          <button class="btn-sm btn-edit"   onclick='editUser(${JSON.stringify(u)})'>✏️ Editar</button>
+          <button class="btn-sm btn-pwd"    onclick="resetPwd('${u.id}','${esc(u.display_name)}')">🔑 Senha</button>
+          <button class="btn-sm btn-ban"    onclick="toggleBan('${u.id}','${esc(u.display_name)}',${!!u.banned_at},'users','${esc(q)}')">${u.banned_at?'✅ Desbanir':'🚫 Banir'}</button>
+          <button class="btn-sm btn-delete" onclick="del('users','${u.id}','${esc(u.display_name)}',()=>renderUsers(document.getElementById('content'),'${esc(q)}'))">🗑</button>
+          <button class="btn-sm" style="background:rgba(107,191,89,.15);color:#3a8a2a" onclick="sendInvite('${u.id}','${esc(u.display_name)}','${esc(u.email)}')">📨 Convidar</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">Nenhum usuário</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+async function editUser(u) {
+  showModal(`✏️ Editar Usuário`,`
+    <label class="form-label">Nome</label>
+    <input class="inp" id="m_dn" value="${esc(u.display_name)}">
+    <label class="form-label">Usuário (@)</label>
+    <input class="inp" id="m_un" value="${esc(u.username)}">
+    <label class="form-label">E-mail</label>
+    <input class="inp" id="m_em" value="${esc(u.email)}">
+    <label class="form-label">Bio</label>
+    <input class="inp" id="m_bio" value="${esc(u.bio||'')}">
+    <div class="form-row">
+      <div><label class="form-label">Sigla avatar</label><input class="inp" id="m_at" value="${esc(u.avatar_text)}" maxlength="2"></div>
+      <div><label class="form-label">Cor avatar</label><input class="inp" type="color" id="m_ac" value="${esc(u.avatar_color)}"></div>
+    </div>
+  `, async () => {
+    await api(`/users/${u.id}`, { method: 'PUT', body: JSON.stringify({
+      display_name: id('m_dn').value, username: id('m_un').value, email: id('m_em').value,
+      bio: id('m_bio').value, avatar_text: id('m_at').value, avatar_color: id('m_ac').value
+    })});
+    toast('Usuário atualizado!');
+    renderUsers(document.getElementById('content'));
+  });
+}
+
+async function resetPwd(uid, name) {
+  showModal(`🔑 Redefinir senha — ${name}`,`
+    <label class="form-label">Nova senha (mínimo 6 caracteres)</label>
+    <input class="inp" id="m_pwd" type="password" placeholder="Nova senha">
+  `, async () => {
+    const pwd = id('m_pwd').value;
+    if (pwd.length < 6) { toast('Senha muito curta.', true); return; }
+    await api(`/users/${uid}/reset-password`, { method: 'POST', body: JSON.stringify({ password: pwd }) });
+    toast('Senha redefinida!');
+  });
+}
+
+async function toggleBan(uid, name, isBanned, section, q) {
+  if (!confirm(`${isBanned ? 'Desbanir' : 'Banir'} ${name}?`)) return;
+  await api(`/users/${uid}/toggle-ban`, { method: 'POST', body: '{}' }).catch(e => { toast(e.message,true); });
+  toast(`${name} ${isBanned ? 'desbanido' : 'banido'}.`);
+  renderUsers(document.getElementById('content'), q);
+}
+
+// ── Reviews ───────────────────────────────────────────────
+const QUALITY = ['','💩','💩💩','💩💩💩','💩💩💩💩','💩💩💩💩💩'];
+async function renderReviews(el, q='') {
+  const reviews = await api(`/reviews${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">💩 Reviews</div>
+    <div class="toolbar">
+      <input class="search-input" type="search" placeholder="Buscar título, autor…" value="${esc(q)}"
+             oninput="renderReviews(document.getElementById('content'),this.value)">
+      <span class="count-badge">${reviews.length}</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Autor</th><th>Título</th><th>Qualidade</th><th>❤️</th><th>💬</th><th>Data</th><th>Ações</th></tr></thead>
+      <tbody>${reviews.length ? reviews.map(r => `<tr>
+        <td><div class="user-cell">
+          <div class="avatar-cell" style="background:${esc(r.avatar_color)}">${esc(r.avatar_text)}</div>
+          <span>@${esc(r.username)}</span>
+        </div></td>
+        <td>${esc(r.title||'—')}</td>
+        <td>${QUALITY[r.quality]||'?'}</td>
+        <td>${r.likes_count}</td>
+        <td>${r.comments_count}</td>
+        <td style="font-size:11px;color:var(--muted)">${fmtDate(r.created_at)}</td>
+        <td><div class="actions">
+          <button class="btn-sm btn-edit"   onclick='editReview(${JSON.stringify(r)})'>✏️</button>
+          <button class="btn-sm btn-delete" onclick="del('reviews','${r.id}','review de ${esc(r.username)}',()=>renderReviews(document.getElementById('content'),'${esc(q)}'))">🗑</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="7" class="empty">Nenhuma review</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+function editReview(r) {
+  showModal('✏️ Editar Review',`
+    <label class="form-label">Título</label>
+    <input class="inp" id="m_title" value="${esc(r.title||'')}">
+    <label class="form-label">Comentário</label>
+    <textarea class="inp" id="m_comment" rows="3" style="resize:vertical">${esc(r.comment||'')}</textarea>
+    <div class="form-row">
+      <div><label class="form-label">Qualidade (1-5)</label><input class="inp" type="number" id="m_qual" min="1" max="5" value="${r.quality}"></div>
+      <div><label class="form-label">Duração (min)</label><input class="inp" type="number" id="m_dur" min="1" value="${r.duration}"></div>
+    </div>
+    <div class="form-row">
+      <div><label class="form-label">Alívio</label>
+        <select class="inp" id="m_relief">
+          ${['baixo','médio','alto','épico'].map(v=>`<option value="${v}"${r.relief===v?' selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div><label class="form-label">Cheiro</label>
+        <select class="inp" id="m_smell">
+          ${['suave','neutro','forte','devastador'].map(v=>`<option value="${v}"${r.smell===v?' selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `, async () => {
+    await api(`/reviews/${r.id}`, { method: 'PUT', body: JSON.stringify({
+      title: id('m_title').value, comment: id('m_comment').value,
+      quality: +id('m_qual').value, duration: +id('m_dur').value,
+      relief: id('m_relief').value, smell: id('m_smell').value
+    })});
+    toast('Review atualizada!');
+    renderReviews(document.getElementById('content'));
+  });
+}
+
+// ── Comentários ───────────────────────────────────────────
+async function renderComments(el, q='') {
+  const comments = await api(`/comments${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">💬 Comentários</div>
+    <div class="toolbar">
+      <input class="search-input" type="search" placeholder="Buscar texto, autor…" value="${esc(q)}"
+             oninput="renderComments(document.getElementById('content'),this.value)">
+      <span class="count-badge">${comments.length}</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Autor</th><th>Mensagem</th><th>Review</th><th>Data</th><th>Ação</th></tr></thead>
+      <tbody>${comments.length ? comments.map(c => `<tr>
+        <td><div class="user-cell">
+          <div class="avatar-cell" style="background:${esc(c.avatar_color)}">${esc(c.avatar_text)}</div>
+          <span>@${esc(c.username)}</span>
+        </div></td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.text)}</td>
+        <td style="color:var(--muted);font-size:12px">${esc(c.review_title||'—')}</td>
+        <td style="font-size:11px;color:var(--muted)">${fmtDate(c.created_at)}</td>
+        <td><button class="btn-sm btn-delete" onclick="del('comments','${c.id}','comentário de ${esc(c.username)}',()=>renderComments(document.getElementById('content'),'${esc(q)}'))">🗑</button></td>
+      </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhum comentário</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+// ── Banheiros ─────────────────────────────────────────────
+const TYPES = {office:'Escritório',commercial:'Shopping',restaurant:'Restaurante',gas:'Posto',public:'Público',home:'Casa',airport:'Aeroporto'};
+async function renderBathrooms(el, q='') {
+  const items = await api(`/bathrooms${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">🚽 Banheiros</div>
+    <div class="toolbar">
+      <input class="search-input" type="search" placeholder="Buscar nome, bairro…" value="${esc(q)}"
+             oninput="renderBathrooms(document.getElementById('content'),this.value)">
+      <span class="count-badge">${items.length}</span>
+      <button class="btn-create ml-auto" onclick="createBathroom()">+ Novo banheiro</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Nome</th><th>Tipo</th><th>Bairro</th><th>⭐</th><th>Reviews</th><th>Ações</th></tr></thead>
+      <tbody>${items.length ? items.map(b => `<tr>
+        <td><strong>${esc(b.name)}</strong></td>
+        <td><span class="badge" style="background:var(--bg)">${TYPES[b.type]||b.type}</span></td>
+        <td style="color:var(--muted)">${esc(b.neighborhood)}</td>
+        <td>${(+b.rating).toFixed(1)}</td>
+        <td>${b.reviews_count}</td>
+        <td><div class="actions">
+          <button class="btn-sm btn-edit"   onclick='editBathroom(${JSON.stringify(b)})'>✏️</button>
+          <button class="btn-sm btn-delete" onclick="del('bathrooms','${b.id}','${esc(b.name)}',()=>renderBathrooms(document.getElementById('content'),'${esc(q)}'))">🗑</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">Nenhum banheiro</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+function bathroomForm(b={}) {
+  return `
+    <label class="form-label">Nome</label>
+    <input class="inp" id="m_name" value="${esc(b.name||'')}">
+    <label class="form-label">Bairro</label>
+    <input class="inp" id="m_neigh" value="${esc(b.neighborhood||'')}">
+    <label class="form-label">Tipo</label>
+    <select class="inp" id="m_type">
+      ${Object.entries(TYPES).map(([v,l])=>`<option value="${v}"${b.type===v?' selected':''}>${l}</option>`).join('')}
+    </select>`;
+}
+
+function createBathroom() {
+  showModal('+ Novo Banheiro', bathroomForm(), async () => {
+    await api('/bathrooms', { method: 'POST', body: JSON.stringify({
+      name: id('m_name').value, neighborhood: id('m_neigh').value, type: id('m_type').value
+    })});
+    toast('Banheiro criado!'); renderBathrooms(document.getElementById('content'));
+  });
+}
+
+function editBathroom(b) {
+  showModal('✏️ Editar Banheiro', bathroomForm(b), async () => {
+    await api(`/bathrooms/${b.id}`, { method: 'PUT', body: JSON.stringify({
+      name: id('m_name').value, neighborhood: id('m_neigh').value, type: id('m_type').value
+    })});
+    toast('Banheiro atualizado!'); renderBathrooms(document.getElementById('content'));
+  });
+}
+
+// ── Comunidades ───────────────────────────────────────────
+async function renderCommunities(el, q='') {
+  const items = await api(`/communities${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">☷ Comunidades</div>
+    <div class="toolbar">
+      <input class="search-input" type="search" placeholder="Buscar nome…" value="${esc(q)}"
+             oninput="renderCommunities(document.getElementById('content'),this.value)">
+      <span class="count-badge">${items.length}</span>
+      <button class="btn-create ml-auto" onclick="createCommunity()">+ Nova comunidade</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Ícone</th><th>Nome</th><th>Descrição</th><th>👥</th><th>Criado por</th><th>Ações</th></tr></thead>
+      <tbody>${items.length ? items.map(c => `<tr>
+        <td style="font-size:22px">${c.icon}</td>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${esc(c.description)}</td>
+        <td>${c.members_count}</td>
+        <td style="font-size:11px;color:var(--muted)">${esc(c.creator_name||'—')}</td>
+        <td><div class="actions">
+          <button class="btn-sm btn-edit"   onclick='editCommunity(${JSON.stringify(c)})'>✏️</button>
+          <button class="btn-sm btn-delete" onclick="del('communities','${c.id}','${esc(c.name)}',()=>renderCommunities(document.getElementById('content'),'${esc(q)}'))">🗑</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">Nenhuma comunidade</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+function communityForm(c={}) {
+  return `
+    <div class="form-row">
+      <div><label class="form-label">Ícone (emoji)</label><input class="inp" id="m_icon" value="${esc(c.icon||'💩')}" style="font-size:18px"></div>
+      <div><label class="form-label">Nome</label><input class="inp" id="m_name" value="${esc(c.name||'')}"></div>
+    </div>
+    <label class="form-label">Descrição</label>
+    <textarea class="inp" id="m_desc" rows="3" style="resize:vertical">${esc(c.description||'')}</textarea>`;
+}
+
+function createCommunity() {
+  showModal('+ Nova Comunidade', communityForm(), async () => {
+    await api('/communities', { method: 'POST', body: JSON.stringify({
+      name: id('m_name').value, description: id('m_desc').value, icon: id('m_icon').value
+    })});
+    toast('Comunidade criada!'); renderCommunities(document.getElementById('content'));
+  });
+}
+
+function editCommunity(c) {
+  showModal('✏️ Editar Comunidade', communityForm(c), async () => {
+    await api(`/communities/${c.id}`, { method: 'PUT', body: JSON.stringify({
+      name: id('m_name').value, description: id('m_desc').value, icon: id('m_icon').value
+    })});
+    toast('Comunidade atualizada!'); renderCommunities(document.getElementById('content'));
+  });
+}
+
+// ── Scraps ────────────────────────────────────────────────
+async function renderScraps(el) {
+  const items = await api('/scraps').catch(()=>[]);
+  el.innerHTML = `
+    <div class="page-title">✉ Scraps</div>
+    <div class="toolbar"><span></span><span class="count-badge">${items.length}</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>De</th><th>Para</th><th>Mensagem</th><th>Data</th><th>Ação</th></tr></thead>
+      <tbody>${items.length ? items.map(s => `<tr>
+        <td><div class="user-cell">
+          <div class="avatar-cell" style="background:${esc(s.from_color)}">${esc(s.from_avatar)}</div>
+          <strong>${esc(s.from_name)}</strong>
+        </div></td>
+        <td><div class="user-cell">
+          <div class="avatar-cell" style="background:${esc(s.to_color)}">${esc(s.to_avatar)}</div>
+          <strong>${esc(s.to_name)}</strong>
+        </div></td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${esc(s.message)}</td>
+        <td style="font-size:11px;color:var(--muted)">${fmtDate(s.created_at)}</td>
+        <td><button class="btn-sm btn-delete" onclick="del('scraps','${s.id}','scrap de ${esc(s.from_name)}',()=>renderScraps(document.getElementById('content')))">🗑</button></td>
+      </tr>`).join('') : '<tr><td colspan="5" class="empty">Nenhum scrap</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+// ── Modal helper ──────────────────────────────────────────
+function showModal(title, bodyHtml, onSave) {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">${title}</div>
+      <div id="modalBody">${bodyHtml}</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+        <button class="btn-save" id="btnSave">Salvar</button>
+      </div>
+    </div>`;
+  ov.querySelector('#btnSave').onclick = async () => {
+    try { await onSave(); ov.remove(); } catch(e) { toast(e.message, true); }
+  };
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+// ── Delete helper ─────────────────────────────────────────
+async function del(resource, id_, name, refresh) {
+  if (!confirm(`Deletar ${name}? Não pode ser desfeito.`)) return;
+  try { await api(`/${resource}/${id_}`, { method: 'DELETE' }); toast(`${name} deletado.`); refresh(); }
+  catch(e) { toast(e.message, true); }
+}
+
+// ── Convites ──────────────────────────────────────────────
+async function sendInvite(uid, name, email) {
+  try {
+    const res = await api(`/invites/user/${uid}`, { method: 'POST', body: '{}' });
+    const link = `${location.origin}/?invite=${res.code}`;
+    showModal(`📨 Convidar — ${name}`, `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
+        Compartilhe este link com <strong>${esc(name)}</strong>
+        ${email ? `(${esc(email)})` : ''} para que ela participe da rede Kgando:
+      </p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp" id="m_link" value="${esc(link)}" readonly style="flex:1;font-size:12px;cursor:text">
+        <button class="btn-save" onclick="copyInvite('${esc(link)}')">📋 Copiar</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px">
+        Código: <strong>${res.code}</strong> — este link só pode ser usado uma vez.
+      </p>
+      <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:12px;font-size:12px;color:var(--muted)">
+        <strong>Mensagem sugerida:</strong><br><br>
+        Olá! Você foi convidado(a) para participar do Kgando, a rede social do trono 🚽<br>
+        Cadastre-se em: <a href="${esc(link)}" target="_blank" style="color:var(--secondary)">${esc(link)}</a>
+      </div>
+    `, () => {});
+  } catch(e) { toast(e.message, true); }
+}
+
+function copyInvite(link) {
+  navigator.clipboard.writeText(link).then(() => toast('Link copiado!')).catch(() => {
+    document.getElementById('m_link')?.select();
+    document.execCommand('copy');
+    toast('Link copiado!');
+  });
+}
+
+async function renderInvites(el) {
+  const items = await api('/invites').catch(() => []);
+  const used = items.filter(i => i.used_by).length;
+  const pending = items.filter(i => !i.used_by).length;
+
+  el.innerHTML = `
+    <div class="page-title">📨 Convites</div>
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="stat-card" style="flex:1;min-width:140px">
+        <div class="stat-card-icon">📨</div>
+        <div class="stat-card-num">${items.length}</div>
+        <div class="stat-card-lbl">Total gerados</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:140px">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-num">${used}</div>
+        <div class="stat-card-lbl">Utilizados</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:140px">
+        <div class="stat-card-icon">⏳</div>
+        <div class="stat-card-num">${pending}</div>
+        <div class="stat-card-lbl">Pendentes</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <span class="count-badge">${items.length} convites</span>
+      <button class="btn-create ml-auto" onclick="genFreeInvite()">+ Gerar convite avulso</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Código</th><th>Criado por</th><th>Utilizado por</th><th>Status</th><th>Data</th><th>Ação</th></tr></thead>
+      <tbody>${items.length ? items.map(i => `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <code style="background:var(--bg);padding:3px 8px;border-radius:6px;font-size:12px">${i.code}</code>
+            <button class="btn-sm btn-edit" onclick="copyInvite('${location.origin}/?invite=${i.code}')">📋</button>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${esc(i.creator_name || '— avulso')}</td>
+        <td style="font-size:12px">${i.used_by_name ? `<span style="color:var(--success)">✅ ${esc(i.used_by_name)}</span>` : '—'}</td>
+        <td>${i.used_by
+          ? '<span class="badge badge-ok">Usado</span>'
+          : '<span class="badge" style="background:rgba(243,156,18,.15);color:#c07a00">Pendente</span>'}</td>
+        <td style="font-size:11px;color:var(--muted)">${fmtDate(i.created_at)}</td>
+        <td>${!i.used_by
+          ? `<button class="btn-sm btn-delete" onclick="revokeInvite('${i.code}')">🗑 Revogar</button>`
+          : '—'}</td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">Nenhum convite gerado</td></tr>'}</tbody>
+    </table></div>`;
+}
+
+async function genFreeInvite() {
+  const res = await api('/invites/generate', { method: 'POST', body: '{}' }).catch(e => { toast(e.message,true); return null; });
+  if (!res) return;
+  const link = `${location.origin}/?invite=${res.code}`;
+  showModal('📨 Novo Convite Avulso', `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Link de convite gerado. Compartilhe com quem quiser convidar:</p>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="inp" id="m_link" value="${esc(link)}" readonly style="flex:1;font-size:12px">
+      <button class="btn-save" onclick="copyInvite('${esc(link)}')">📋 Copiar</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Código: <strong>${res.code}</strong></p>
+  `, () => { renderInvites(document.getElementById('content')); });
+}
+
+async function revokeInvite(code) {
+  if (!confirm('Revogar este convite?')) return;
+  await api(`/invites/${code}`, { method: 'DELETE' }).catch(e => { toast(e.message,true); });
+  toast('Convite revogado.');
+  renderInvites(document.getElementById('content'));
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function id(i) { return document.getElementById(i); }
+function esc(s) {
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso.replace(' ','T')+'Z').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+</script>
+</body>
+</html>

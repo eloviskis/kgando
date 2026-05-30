@@ -1,0 +1,1843 @@
+# 🚽 PooP.it - Versão Web Completa
+
+Aqui está o código completo do app PooP.it em versão web:
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PooP.it 💩 - A Rede Social do Trono</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #D4A574;
+            --primary-dark: #B8956A;
+            --secondary: #8B4513;
+            --accent: #FFD700;
+            --background: #F5E6D3;
+            --card-bg: #FFF8F0;
+            --text-dark: #4A3728;
+            --text-light: #7A6558;
+            --success: #6BBF59;
+            --danger: #E74C3C;
+            --shadow: 0 4px 15px rgba(139, 69, 19, 0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 15px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .logo-emoji {
+            font-size: 32px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 30px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-dark);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+            object-fit: cover;
+        }
+
+        /* ===== LAYOUT ===== */
+        .main-container {
+            max-width: 1200px;
+            margin: 80px auto 100px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 25px;
+        }
+
+        /* ===== SIDEBAR ESQUERDA ===== */
+        .sidebar-left {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 3px solid var(--primary);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .profile-title {
+            color: var(--secondary);
+            font-size: 13px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent), #FFA500);
+            padding: 5px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed var(--primary);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .quick-actions {
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--secondary), #A0522D);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: var(--card-bg);
+            color: var(--secondary);
+            border: 2px solid var(--primary);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .menu-list {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .menu-item i {
+            width: 24px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .menu-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        /* ===== FEED PRINCIPAL ===== */
+        .main-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .daily-highlight {
+            background: linear-gradient(135deg, var(--accent) 0%, #FFA500 100%);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daily-highlight::before {
+            content: '👑';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 100px;
+            opacity: 0.2;
+        }
+
+        .highlight-badge {
+            background: white;
+            color: var(--secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .highlight-content {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .highlight-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 4px solid white;
+            object-fit: cover;
+        }
+
+        .highlight-info h3 {
+            color: var(--secondary);
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .highlight-info p {
+            color: var(--text-dark);
+            opacity: 0.8;
+        }
+
+        .highlight-rating {
+            margin-left: auto;
+            text-align: center;
+        }
+
+        .rating-big {
+            font-size: 36px;
+        }
+
+        .rating-label {
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        /* Review Cards */
+        .review-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .review-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .review-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+        }
+
+        .review-user-info h4 {
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .review-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .review-meta i {
+            color: var(--primary);
+        }
+
+        .review-options {
+            margin-left: auto;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .review-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .review-ratings {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .rating-item {
+            background: var(--background);
+            padding: 12px 15px;
+            border-radius: 12px;
+        }
+
+        .rating-label-small {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .rating-value {
+            font-size: 18px;
+        }
+
+        .review-comment {
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .review-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed var(--background);
+        }
+
+        .review-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .review-action-btn:hover {
+            background: var(--background);
+            color: var(--secondary);
+        }
+
+        .review-action-btn.liked {
+            color: var(--danger);
+        }
+
+        /* ===== SIDEBAR DIREITA ===== */
+        .sidebar-right {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .widget {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .widget-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--secondary);
+        }
+
+        .bathroom-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bathroom-item:hover {
+            background: var(--background);
+        }
+
+        .bathroom-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .bathroom-info h5 {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+
+        .bathroom-info p {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .bathroom-rating {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .community-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .community-item:hover {
+            background: var(--background);
+        }
+
+        .community-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--secondary), #A0522D);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .community-info h5 {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .community-info p {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .join-btn {
+            margin-left: auto;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .join-btn:hover {
+            background: var(--secondary);
+        }
+
+        /* ===== BOTTOM NAV (Mobile) ===== */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            padding: 10px 20px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bottom-nav-item i {
+            font-size: 22px;
+        }
+
+        .bottom-nav-item.active, .bottom-nav-item:hover {
+            color: var(--secondary);
+        }
+
+        .bottom-nav-item.center {
+            background: linear-gradient(135deg, var(--secondary), #A0522D);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-top: -30px;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
+        }
+
+        .bottom-nav-item.center i {
+            font-size: 28px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 25px;
+            border-radius: 25px 25px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .modal-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+        }
+
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+
+        .form-sublabel {
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: normal;
+        }
+
+        .emoji-rating {
+            display: flex;
+            gap: 10px;
+        }
+
+        .emoji-btn {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--background);
+            border-radius: 15px;
+            background: var(--card-bg);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .emoji-btn:hover {
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .emoji-btn.selected {
+            border-color: var(--secondary);
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .relief-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .relief-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            border: 3px solid var(--background);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .relief-option:hover {
+            border-color: var(--primary);
+        }
+
+        .relief-option.selected {
+            border-color: var(--secondary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .relief-option input {
+            display: none;
+        }
+
+        .relief-emoji {
+            font-size: 28px;
+        }
+
+        .smell-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .smell-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px;
+            border: 3px solid var(--background);
+            border-radius: 15px;
+            background: var(--card-bg);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .smell-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .smell-btn.selected {
+            border-color: var(--secondary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .smell-emoji {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--background);
+            border-radius: 15px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--secondary), #A0522D);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        }
+
+        /* ===== COMMUNITIES PAGE ===== */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+        }
+
+        .communities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .community-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .community-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .community-banner {
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+
+        .community-card-content {
+            padding: 20px;
+        }
+
+        .community-card-content h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .community-card-content p {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .community-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .members-count {
+            font-size: 13px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .join-btn-large {
+            padding: 10px 25px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .join-btn-large:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ===== PROFILE PAGE ===== */
+        .profile-page {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .profile-cover {
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 25px 25px 0 0;
+            position: relative;
+        }
+
+        .profile-main {
+            background: var(--card-bg);
+            border-radius: 0 0 25px 25px;
+            padding: 80px 30px 30px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .profile-avatar-large {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 6px solid var(--card-bg);
+            position: absolute;
+            bottom: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            object-fit: cover;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-name-large {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .profile-bio {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .profile-badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, var(--accent), #FFA500);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profile-stats-large {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+        }
+
+        .stat-item-large {
+            text-align: center;
+        }
+
+        .stat-number-large {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .stat-label-large {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .profile-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--secondary);
+        }
+
+        .scraps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .scrap-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--background);
+            border-radius: 15px;
+        }
+
+        .scrap-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .scrap-content h5 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .scrap-content p {
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .scrap-time {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--secondary);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-left, .sidebar-right {
+                display: none;
+            }
+
+            .bottom-nav {
+                display: block;
+            }
+
+            .main-feed {
+                padding-bottom: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .search-bar {
+                order: 3;
+                flex: 100%;
+                margin: 10px 0 0;
+                max-width: 100%;
+            }
+
+            .review-ratings {
+                grid-template-columns: 1fr;
+            }
+
+            .highlight-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .highlight-rating {
+                margin-left: 0;
+            }
+
+            .profile-stats-large {
+                gap: 30px;
+            }
+
+            .modal {
+                margin: 10px;
+                max-height: 95vh;
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-emoji">💩</span>
+                <span>PooP.it</span>
+            </div>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar pessoas, banheiros, comunidades...">
+            </div>
+            
+            <div class="header-actions">
+                <button class="header-btn" title="Notificações">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="header-btn" title="Mensagens">
+                    <i class="fas fa-envelope"></i>
+                </button>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felipe" alt="Avatar" class="user-avatar" onclick="showPage('profile')">
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- SIDEBAR ESQUERDA -->
+        <aside class="sidebar-left">
+            <div class="profile-card">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felipe" alt="Avatar" class="profile-avatar">
+                <h3 class="profile-name">Felipe Cagnin</h3>
+                <span class="profile-title">🥷 Cocô Ninja</span>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">47</div>
+                        <div class="stat-label">Cagadas</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">23</div>
+                        <div class="stat-label">Amigos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Badges</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="action-btn primary" onclick="openModal()">
+                    <span>💩</span> Avaliar Nova Cagada
+                </button>
+                <button class="action-btn secondary">
+                    <span>🚽</span> Avaliar Banheiro
+                </button>
+            </div>
+
+            <nav class="menu-list">
+                <a href="#" class="menu-item active" onclick="showPage('home')">
+                    <i class="fas fa-home"></i>
+                    <span>Início</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showPage('profile')">
+                    <i class="fas fa-user"></i>
+                    <span>Meu Perfil</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Recados</span>
+                    <span class="menu-badge">3</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showPage('communities')">
+                    <i class="fas fa-users"></i>
+                    <span>Comunidades</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-toilet"></i>
+                    <span>Banheiros</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-trophy"></i>
+                    <span>Ranking</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- FEED PRINCIPAL -->
+        <main class="main-feed">
+            <!-- HOME PAGE -->
+            <div id="home-page" class="page active">
+                <!-- Destaque do Dia -->
+                <div class="daily-highlight fade-in">
+                    <div class="highlight-badge">
+                        <span>👑</span> Cagada do Dia #42
+                    </div>
+                    <div class="highlight-content">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Eloi" alt="Avatar" class="highlight-avatar">
+                        <div class="highlight-info">
+                            <h3>Eloi Carlos</h3>
+                            <p>🏢 Banheiro do Escritório</p>
+                            <p>"Consistência top, textura perfeita. Deu nem tempo de abrir o Candy Crush!"</p>
+                        </div>
+                        <div class="highlight-rating">
+                            <div class="rating-big">💩💩💩💩</div>
+                            <div class="rating-label">4.5/5 ⭐</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews -->
+                <div class="review-card fade-in">
+                    <div class="review-header">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felipe" alt="Avatar" class="review-avatar">
+                        <div class="review-user-info">
+                            <h4>Felipe Cagnin</h4>
+                            <div class="review-meta">
+                                <span><i class="fas fa-clock"></i> Há 2 horas</span>
+                                <span>🥷 Cocô Ninja</span>
+                            </div>
+                        </div>
+                        <div class="review-options">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="review-title">"Suave e Macio!"</h3>
+
+                    <div class="review-ratings">
+                        <div class="rating-item">
+                            <div class="rating-label-small">Qualidade</div>
+                            <div class="rating-value">💩💩💩💩 Firme</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Tempo</div>
+                            <div class="rating-value">⚡ 5 min (Rápido)</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Alívio</div>
+                            <div class="rating-value">😐 Satisfeito</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Cheiro</div>
+                            <div class="rating-value">🌹 Rosas</div>
+                        </div>
+                    </div>
+
+                    <p class="review-comment">
+                        Operação executada com maestria. Consistência impecável, tempo de execução recorde. 
+                        Nem deu tempo de ver um Reels sequer. Ninjutsu do cocô ativado! 🥷
+                    </p>
+
+                    <div class="review-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Banheiro do Escritório ⭐ 4.8
+                    </div>
+
+                    <div class="review-actions">
+                        <button class="review-action-btn" onclick="toggleLike(this)">
+                            <i class="far fa-heart"></i>
+                            <span>42</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-comment"></i>
+                            <span>12</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-share-square"></i>
+                            <span>Compartilhar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="review-card fade-in">
+                    <div class="review-header">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Eloi" alt="Avatar" class="review-avatar">
+                        <div class="review-user-info">
+                            <h4>Eloi Carlos</h4>
+                            <div class="review-meta">
+                                <span><i class="fas fa-clock"></i> Há 5 horas</span>
+                                <span>🏆 Mestre da Cagada</span>
+                            </div>
+                        </div>
+                        <div class="review-options">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="review-title">"Operação Relâmpago"</h3>
+
+                    <div class="review-ratings">
+                        <div class="rating-item">
+                            <div class="rating-label-small">Qualidade</div>
+                            <div class="rating-value">💩💩💩💩💩 Perfeito</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Tempo</div>
+                            <div class="rating-value">⚡ 3 min (Ninja)</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Alívio</div>
+                            <div class="rating-value">😌 100% Leve</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Cheiro</div>
+                            <div class="rating-value">💨 Neutro</div>
+                        </div>
+                    </div>
+
+                    <p class="review-comment">
+                        Acordei inspirado hoje. A natureza chamou e eu atendi com excelência. 
+                        Zero esforço, máxima eficiência. É para isso que eu treino! 💪
+                    </p>
+
+                    <div class="review-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Banheiro de Casa ⭐ 5.0
+                    </div>
+
+                    <div class="review-actions">
+                        <button class="review-action-btn liked">
+                            <i class="fas fa-heart"></i>
+                            <span>89</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-comment"></i>
+                            <span>24</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-share-square"></i>
+                            <span>Compartilhar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="review-card fade-in">
+                    <div class="review-header">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria" alt="Avatar" class="review-avatar">
+                        <div class="review-user-info">
+                            <h4>Maria Santos</h4>
+                            <div class="review-meta">
+                                <span><i class="fas fa-clock"></i> Ontem</span>
+                                <span>📖 Leitora de Trono</span>
+                            </div>
+                        </div>
+                        <div class="review-options">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="review-title">"Sessão de Meditação"</h3>
+
+                    <div class="review-ratings">
+                        <div class="rating-item">
+                            <div class="rating-label-small">Qualidade</div>
+                            <div class="rating-value">💩💩💩 Médio</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Tempo</div>
+                            <div class="rating-value">📱 20 min (Reels)</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Alívio</div>
+                            <div class="rating-value">😰 Ainda há trabalho</div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="rating-label-small">Cheiro</div>
+                            <div class="rating-value">☠️ Tóxico</div>
+                        </div>
+                    </div>
+
+                    <p class="review-comment">
+                        Dia complicado. Precisei de paciência e muitos vídeos de gatinhos. 
+                        O banheiro do shopping deixou a desejar, mas a missão foi cumprida! 🎯
+                    </p>
+
+                    <div class="review-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Shopping Center Norte ⭐ 2.5
+                    </div>
+
+                    <div class="review-actions">
+                        <button class="review-action-btn">
+                            <i class="far fa-heart"></i>
+                            <span>31</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-comment"></i>
+                            <span>8</span>
+                        </button>
+                        <button class="review-action-btn">
+                            <i class="far fa-share-square"></i>
+                            <span>Compartilhar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMMUNITIES PAGE -->
+            <div id="communities-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">👥 Comunidades</h1>
+                    <p class="page-subtitle">Encontre sua galera e compartilhe experiências!</p>
+                </div>
+
+                <div class="communities-grid">
+                    <div class="community-card">
+                        <div class="community-banner">🏃</div>
+                        <div class="community-card-content">
+                            <h3>Caguei e Saí Correndo</h3>
+                            <p>Para os ninjas que não perdem tempo. Eficiência máxima!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 12,345 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="community-card">
+                        <div class="community-banner">🌍</div>
+                        <div class="community-card-content">
+                            <h3>Banheiros Estrangeiros</h3>
+                            <p>Reviews de banheiros ao redor do mundo. Viaje cagando!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 8,900 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="community-card">
+                        <div class="community-banner">🔬</div>
+                        <div class="community-card-content">
+                            <h3>O Segredo da Consistência</h3>
+                            <p>Dicas de alimentação para o cocô perfeito!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 25,100 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="community-card">
+                        <div class="community-banner">💼</div>
+                        <div class="community-card-content">
+                            <h3>Cagadas no Trabalho</h3>
+                            <p>O melhor momento do expediente. Compartilhe!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 18,700 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="community-card">
+                        <div class="community-banner">📱</div>
+                        <div class="community-card-content">
+                            <h3>Leitores de Trono</h3>
+                            <p>Para quem leva o celular e esquece da vida!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 31,200 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="community-card">
+                        <div class="community-banner">🌅</div>
+                        <div class="community-card-content">
+                            <h3>Cagada Matinal</h3>
+                            <p>O melhor jeito de começar o dia!</p>
+                            <div class="community-meta">
+                                <span class="members-count">
+                                    <i class="fas fa-users"></i> 22,450 membros
+                                </span>
+                                <button class="join-btn-large">Participar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE PAGE -->
+            <div id="profile-page" class="page">
+                <div class="profile-page">
+                    <div class="profile-cover">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felipe" alt="Avatar" class="profile-avatar-large">
+                    </div>
+                    <div class="profile-main">
+                        <h1 class="profile-name-large">Felipe Cagnin</h1>
+                        <p class="profile-bio">
+                            Ninja das operações matinais. Especialista em eficiência no trono. 
+                            "Eu cago mole, cago ninja" 🥷💩
+                        </p>
+                        <div class="profile-badges">
+                            <span class="badge">🥷 Cocô Ninja</span>
+                            <span class="badge">🥇 Cagador Ouro</span>
+                            <span class="badge">🗺️ Explorador</span>
+                            <span class="badge">🌹 Perfumado</span>
+                        </div>
+                        <div class="profile-stats-large">
+                            <div class="stat-item-large">
+                                <div class="stat-number-large">47</div>
+                                <div class="stat-label-large">Avaliações</div>
+                            </div>
+                            <div class="stat-item-large">
+                                <div class="stat-number-large">23</div>
+                                <div class="stat-label-large">Amigos</div>
+                            </div>
+                            <div class="stat-item-large">
+                                <div class="stat-number-large">1,450</div>
+                                <div class="stat-label-large">Curtidas</div>
+                            </div>
+                            <div class="stat-item-large">
+                                <div class="stat-number-large">12</div>
+                                <div class="stat-label-large">Badges</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-envelope"></i> Meus Recados
+                        </h3>
+                        <div class="scraps-list">
+                            <div class="scrap-item">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria" alt="Avatar" class="scrap-avatar">
+                                <div class="scrap-content">
+                                    <h5>Maria G.</h5>
+                                    <p>Vi sua avaliação do banheiro do shopping kkkkk. Mandou bem! Abçs! ❤️</p>
+                                    <span class="scrap-time">Há 2 horas</span>
+                                </div>
+                            </div>
+                            <div class="scrap-item">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro" alt="Avatar" class="scrap-avatar">
+                                <div class="scrap-content">
+                                    <h5>Pedro L.</h5>
+                                    <p>Fala mestre! Aquela cagada matinal foi braba kkkk. Vlw pela dica de fibras!</p>
+                                    <span class="scrap-time">Ontem</span>
+                                </div>
+                            </div>
+                            <div class="scrap-item">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Eloi" alt="Avatar" class="scrap-avatar">
+                                <div class="scrap-content">
+                                    <h5>Eloi Carlos</h5>
+                                    <p>Bora criar o app de coco?? kkkkkkkk tô rascunhando aqui!</p>
+                                    <span class="scrap-time">3 dias atrás</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-star"></i> Minhas Top Avaliações
+                        </h3>
+                        <div class="review-card" style="box-shadow: none; padding: 15px;">
+                            <h4 style="margin-bottom: 10px;">🏆 "Suave e Macio!" - 89 curtidas</h4>
+                            <p style="color: var(--text-light); font-size: 14px;">Banheiro do Escritório • ⭐ 4.5/5</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- SIDEBAR DIREITA -->
+        <aside class="sidebar-right">
+            <div class="widget">
+                <h3 class="widget-title">
+                    <span>🚽</span> Últimos Banheiros
+                </h3>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon">🏢</div>
+                    <div class="bathroom-info">
+                        <h5>Shopping Center Norte</h5>
+                        <p>24 avaliações</p>
+                    </div>
+                    <div class="bathroom-rating">
+                        <i class="fas fa-star"></i> 3.8
+                    </div>
+                </div>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon">⛽</div>
+                    <div class="bathroom-info">
+                        <h5>Posto Ipiranga</h5>
+                        <p>12 avaliações</p>
+                    </div>
+                    <div class="bathroom-rating">
+                        <i class="fas fa-star"></i> 2.5
+                    </div>
+                </div>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon">🍔</div>
+                    <div class="bathroom-info">
+                        <h5>McDonald's Centro</h5>
+                        <p>45 avaliações</p>
+                    </div>
+                    <div class="bathroom-rating">
+                        <i class="fas fa-star"></i> 4.2
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <h3 class="widget-title">
+                    <span>🔥</span> Comunidades em Alta
+                </h3>
+                <div class="community-item">
+                    <div class="community-icon">🏃</div>
+                    <div class="community-info">
+                        <h5>Caguei e Saí Correndo</h5>
+                        <p>12,345 membros</p>
+                    </div>
+                    <button class="join-btn" onclick="joinCommunity(this)">Entrar</button>
+                </div>
+                <div class="community-item">
+                    <div class="community-icon">🌍</div>
+                    <div class="community-info">
+                        <h5>Banheiros Estrangeiros</h5>
+                        <p>8,900 membros</p>
+                    </div>
+                    <button class="join-btn" onclick="joinCommunity(this)">Entrar</button>
+                </div>
+                <div class="community-item">
+                    <div class="community-icon">🔬</div>
+                    <div class="community-info">
+                        <h5>Segredo da Consistência</h5>
+                        <p>25,100 membros</p>
+                    </div>
+                    <button class="join-btn" onclick="joinCommunity(this)">Entrar</button>
+                </div>
+            </div>
+
+            <div class="widget">
+                <h3 class="widget-title">
+                    <span>🏆</span> Ranking Semanal
+                </h3>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon" style="background: gold;">🥇</div>
+                    <div class="bathroom-info">
+                        <h5>Eloi Carlos</h5>
+                        <p>15 avaliações esta semana</p>
+                    </div>
+                </div>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon" style="background: silver;">🥈</div>
+                    <div class="bathroom-info">
+                        <h5>Felipe Cagnin</h5>
+                        <p>12 avaliações esta semana</p>
+                    </div>
+                </div>
+                <div class="bathroom-item">
+                    <div class="bathroom-icon" style="background: #cd7f32;">🥉</div>
+                    <div class="bathroom-info">
+                        <h5>Maria Santos</h5>
+                        <p>9 avaliações esta semana</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- BOTTOM NAV (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="

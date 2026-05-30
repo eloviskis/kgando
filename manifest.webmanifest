@@ -1,0 +1,43 @@
+{
+  "name": "Kgando — A Rede Social do Trono",
+  "short_name": "Kgando",
+  "description": "Rede social retrô e humorística para registrar operações, avaliar banheiros e participar de comunidades.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F5E6D3",
+  "theme_color": "#8B4513",
+  "categories": ["social", "entertainment", "lifestyle"],
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova cagada",
+      "short_name": "Nova",
+      "description": "Publicar uma nova avaliação",
+      "url": "./index.html#new",
+      "icons": [{ "src": "assets/icon.svg", "sizes": "192x192", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Banheiros",
+      "short_name": "Banheiros",
+      "description": "Ver banheiros avaliados",
+      "url": "./index.html#bathrooms",
+      "icons": [{ "src": "assets/icon.svg", "sizes": "192x192", "type": "image/svg+xml" }]
+    }
+  ]
+}

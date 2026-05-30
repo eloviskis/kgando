@@ -1,0 +1,12 @@
+Kgando é a primeira rede social dedicada à cultura do trono. 🚽
+
+Avalie banheiros que você visitou, compartilhe suas experiências (com stickers e tudo!), siga outros exploradores, entre em comunidades temáticas e deixe recados nos perfis dos amigos.
+
+Funcionalidades:
+• Avalie banheiros com nota de qualidade, duração, cheiro e alívio
+• Encontre os melhores (e piores) banheiros da sua região
+• Feed de atividades em estilo rede social
+• Comunidades temáticas
+• Recados (Scraps) entre usuários
+• Ranking dos usuários mais produtivos
+• Funciona offline (PWA)
