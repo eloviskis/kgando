@@ -1,0 +1,55 @@
+{
+  "packageId": "com.kgando.app",
+  "host": "kgando.com",
+  "name": "Kgando — A Rede Social do Trono",
+  "launcherName": "Kgando",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#8B4513",
+  "navigationColor": "#8B4513",
+  "navigationColorDark": "#5c2d0a",
+  "navigationDividerColor": "#5c2d0a",
+  "navigationDividerColorDark": "#3a1800",
+  "backgroundColor": "#F5E6D3",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://kgando.com/assets/icon.svg",
+  "maskableIconUrl": "https://kgando.com/assets/icon-maskable.svg",
+  "monochromeIconUrl": "",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./kgando.keystore",
+    "alias": "kgando"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "Nova cagada",
+      "shortName": "Nova",
+      "url": "/index.html#new",
+      "iconUrl": "https://kgando.com/assets/icon.svg"
+    },
+    {
+      "name": "Banheiros",
+      "shortName": "Banheiros",
+      "url": "/index.html#bathrooms",
+      "iconUrl": "https://kgando.com/assets/icon.svg"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://kgando.com/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://kgando.com/",
+  "minSdkVersion": 21,
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

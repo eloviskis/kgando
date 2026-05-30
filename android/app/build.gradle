@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.kgando.app'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId 'com.kgando.app'
         minSdk 21
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName '1.0.0'
     }
@@ -38,5 +38,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.browser:browser:1.8.0'
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
 }

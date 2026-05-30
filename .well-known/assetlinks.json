@@ -3,6 +3,6 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.kgando.app",
-    "sha256_cert_fingerprints": ["PLACEHOLDER_SHA256_SUBSTITUA_APOS_GERAR_KEYSTORE"]
+    "sha256_cert_fingerprints": ["5F:79:48:30:A4:8A:2A:D5:60:04:6C:94:73:6C:6F:15:73:BE:73:55:ED:D4:CA:43:77:7C:7E:58:B9:41:08:E8"]
   }
 }]
