@@ -68,15 +68,20 @@ router.post('/', requireAuth, (req, res) => {
 
 // PUT /api/reviews/:id — atualizar própria review
 router.put('/:id', requireAuth, (req, res) => {
+  console.log('PUT /api/reviews/:id', { id: req.params.id, body: req.body, userId: req.user.id });
   const rev = db.prepare('SELECT id, user_id, bathroom_id FROM reviews WHERE id=?').get(req.params.id);
   if (!rev) return res.status(404).json({ error: 'Review não encontrada.' });
   if (rev.user_id !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
 
   const { bathroom_id, title, comment, quality, duration, relief, smell, sticker } = req.body;
+  console.log('Campos recebidos:', { quality, duration, relief, smell, types: { 
+    quality: typeof quality, 
+    duration: typeof duration 
+  }});
   if (!quality || !duration || !relief || !smell)
     return res.status(400).json({ error: 'Preencha qualidade, duração, alívio e cheiro.' });
 
-  db.prepare(`
+  const updateResult = db.prepare(`
     UPDATE reviews SET
       bathroom_id = ?,
       title = ?,
@@ -99,6 +104,7 @@ router.put('/:id', requireAuth, (req, res) => {
     sticker || '',
     req.params.id
   );
+  console.log('Update result:', updateResult);
 
   // Se o banheiro mudou, atualizar ratings
   if (bathroom_id && bathroom_id !== rev.bathroom_id) {
@@ -126,6 +132,7 @@ router.put('/:id', requireAuth, (req, res) => {
   }
 
   const review = db.prepare(`${SELECT_REVIEW} WHERE r.id=?`).get(req.user.id, req.params.id);
+  console.log('Review atualizada:', review);
   res.json(review);
 });
 

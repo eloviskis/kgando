@@ -3401,7 +3401,8 @@ function esc(str) {
 }
 
 function qualityIcon(q) {
-  const o = QUALITY_OPTIONS.find(x => x.value === Number(q));
+  const opts = getQualityOptions();
+  const o = opts.find(x => x.value === Number(q));
   return o ? o.icon : '?';
 }
 
