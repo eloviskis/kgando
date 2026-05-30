@@ -825,9 +825,18 @@ function handleClick(e) {
     return;
   }
   if (action === 'accept-friend') {
+    const btn = el;
+    btn.disabled = true;
     apiFetch(`/friends/${el.dataset.id}/accept`, { method: 'PUT' })
-      .then(() => { el.closest('.friend-request-row')?.remove(); showToast(t('profile.friendAccepted')); renderApp(); })
-      .catch(err => showToast(err.message));
+      .then(() => { 
+        el.closest('.friend-request-row')?.remove(); 
+        showToast(t('profile.friendAccepted')); 
+        setTimeout(() => renderApp(), 300);
+      })
+      .catch(err => {
+        showToast(err.message);
+        btn.disabled = false;
+      });
     return;
   }
   if (action === 'remove-friend') {
@@ -2688,21 +2697,21 @@ async function renderSettingsPage(root) {
   const prefsRows = NOTIF_TYPES.map(({ key, label }) => {
     const appOn   = notifPrefs?.[key]?.app   !== false;
     const emailOn = notifPrefs?.[key]?.email === true;
-    return `<div class="notif-pref-row" data-key="${key}">
-      <span class="notif-pref-label">${esc(label)}</span>
-      <div class="notif-pref-toggles">
+    return `<tr class="notif-pref-row" data-key="${key}">
+      <td class="notif-pref-label">${esc(label)}</td>
+      <td style="text-align:center">
         <label class="notif-pref-toggle-wrap">
           <input type="checkbox" data-pref="${key}" data-channel="app" ${appOn ? 'checked' : ''}>
           <span class="notif-pref-toggle-slider"></span>
-          <span class="notif-pref-toggle-caption">${t('notifPref.app') || 'App'}</span>
         </label>
+      </td>
+      <td style="text-align:center">
         <label class="notif-pref-toggle-wrap">
           <input type="checkbox" data-pref="${key}" data-channel="email" ${emailOn ? 'checked' : ''}>
           <span class="notif-pref-toggle-slider"></span>
-          <span class="notif-pref-toggle-caption">${t('notifPref.email') || 'Email'}</span>
         </label>
-      </div>
-    </div>`;
+      </td>
+    </tr>`;
   }).join('');
 
   root.innerHTML = `
@@ -2730,12 +2739,23 @@ async function renderSettingsPage(root) {
       </div>
 
       <div class="settings-card" id="notif-prefs-card">
-        <h3>💩 ${t('notifPref.title')}</h3>
+        <h3>${t('notifPref.title')}</h3>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">
           ${t('notifPref.desc')}
         </p>
         ${notifPrefs !== null ? `
-        <div class="notif-prefs-list" id="notifPrefsBody">${prefsRows}</div>
+        <table class="notif-prefs-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">${t('notifPref.event')}</th>
+              <th style="text-align:center">${t('notifPref.app')}</th>
+              <th style="text-align:center">${t('notifPref.email')}</th>
+            </tr>
+          </thead>
+          <tbody id="notifPrefsBody">
+            ${prefsRows}
+          </tbody>
+        </table>
         <p id="notifPrefsSaved" class="notif-prefs-saved" style="display:none">✅ ${t('notifPref.saved')}</p>
         ` : `<p style="font-size:13px;color:var(--muted)">${t('notifPref.loginRequired')}</p>`}
       </div>
