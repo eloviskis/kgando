@@ -44,13 +44,7 @@ window.toggleLangFromAuth = function() {
 };
 
 window.toggleLang = function() {
-  const newLang = CURRENT_LANG === 'pt' ? 'en' : 'pt';
-  setLang(newLang);
-  // Recarregar landing page se estiver visível
-  const landingRoot = document.getElementById('landingRoot');
-  if (landingRoot && landingRoot.style.display !== 'none') {
-    showLandingPage();
-  }
+  setLang(CURRENT_LANG === 'pt' ? 'en' : 'pt');
 };
 
 function applyShellTranslations() {
@@ -512,6 +506,7 @@ function hideLandingPage() {
 }
 
 function buildLandingHTML() {
+  const flag = CURRENT_LANG === 'en' ? '🇺🇸' : '🇧🇷';
   return `
   <div class="landing-page">
     <header class="landing-header">
@@ -520,13 +515,13 @@ function buildLandingHTML() {
           <div class="landing-brand-mark">🚽</div>
           <div>
             <strong>Kgando <span style="font-size:0.6em;color:#FF6B6B;font-weight:900;letter-spacing:1px;">BETA</span></strong>
-            <small>rede social do trono</small>
+            <small>${t('landing.brandSub')}</small>
           </div>
         </div>
         <nav class="landing-nav">
-          <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">🇧🇷</button>
-          <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">Entrar</button>
-          <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">Criar conta grátis</button>
+          <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">${flag}</button>
+          <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">${t('landing.login')}</button>
+          <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">${t('landing.registerFree')}</button>
         </nav>
       </div>
     </header>
@@ -534,12 +529,12 @@ function buildLandingHTML() {
     <section class="landing-hero">
       <div class="landing-hero__inner">
         <div class="landing-hero__text">
-          <div class="landing-hero__badge">🚽 Bem-vindo ao trono</div>
-          <h1 class="landing-hero__title">💩 Kgando<br><span>a rede social</span><br>do trono</h1>
-          <p class="landing-hero__sub">Avalie banheiros, compartilhe suas aventuras no trono, conecte-se com entusiastas e forme comunidades. Porque todo mundo merece um banheiro digno.</p>
+          <div class="landing-hero__badge">${t('landing.heroBadge')}</div>
+          <h1 class="landing-hero__title">${t('landing.heroTitle')}</h1>
+          <p class="landing-hero__sub">${t('landing.heroSub')}</p>
           <div class="landing-hero__actions">
-            <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')">💩 Entrar no trono — é grátis</button>
-            <button class="landing-cta-secondary" type="button" onclick="window._landingAuth('login')">Já tenho conta</button>
+            <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')">${t('landing.heroCta')}</button>
+            <button class="landing-cta-secondary" type="button" onclick="window._landingAuth('login')">${t('landing.cta2')}</button>
             <button id="landingInstallBtn" class="landing-cta-install" type="button" data-action="install-app" hidden>${t('landing.installBtn')}</button>
           </div>
         </div>
@@ -549,20 +544,20 @@ function buildLandingHTML() {
               <div class="lhc-avatar" style="background:#8B4513">JS</div>
               <div>
                 <div class="lhc-name">Jaspion da Silva Sauro</div>
-                <div class="lhc-time">há 2 min</div>
+                <div class="lhc-time">${t('landing.mockTime')}</div>
               </div>
               <span style="margin-left:auto;font-size:20px">🥷</span>
             </div>
-            <div class="lhc-title">A operação das 9h no escritório 🏢</div>
+            <div class="lhc-title">${t('landing.mockTitle')}</div>
             <div class="lhc-ratings">
               <span>💩💩💩💩💩</span>
-              <span>⚡ Ninja</span>
-              <span>😌 100% leve</span>
-              <span>🌹 Rosas</span>
+              <span>⚡ ${t('duration.1')}</span>
+              <span>😌 ${t('relief.light')}</span>
+              <span>🌹 ${t('smell.roses')}</span>
             </div>
             <div class="lhc-actions">
-              <span>❤️ 24 curtidas</span>
-              <span>💬 3 comentários</span>
+              <span>${t('landing.mockLikes')}</span>
+              <span>${t('landing.mockComments')}</span>
             </div>
           </div>
         </div>
@@ -571,47 +566,47 @@ function buildLandingHTML() {
 
     <section class="landing-stats">
       <div class="landing-stats__inner">
-        <div><div class="lsi-num" data-stat="reviews">…</div><div class="lsi-lbl">Avaliações feitas</div></div>
-        <div><div class="lsi-num" data-stat="bathrooms">…</div><div class="lsi-lbl">Banheiros mapeados</div></div>
-        <div><div class="lsi-num" data-stat="communities">…</div><div class="lsi-lbl">Comunidades ativas</div></div>
-        <div><div class="lsi-num" data-stat="users">…</div><div class="lsi-lbl">Membros felizes</div></div>
+        <div><div class="lsi-num" data-stat="reviews">…</div><div class="lsi-lbl">${t('landing.statReviews')}</div></div>
+        <div><div class="lsi-num" data-stat="bathrooms">…</div><div class="lsi-lbl">${t('landing.statBaths')}</div></div>
+        <div><div class="lsi-num" data-stat="communities">…</div><div class="lsi-lbl">${t('landing.statComms')}</div></div>
+        <div><div class="lsi-num" data-stat="users">…</div><div class="lsi-lbl">${t('landing.statUsers')}</div></div>
       </div>
     </section>
 
     <section class="landing-features">
       <div class="landing-section-inner">
-        <h2 class="landing-section-title">Tudo no Kgando</h2>
-        <p class="landing-section-sub">para registrar e compartilhar suas aventuras no trono</p>
+        <h2 class="landing-section-title">${t('landing.featuresTitle')}</h2>
+        <p class="landing-section-sub">${t('landing.featuresSub')}</p>
         <div class="landing-features-grid">
           <div class="landing-feature-card">
             <div class="lfc-icon">💩</div>
-            <h3>Avalie com detalhes</h3>
-            <p>Qualidade, duração, alívio, cheiro — registre cada nuance da sua experiência com os critérios que importam de verdade.</p>
+            <h3>${t('landing.card1.title')}</h3>
+            <p>${t('landing.card1.desc')}</p>
           </div>
           <div class="landing-feature-card">
             <div class="lfc-icon">🚽</div>
-            <h3>Descubra banheiros</h3>
-            <p>Encontre e avalie banheiros em escritórios, shoppings, restaurantes e mais. Ajude a comunidade a encontrar o melhor trono.</p>
+            <h3>${t('landing.card2.title')}</h3>
+            <p>${t('landing.card2.desc')}</p>
           </div>
           <div class="landing-feature-card">
             <div class="lfc-icon">☷</div>
-            <h3>Forme comunidades</h3>
-            <p>Junte-se a grupos temáticos, compartilhe estratégias e discuta as melhores técnicas com outros entusiastas da área.</p>
+            <h3>${t('landing.card3.title')}</h3>
+            <p>${t('landing.card3.desc')}</p>
           </div>
           <div class="landing-feature-card">
             <div class="lfc-icon">✉</div>
-            <h3>Envie recados</h3>
-            <p>O clássico do Orkut de volta! Deixe recados no perfil dos seus amigos e receba mensagens de admiradores do trono.</p>
+            <h3>${t('landing.card4.title')}</h3>
+            <p>${t('landing.card4.desc')}</p>
           </div>
           <div class="landing-feature-card">
             <div class="lfc-icon">🏅</div>
-            <h3>Conquiste badges</h3>
-            <p>Desbloqueie conquistas exclusivas conforme você avalia, explora banheiros e se destaca na comunidade.</p>
+            <h3>${t('landing.card5.title')}</h3>
+            <p>${t('landing.card5.desc')}</p>
           </div>
           <div class="landing-feature-card">
             <div class="lfc-icon">★</div>
-            <h3>Suba no ranking</h3>
-            <p>Concorra com outros membros pelo título de maior cagador da semana e ganhe o reconhecimento merecido.</p>
+            <h3>${t('landing.card6.title')}</h3>
+            <p>${t('landing.card6.desc')}</p>
           </div>
         </div>
       </div>
@@ -619,34 +614,34 @@ function buildLandingHTML() {
 
     <section class="landing-howto">
       <div class="landing-section-inner">
-        <h2 class="landing-section-title">Como funciona</h2>
-        <p class="landing-section-sub">três passos para viver a melhor experiência do trono</p>
+        <h2 class="landing-section-title">${t('landing.howTitle')}</h2>
+        <p class="landing-section-sub">${t('landing.howSub')}</p>
         <div class="landing-howto-steps">
           <div class="landing-howto-step">
             <div class="lhs-number">1</div>
             <div class="lhs-icon">💩</div>
-            <h3>Crie sua conta</h3>
-            <p>Monte seu perfil com um avatar de cocô exclusivo, adicione sua bio e comece a explorar a comunidade.</p>
+            <h3>${t('landing.step1.title')}</h3>
+            <p>${t('landing.step1.desc')}</p>
           </div>
           <div class="landing-howto-step">
             <div class="lhs-number">2</div>
             <div class="lhs-icon">🏆</div>
-            <h3>Avalie e explore</h3>
-            <p>Registre banheiros, dê notas de qualidade, tempo de permanência e odor. Ajude outros a encontrar o trono perfeito.</p>
+            <h3>${t('landing.step2.title')}</h3>
+            <p>${t('landing.step2.desc')}</p>
           </div>
           <div class="landing-howto-step">
             <div class="lhs-number">3</div>
             <div class="lhs-icon">👥</div>
-            <h3>Conecte-se</h3>
-            <p>Adicione amigos, escreva depoimentos, participe de comunidades temáticas e suba no ranking semanal.</p>
+            <h3>${t('landing.step3.title')}</h3>
+            <p>${t('landing.step3.desc')}</p>
           </div>
         </div>
 
         <div class="landing-howto-banner">
           <div class="lhb-emojis">🚽💩🧻🪣🚿</div>
-          <p>Toda experiência no trono merece ser documentada.<br><strong>O Kgando é o lugar certo para isso.</strong></p>
+          <p>${t('landing.howBanner')}</p>
           <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')" style="margin-top:20px">
-            Criar conta agora — é grátis
+            ${t('landing.howCta')}
           </button>
         </div>
       </div>
@@ -656,12 +651,12 @@ function buildLandingHTML() {
       <div class="landing-section-inner">
         <div class="landing-contact-box">
           <div class="lcb-icon">✉️</div>
-          <h2>Fale com a gente</h2>
-          <p>Sugestões, dúvidas, parcerias ou só quer dizer um oi do trono?</p>
+          <h2>${t('landing.contactTitle')}</h2>
+          <p>${t('landing.contactSub')}</p>
           <a href="mailto:estou@kgando.com" class="landing-contact-email">
             estou@kgando.com
           </a>
-          <p class="landing-contact-sub">Respondemos em até 48 horas 🚽</p>
+          <p class="landing-contact-sub">${t('landing.contactReply')}</p>
         </div>
       </div>
     </section>
@@ -671,17 +666,17 @@ function buildLandingHTML() {
         <div class="lf-brand">
           <span>💩</span>
           <strong>Kgando</strong>
-          <span class="lf-tagline">— A Rede Social do Trono</span>
+          <span class="lf-tagline">${t('landing.footerTagline')}</span>
         </div>
-        <p class="lf-copy">© 2026 Kgando · kgando.com — Feito com 💩 e muito carinho</p>
+        <p class="lf-copy">${t('landing.footerCopy')}</p>
         <div class="lf-legal">
-          <a href="/privacidade" target="_blank">Política de Privacidade</a>
+          <a href="/privacidade" target="_blank">${t('landing.privacy')}</a>
           <span>·</span>
-          <a href="/termos" target="_blank">Termos de Serviço</a>
+          <a href="/termos" target="_blank">${t('landing.terms')}</a>
           <span>·</span>
-          <a href="/exclusao" target="_blank">Exclusão de Dados</a>
+          <a href="/exclusao" target="_blank">${t('landing.dataDeletion')}</a>
           <span>·</span>
-          <a href="mailto:estou@kgando.com">Contato</a>
+          <a href="mailto:estou@kgando.com">${t('landing.contact')}</a>
         </div>
       </div>
     </footer>
