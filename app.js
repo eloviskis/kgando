@@ -791,6 +791,10 @@ function handleClick(e) {
     else section.hidden = true;
     return;
   }
+  if (action === 'edit-review') {
+    openEditReviewModal(el.dataset.id);
+    return;
+  }
   if (action === 'delete-review') {
     if (!confirm(t('review.deleteConfirm'))) return;
     apiFetch(`/reviews/${el.dataset.id}`, { method: 'DELETE' })
@@ -1430,7 +1434,8 @@ function reviewCard(r) {
         💬 <span id="comm-count-${r.id}">${r.comments_count}</span>
       </button>
       ${currentUser && r.user_id === currentUser.id
-        ? `<button class="action-btn-sm action-btn-danger" data-action="delete-review" data-id="${r.id}" title="Deletar review">🗑</button>`
+        ? `<button class="action-btn-sm" data-action="edit-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Editar avaliação' : 'Edit review'}">✏️</button>
+           <button class="action-btn-sm action-btn-danger" data-action="delete-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Deletar avaliação' : 'Delete review'}">🗑</button>`
         : ''}
     </div>
 
@@ -1550,14 +1555,17 @@ async function renderNewPage(root) {
   });
 }
 
-async function submitReview(form) {
+async function submitReview(form, reviewId = null) {
   const btn = form.querySelector('button[type=submit]');
-  btn.disabled = true; btn.textContent = 'Publicando…';
+  const isEdit = !!reviewId;
+  btn.disabled = true; 
+  btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? 'Salvando…' : 'Saving…') : 'Publicando…';
   const body = Object.fromEntries(new FormData(form));
 
   if (!body.quality || !body.duration || !body.relief || !body.smell) {
     showToast(t('new.error'));
-    btn.disabled = false; btn.textContent = 'Publicar Avaliação 💩';
+    btn.disabled = false; 
+    btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
     return;
   }
   body.quality  = Number(body.quality);
@@ -1566,20 +1574,152 @@ async function submitReview(form) {
   if (!body.sticker)     delete body.sticker;
 
   try {
-    await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
-    showToast(t('new.success'));
-    // Atualiza contador de reviews do usuário
-    if (currentUser) {
-      currentUser.reviews_count = (currentUser.reviews_count || 0) + 1;
+    if (isEdit) {
+      await apiFetch(`/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify(body) });
+      showToast(CURRENT_LANG === 'pt' ? 'Avaliação atualizada! 💩' : 'Review updated! 💩');
+      document.getElementById('modalHost').innerHTML = '';
+      await renderApp();
+    } else {
+      await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
+      showToast(t('new.success'));
+      // Atualiza contador de reviews do usuário
+      if (currentUser) {
+        currentUser.reviews_count = (currentUser.reviews_count || 0) + 1;
+      }
+      // Força reload da página home
+      currentPage = 'home';
+      history.pushState(null, '', '#home');
+      await renderApp();
+      document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    // Força reload da página home
-    currentPage = 'home';
-    history.pushState(null, '', '#home');
-    await renderApp();
-    document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showToast(err.message);
-    btn.disabled = false; btn.textContent = 'Publicar Avaliação 💩';
+    btn.disabled = false; 
+    btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
+  }
+}
+
+async function openEditReviewModal(reviewId) {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal modal--wide">
+        <div class="modal-header">
+          <h2>✏️ ${CURRENT_LANG === 'pt' ? 'Editar Avaliação' : 'Edit Review'}</h2>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  
+  try {
+    const review = await apiFetch(`/reviews/${reviewId}`);
+    const bathrooms = await apiFetch('/bathrooms').catch(() => []);
+    const bathOptions = bathrooms.map(b =>
+      `<option value="${b.id}" ${review.bathroom_id === b.id ? 'selected' : ''}>${esc(b.name)} — ${esc(b.neighborhood)}</option>`
+    ).join('');
+
+    const body = host.querySelector('.modal-body');
+    body.innerHTML = `
+      <form id="editReviewForm">
+        <div class="form-group">
+          <label class="form-label">${t('new.quality')} <span class="form-sublabel">(1 a 5 💩)</span></label>
+          <div class="emoji-rating">
+            ${getQualityOptions().map(o => `
+              <button type="button" class="emoji-btn${review.quality === o.value ? ' active' : ''}" data-field="quality" data-value="${o.value}">
+                ${o.icon}<small>${o.label}</small>
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="quality" id="fQuality" value="${review.quality}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.duration')}</label>
+          <div class="emoji-rating">
+            ${getDurationOptions().map(o => `
+              <button type="button" class="emoji-btn${review.duration === o.value ? ' active' : ''}" data-field="duration" data-value="${o.value}">
+                ${o.icon}<small>${o.label}</small>
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="duration" id="fDuration" value="${review.duration}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.relief')}</label>
+          <div class="emoji-rating">
+            ${getReliefOptions().map(o => `
+              <button type="button" class="emoji-btn${review.relief === o.value ? ' active' : ''}" data-field="relief" data-value="${o.value}">
+                ${o.icon}<small>${o.label}</small>
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="relief" id="fRelief" value="${review.relief}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.smell')}</label>
+          <div class="emoji-rating">
+            ${getSmellOptions().map(o => `
+              <button type="button" class="emoji-btn${review.smell === o.value ? ' active' : ''}" data-field="smell" data-value="${o.value}">
+                ${o.icon}<small>${o.label}</small>
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="smell" id="fSmell" value="${review.smell}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.sticker')} <span class="form-sublabel">(${CURRENT_LANG === 'pt' ? 'opcional' : 'optional'})</span></label>
+          <div class="emoji-rating">
+            ${getStickerOptions().map(o => `
+              <button type="button" class="emoji-btn${review.sticker === o.value ? ' active' : ''}" data-field="sticker" data-value="${o.value}">
+                ${o.icon}<small>${o.label}</small>
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="sticker" id="fSticker" value="${review.sticker || ''}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${CURRENT_LANG === 'pt' ? 'Título' : 'Title'} <span class="form-sublabel">(${CURRENT_LANG === 'pt' ? 'opcional' : 'optional'})</span></label>
+          <input class="form-text-input" type="text" name="title" value="${esc(review.title || '')}" placeholder="${CURRENT_LANG === 'pt' ? 'Ex: Operação Relâmpago 🥷' : 'e.g. Lightning Operation 🥷'}" maxlength="120">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.comment')}</label>
+          <textarea class="form-textarea" name="comment" placeholder="${t('new.commentPh')}" maxlength="600">${esc(review.comment || '')}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">${t('new.bathroom')} <span class="form-sublabel">(${CURRENT_LANG === 'pt' ? 'opcional' : 'optional'})</span></label>
+          <select class="form-select" name="bathroom_id">
+            <option value="">${t('new.selectBath')}</option>
+            ${bathOptions}
+          </select>
+        </div>
+
+        <button class="submit-btn" type="submit">${CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save'}</button>
+      </form>
+    `;
+
+    // Wire up emoji buttons
+    body.querySelectorAll('.emoji-btn[data-field]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.field;
+        const val   = btn.dataset.value;
+        body.querySelectorAll(`.emoji-btn[data-field="${field}"]`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const hidden = document.getElementById(`f${field.charAt(0).toUpperCase() + field.slice(1)}`);
+        if (hidden) hidden.value = val;
+      });
+    });
+
+    // Submit handler
+    const form = document.getElementById('editReviewForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await submitReview(form, reviewId);
+    });
+
+  } catch(e) {
+    host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
   }
 }
 

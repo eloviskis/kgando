@@ -66,6 +66,77 @@ router.post('/', requireAuth, (req, res) => {
   res.status(201).json(review);
 });
 
+// PUT /api/reviews/:id — atualizar própria review
+router.put('/:id', requireAuth, (req, res) => {
+  const rev = db.prepare('SELECT id, user_id, bathroom_id FROM reviews WHERE id=?').get(req.params.id);
+  if (!rev) return res.status(404).json({ error: 'Review não encontrada.' });
+  if (rev.user_id !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
+
+  const { bathroom_id, title, comment, quality, duration, relief, smell, sticker } = req.body;
+  if (!quality || !duration || !relief || !smell)
+    return res.status(400).json({ error: 'Preencha qualidade, duração, alívio e cheiro.' });
+
+  db.prepare(`
+    UPDATE reviews SET
+      bathroom_id = ?,
+      title = ?,
+      comment = ?,
+      quality = ?,
+      duration = ?,
+      relief = ?,
+      smell = ?,
+      sticker = ?,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(
+    bathroom_id || null,
+    title || '',
+    comment || '',
+    quality,
+    duration,
+    relief,
+    smell,
+    sticker || '',
+    req.params.id
+  );
+
+  // Se o banheiro mudou, atualizar ratings
+  if (bathroom_id && bathroom_id !== rev.bathroom_id) {
+    const scoreMap = { good: 5, ok: 3, bad: 1, light: 5, satisfied: 3, incomplete: 1, roses: 5, neutral: 3, toxic: 1 };
+    const q = scoreMap[quality] || 3;
+    const r = scoreMap[relief]  || 3;
+    const s = scoreMap[smell]   || 3;
+    const avg = Math.round((q + r + s) / 3 * 10) / 10;
+    
+    // Remove do banheiro antigo
+    if (rev.bathroom_id) {
+      db.prepare(`
+        UPDATE bathrooms SET reviews_count = MAX(0, reviews_count - 1)
+        WHERE id = ?
+      `).run(rev.bathroom_id);
+    }
+    
+    // Adiciona ao novo banheiro
+    db.prepare(`
+      UPDATE bathrooms SET
+        reviews_count = reviews_count + 1,
+        rating = ROUND((rating * reviews_count + ?) / (reviews_count + 1), 1)
+      WHERE id = ?
+    `).run(avg, bathroom_id);
+  }
+
+  const review = db.prepare(`${SELECT_REVIEW} WHERE r.id=?`).get(req.user.id, req.params.id);
+  res.json(review);
+});
+
+// GET /api/reviews/:id — obter uma review específica
+router.get('/:id', (req, res) => {
+  const uid = currentUserId(req);
+  const review = db.prepare(`${SELECT_REVIEW} WHERE r.id=?`).get(uid, req.params.id);
+  if (!review) return res.status(404).json({ error: 'Review não encontrada.' });
+  res.json(review);
+});
+
 // DELETE /api/reviews/:id — deletar própria review
 router.delete('/:id', requireAuth, (req, res) => {
   const rev = db.prepare('SELECT id, user_id FROM reviews WHERE id=?').get(req.params.id);
