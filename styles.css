@@ -1173,6 +1173,18 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   background: rgba(255,255,255,.25); 
   transform: scale(1.1);
 }
+.landing-nav-install {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  color: #fff; border: none;
+  padding: 9px 16px; border-radius: 20px; font-size: 13px; font-weight: 800;
+  font-family: inherit; cursor: pointer; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.landing-nav-install:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 71, 87, 0.5);
+}
 .landing-login-btn {
   background: rgba(255,255,255,.12); color: #fff;
   border: 2px solid rgba(255,255,255,.3);
@@ -1724,6 +1736,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   .landing-header { padding: 0 16px; }
   .landing-nav { gap: 8px; }
   .landing-lang-btn { padding: 6px 10px; font-size: 16px; }
+  .landing-nav-install { display: none; }
   .landing-login-btn { padding: 8px 14px; font-size: 13px; }
   .landing-register-btn { padding: 8px 14px; font-size: 13px; }
   .landing-hero { padding: 60px 16px 48px; }

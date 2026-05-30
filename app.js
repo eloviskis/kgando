@@ -38,11 +38,6 @@ function setLang(lang) {
   location.reload();
 }
 
-window.toggleLangFromAuth = function() {
-  const newLang = CURRENT_LANG === 'pt' ? 'en' : 'pt';
-  setLang(newLang);
-};
-
 window.toggleLang = function() {
   setLang(CURRENT_LANG === 'pt' ? 'en' : 'pt');
 };
@@ -50,30 +45,12 @@ window.toggleLang = function() {
 function applyShellTranslations() {
   const lang = CURRENT_LANG;
   const flag = lang === 'en' ? '🇺🇸' : '🇧🇷';
-  console.log('[applyShellTranslations] lang:', lang, 'flag:', flag);
 
-  // Botão de bandeira no app
   const langBtn = document.getElementById('langToggleBtn');
-  if (langBtn) {
-    langBtn.textContent = flag;
-    console.log('[applyShellTranslations] langToggleBtn updated:', flag);
-  }
+  if (langBtn) langBtn.textContent = flag;
 
-  // Botão de bandeira no modal de autenticação
-  const authLangFlag = document.getElementById('authLangFlag');
-  if (authLangFlag) {
-    authLangFlag.textContent = flag;
-    console.log('[applyShellTranslations] authLangFlag updated:', flag);
-  } else {
-    console.log('[applyShellTranslations] authLangFlag element NOT FOUND');
-  }
-
-  // Botão de bandeira na landing page
   const landingLangFlag = document.getElementById('landingLangFlag');
-  if (landingLangFlag) {
-    landingLangFlag.textContent = flag;
-    console.log('[applyShellTranslations] landingLangFlag updated:', flag);
-  }
+  if (landingLangFlag) landingLangFlag.textContent = flag;
 
   // Tagline da marca
   const brandSmall = document.querySelector('.brand small');
@@ -336,6 +313,8 @@ async function boot() {
   }
   
   applyShellTranslations();
+  setupPWA();
+  bindEvents();
   const urlParams = new URLSearchParams(window.location.search);
 
   // ── Login via Google OAuth (callback) ──────────────────
@@ -433,8 +412,6 @@ async function boot() {
 
 function initApp() {
   renderApp();
-  bindEvents();
-  registerServiceWorker();
   updateConnectionStatus();
   // Garante avatar mesmo que DOM ainda esteja sendo montado
   requestAnimationFrame(() => updateHeaderAvatar());
@@ -444,26 +421,9 @@ function initApp() {
 
 /* ── Auth helpers ───────────────────────────────── */
 function showAuthModal() {
-  console.log('[showAuthModal] Opening auth modal');
   const overlay = document.getElementById('authOverlay');
   overlay.style.display = 'flex';
-  // Fechar ao clicar no fundo escuro
   overlay.onclick = (e) => { if (e.target === overlay) hideAuthModal(); };
-  // Atualizar bandeira de idioma
-  console.log('[showAuthModal] Calling applyShellTranslations');
-  applyShellTranslations();
-  
-  // Force flag update after a short delay to ensure DOM is ready
-  setTimeout(() => {
-    const authLangFlag = document.getElementById('authLangFlag');
-    const flag = CURRENT_LANG === 'en' ? '🇺🇸' : '🇧🇷';
-    if (authLangFlag) {
-      authLangFlag.textContent = flag;
-      console.log('[showAuthModal] Forced flag update:', flag);
-    } else {
-      console.error('[showAuthModal] authLangFlag still not found after delay');
-    }
-  }, 100);
 }
 function hideAuthModal() {
   document.getElementById('authOverlay').style.display = 'none';
@@ -486,6 +446,7 @@ async function showLandingPage() {
   
   // Atualizar bandeira de idioma na landing page
   applyShellTranslations();
+  syncInstallButtons();
   
   // Carregar stats reais e atualizar
   try {
@@ -520,6 +481,7 @@ function buildLandingHTML() {
         </div>
         <nav class="landing-nav">
           <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">${flag}</button>
+          <button class="landing-nav-install" type="button" data-action="install-app" hidden>${t('landing.installBtn')}</button>
           <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">${t('landing.login')}</button>
           <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">${t('landing.registerFree')}</button>
         </nav>
@@ -781,6 +743,9 @@ async function apiFetch(path, options = {}) {
 
 /* ── Event binding ──────────────────────────────── */
 function bindEvents() {
+  if (window.__eventsBound) return;
+  window.__eventsBound = true;
+
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('avatarMenu');
     if (menu && !menu.hidden && !e.target.closest('#avatarMenu') && !e.target.closest('[data-action="toggle-avatar-menu"]')) {
@@ -796,13 +761,22 @@ function bindEvents() {
   });
   window.addEventListener('online',  updateConnectionStatus);
   window.addEventListener('offline', updateConnectionStatus);
+}
+
+function setupPWA() {
+  if (window.__pwaSetup) return;
+  window.__pwaSetup = true;
+  registerServiceWorker();
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPWA = e;
-    const btn = document.getElementById('installButton');
-    if (btn) btn.hidden = false;
-    const landingBtn = document.getElementById('landingInstallBtn');
-    if (landingBtn) landingBtn.hidden = false;
+    e.preventDefault();
+    deferredPWA = e;
+    syncInstallButtons();
   });
+}
+
+function syncInstallButtons() {
+  if (!deferredPWA) return;
+  document.querySelectorAll('[data-action="install-app"]').forEach(btn => { btn.hidden = false; });
 }
 
 function handleClick(e) {
