@@ -309,6 +309,12 @@ document.addEventListener('DOMContentLoaded', boot);
 
 async function boot() {
   loadLocale();
+  
+  // Espera o DOM estar pronto antes de aplicar traduções
+  if (document.readyState === 'loading') {
+    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+  }
+  
   applyShellTranslations();
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -422,6 +428,8 @@ function showAuthModal() {
   overlay.style.display = 'flex';
   // Fechar ao clicar no fundo escuro
   overlay.onclick = (e) => { if (e.target === overlay) hideAuthModal(); };
+  // Atualizar bandeira de idioma
+  applyShellTranslations();
 }
 function hideAuthModal() {
   document.getElementById('authOverlay').style.display = 'none';
