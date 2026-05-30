@@ -479,6 +479,18 @@ window.LOCALES.pt = {
   'review.relief':   'Alívio',
   'review.smell':    'Cheiro',
   'review.now':      'agora',
+  'review.instagram':          'Instagramar',
+  'review.instagramTitle':     'Escolha o formato',
+  'review.formatStory':        'Story 9:16',
+  'review.formatFeed':         'Feed 4:5',
+  'review.formatSquare':       'Quadrado 1:1',
+  'review.instagramGenerate':  'Gerar imagem',
+  'review.instagramSuccess':   'Imagem pronta!',
+  'review.instagramError':     'Erro ao gerar imagem',
+  'review.instagramGenerating':'Gerando…',
+  'review.publishedTitle':     'Avaliação publicada!',
+  'review.viewFeed':           'Ver no feed',
+  'review.shareWatermark':     'kgando.com',
 
   /* ── Mini-perfil (desktop) ── */
   'mini.reviews':  'cagadas',

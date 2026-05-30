@@ -479,6 +479,18 @@ window.LOCALES.en = {
   'review.relief':   'Relief',
   'review.smell':    'Smell',
   'review.now':      'just now',
+  'review.instagram':          'Share as image',
+  'review.instagramTitle':     'Choose format',
+  'review.formatStory':        'Story 9:16',
+  'review.formatFeed':         'Feed 4:5',
+  'review.formatSquare':       'Square 1:1',
+  'review.instagramGenerate':  'Generate image',
+  'review.instagramSuccess':   'Image ready!',
+  'review.instagramError':     'Failed to generate image',
+  'review.instagramGenerating':'Generating…',
+  'review.publishedTitle':     'Review published!',
+  'review.viewFeed':           'View feed',
+  'review.shareWatermark':     'kgando.com',
 
   /* ── Mini-profile (desktop) ── */
   'mini.reviews':  'dumps',

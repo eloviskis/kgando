@@ -1005,6 +1005,10 @@ function handleClick(e) {
     shareProfile(el.dataset.userId, el.dataset.userName);
     return;
   }
+  if (action === 'instagram-review') {
+    openInstagramModal(el.dataset.id);
+    return;
+  }
   if (action === 'open-review-modal') {
     openReviewModal();
     return;
@@ -1522,7 +1526,8 @@ function reviewCard(r) {
         💬 <span id="comm-count-${r.id}">${r.comments_count}</span>
       </button>
       ${currentUser && r.user_id === currentUser.id
-        ? `<button class="action-btn-sm" data-action="edit-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Editar avaliação' : 'Edit review'}">✏️</button>
+        ? `<button class="action-btn-sm" data-action="instagram-review" data-id="${r.id}" title="${t('review.instagram')}">📸</button>
+           <button class="action-btn-sm" data-action="edit-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Editar avaliação' : 'Edit review'}">✏️</button>
            <button class="action-btn-sm action-btn-danger" data-action="delete-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Deletar avaliação' : 'Delete review'}">🗑</button>`
         : ''}
     </div>
@@ -1683,17 +1688,16 @@ async function submitReview(form, reviewId = null) {
       await renderApp();
       console.log('Edição concluída com sucesso!');
     } else {
-      await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
+      const review = await apiFetch('/reviews', { method: 'POST', body: JSON.stringify(body) });
       showToast(t('new.success'));
-      // Atualiza contador de reviews do usuário
       if (currentUser) {
         currentUser.reviews_count = (currentUser.reviews_count || 0) + 1;
       }
-      // Força reload da página home
       currentPage = 'home';
       history.pushState(null, '', '#home');
       await renderApp();
       document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      openPublishedReviewModal(review);
     }
   } catch (err) {
     console.error('Erro ao salvar review:', err);
@@ -2461,6 +2465,209 @@ async function openUserParcasModal(userId, userName) {
   } catch(e) {
     host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
   }
+}
+
+const SHARE_FORMATS = {
+  story:  { w: 1080, h: 1920, labelKey: 'review.formatStory',  cls: 'share-image-card--story',  previewCls: 'instagram-format-preview--story' },
+  feed:   { w: 1080, h: 1350, labelKey: 'review.formatFeed',   cls: 'share-image-card--feed',   previewCls: 'instagram-format-preview--feed' },
+  square: { w: 1080, h: 1080, labelKey: 'review.formatSquare', cls: 'share-image-card--square', previewCls: 'instagram-format-preview--square' },
+};
+
+function buildShareImageHTML(review, format) {
+  const fmt = SHARE_FORMATS[format] || SHARE_FORMATS.feed;
+  const durationOpts = getDurationOptions();
+  const reliefOpts   = getReliefOptions();
+  const smellOpts    = getSmellOptions();
+  const stickerOpts  = getStickerOptions();
+  const dur = durationOpts.find(x => x.value === review.duration) || {};
+  const rel = reliefOpts.find(x => x.value === review.relief) || {};
+  const sml = smellOpts.find(x => x.value === review.smell) || {};
+  const stk = stickerOpts.find(x => x.value === review.sticker);
+  const poop = getPoopAvatar(review.avatar_text);
+  const avatarBg = poop ? '#FFF0DC' : (review.avatar_color || '#8B4513');
+  const avatarTxt = poop ? poop.emoji : (review.avatar_text || '??');
+
+  return `
+    <div class="share-image-card ${fmt.cls}">
+      <div class="share-image-brand">
+        <div class="share-image-brand-mark">🚽</div>
+        <div class="share-image-brand-text">
+          <strong>Kgando <span class="share-image-brand-beta">BETA</span></strong>
+          <small>${t('landing.brandSub')}</small>
+        </div>
+      </div>
+      <div class="share-image-header">
+        <div class="share-image-avatar" style="background:${avatarBg}">${avatarTxt}</div>
+        <div class="share-image-user">
+          <strong>${esc(review.display_name)}</strong>
+          <span>@${esc(review.username)}</span>
+        </div>
+        ${stk ? `<span class="share-image-sticker">${stk.icon}</span>` : ''}
+      </div>
+      ${review.title ? `<div class="share-image-title">${esc(review.title)}</div>` : ''}
+      <div class="share-image-ratings">
+        <div class="share-image-rating">
+          <div class="lbl">${t('review.quality')}</div>
+          <div class="val">${qualityIcon(review.quality)}</div>
+        </div>
+        <div class="share-image-rating">
+          <div class="lbl">${t('review.duration')}</div>
+          <div class="val">${dur.icon || ''} ${esc(dur.label || '')}</div>
+        </div>
+        <div class="share-image-rating">
+          <div class="lbl">${t('review.relief')}</div>
+          <div class="val">${rel.icon || ''} ${esc(rel.label || '')}</div>
+        </div>
+        <div class="share-image-rating">
+          <div class="lbl">${t('review.smell')}</div>
+          <div class="val">${sml.icon || ''} ${esc(sml.label || '')}</div>
+        </div>
+      </div>
+      ${review.comment ? `<div class="share-image-comment">"${esc(review.comment)}"</div>` : ''}
+      ${review.bathroom_name ? `
+        <div class="share-image-location">
+          🚽 ${esc(review.bathroom_name)}${review.bathroom_neighborhood ? ` — ${esc(review.bathroom_neighborhood)}` : ''}
+        </div>` : ''}
+      <div class="share-image-watermark">💩 ${t('review.shareWatermark')}</div>
+    </div>`;
+}
+
+async function captureShareImage(review, format) {
+  if (typeof html2canvas !== 'function') throw new Error('html2canvas unavailable');
+
+  const stage = document.createElement('div');
+  stage.className = 'share-image-stage';
+  stage.innerHTML = buildShareImageHTML(review, format);
+  document.body.appendChild(stage);
+
+  try {
+    if (document.fonts?.ready) await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 150));
+
+    const el = stage.querySelector('.share-image-card');
+    const canvas = await html2canvas(el, {
+      useCORS: true,
+      logging: false,
+      scale: 1,
+      backgroundColor: '#F5E6D3',
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+    });
+    return canvas.toDataURL('image/png');
+  } finally {
+    stage.remove();
+  }
+}
+
+async function shareOrDownloadImage(dataUrl) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const file = new File([blob], 'kgando-avaliacao.png', { type: 'image/png' });
+
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Kgando' });
+      showToast(t('review.instagramSuccess'));
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+    }
+  }
+
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'kgando-avaliacao.png';
+  a.click();
+  showToast(t('review.instagramSuccess'));
+}
+
+function renderInstagramFormatPicker(review, selectedFormat = 'feed') {
+  const formatBtns = Object.entries(SHARE_FORMATS).map(([key, fmt]) => `
+    <button type="button" class="instagram-format-btn${selectedFormat === key ? ' active' : ''}"
+            data-action="pick-instagram-format" data-format="${key}">
+      <div class="instagram-format-preview ${fmt.previewCls}"></div>
+      <span>${t(fmt.labelKey)}</span>
+    </button>`).join('');
+
+  return `
+    <div class="instagram-format-picker">${formatBtns}</div>
+    <button class="submit-btn" type="button" id="instagramGenerateBtn" data-action="generate-instagram-image" data-review-id="${review.id}">
+      📸 ${t('review.instagramGenerate')}
+    </button>`;
+}
+
+async function openInstagramModal(reviewId, cachedReview = null) {
+  const host = document.getElementById('modalHost');
+  let selectedFormat = 'feed';
+
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>📸 ${t('review.instagramTitle')}</h2>
+          <button class="modal-close" data-action="close-modal" type="button">✕</button>
+        </div>
+        <div class="modal-body"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+
+  let review = cachedReview;
+  try {
+    if (!review) review = await apiFetch(`/reviews/${reviewId}`);
+  } catch (e) {
+    host.querySelector('.modal-body').innerHTML = `<p style="color:var(--danger);text-align:center">${esc(e.message)}</p>`;
+    return;
+  }
+
+  const body = host.querySelector('.modal-body');
+  body.innerHTML = renderInstagramFormatPicker(review, selectedFormat);
+
+  body.querySelectorAll('[data-action="pick-instagram-format"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedFormat = btn.dataset.format;
+      body.querySelectorAll('[data-action="pick-instagram-format"]').forEach(b => b.classList.toggle('active', b.dataset.format === selectedFormat));
+    });
+  });
+
+  body.querySelector('[data-action="generate-instagram-image"]').addEventListener('click', async () => {
+    const genBtn = document.getElementById('instagramGenerateBtn');
+    if (!genBtn || genBtn.disabled) return;
+    genBtn.disabled = true;
+    genBtn.textContent = t('review.instagramGenerating');
+    try {
+      const dataUrl = await captureShareImage(review, selectedFormat);
+      await shareOrDownloadImage(dataUrl);
+      host.innerHTML = '';
+    } catch (e) {
+      console.error('[instagram]', e);
+      showToast(t('review.instagramError'));
+      genBtn.disabled = false;
+      genBtn.textContent = `📸 ${t('review.instagramGenerate')}`;
+    }
+  });
+}
+
+function openPublishedReviewModal(review) {
+  const host = document.getElementById('modalHost');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>${t('review.publishedTitle')}</h2>
+          <button class="modal-close" data-action="close-modal" type="button">✕</button>
+        </div>
+        <div class="modal-body" style="text-align:center">
+          <div class="published-success-icon">💩</div>
+          <p style="margin-bottom:24px;font-size:15px;color:var(--muted)">${t('new.success')}</p>
+          <button class="submit-btn" type="button" data-action="instagram-review" data-id="${review.id}" style="margin-bottom:12px">
+            📸 ${t('review.instagram')}
+          </button>
+          <button class="btn-secondary" type="button" data-action="close-modal" style="width:100%">
+            ${t('review.viewFeed')}
+          </button>
+        </div>
+      </div>
+    </div>`;
 }
 
 async function shareProfile(userId, userName) {
