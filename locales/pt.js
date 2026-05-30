@@ -254,6 +254,8 @@ window.LOCALES.pt = {
   'comm.success':   'Comunidade criada! 🎉',
   'comm.join':      'Participar',
   'comm.leave':     'Sair',
+  'comm.joined':    'Você entrou na comunidade! 🎉',
+  'comm.left':      'Você saiu da comunidade.',
   'comm.members':   'membros',
   'comm.topics':    'tópicos',
   'comm.manage':    '⚙ Gerenciar',
@@ -263,6 +265,7 @@ window.LOCALES.pt = {
   'comm.topicCreate': 'Criar tópico',
   'comm.noTopics':  'Nenhum tópico ainda. Seja o primeiro!',
   'comm.reply':     'Responder',
+  'comm.replied':   'Resposta publicada! 💬',
   'comm.noReplies': 'Sem respostas ainda.',
   'comm.replyPh':   'Sua resposta…',
   'comm.topicErr':  'Preencha título e conteúdo.',
@@ -425,6 +428,7 @@ window.LOCALES.pt = {
   /* ── Notificações ── */
   'notif.title':    'Notificações',
   'notif.markAll':  'Marcar todas como lidas',
+  'notif.allRead':  'Todas marcadas como lidas! ✓',
   'notif.empty':    'Sem notificações.',
   'notif.close':    '✕',
 
@@ -458,6 +462,9 @@ window.LOCALES.pt = {
 
   /* ── Review card ── */
   'review.delete': 'Review deletada.',
+  'review.liked':  'Curtida adicionada! 💩',
+  'review.unliked': 'Curtida removida.',
+  'review.commented': 'Comentário publicado! 💬',
   'review.likes':  'curtidas',
   'review.quality': 'Qualidade',
   'review.duration': 'Duração',

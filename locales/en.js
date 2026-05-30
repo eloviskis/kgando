@@ -254,6 +254,8 @@ window.LOCALES.en = {
   'comm.success':   'Community created! 🎉',
   'comm.join':      'Join',
   'comm.leave':     'Leave',
+  'comm.joined':    'You joined the community! 🎉',
+  'comm.left':      'You left the community.',
   'comm.members':   'members',
   'comm.topics':    'topics',
   'comm.manage':    '⚙ Manage',
@@ -263,6 +265,7 @@ window.LOCALES.en = {
   'comm.topicCreate': 'Create topic',
   'comm.noTopics':  'No topics yet. Be the first!',
   'comm.reply':     'Reply',
+  'comm.replied':   'Reply posted! 💬',
   'comm.noReplies': 'No replies yet.',
   'comm.replyPh':   'Your reply…',
   'comm.topicErr':  'Please fill in the title and content.',
@@ -425,6 +428,7 @@ window.LOCALES.en = {
   /* ── Notifications ── */
   'notif.title':    'Notifications',
   'notif.markAll':  'Mark all as read',
+  'notif.allRead':  'All marked as read! ✓',
   'notif.empty':    'No notifications.',
   'notif.close':    '✕',
 
@@ -458,6 +462,9 @@ window.LOCALES.en = {
 
   /* ── Review card ── */
   'review.delete': 'Review deleted.',
+  'review.liked':  'Like added! 💩',
+  'review.unliked': 'Like removed.',
+  'review.commented': 'Comment posted! 💬',
   'review.likes':  'likes',
   'review.quality': 'Quality',
   'review.duration': 'Duration',

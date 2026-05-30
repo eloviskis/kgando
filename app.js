@@ -2595,6 +2595,7 @@ async function openTopicModal(communityId, topicId) {
               <div style="font-size:11px;color:var(--muted)">agora</div>
             </div>
           </div>`);
+        showToast(t('comm.replied'));
         btn.disabled = false;
       } catch(err) { showToast(err.message); btn.disabled = false; }
     });
@@ -2920,6 +2921,7 @@ async function toggleLike(reviewId, liked, btn) {
     btn.classList.toggle('liked', res.liked);
     const countEl = document.getElementById(`likes-${reviewId}`);
     if (countEl) countEl.textContent = res.likes_count;
+    showToast(res.liked ? t('review.liked') : t('review.unliked'));
   } catch (err) { showToast(err.message); }
 }
 
@@ -2931,6 +2933,7 @@ async function toggleCommunity(id, joined, btn) {
     btn.dataset.joined = res.is_member ? '1' : '0';
     btn.classList.toggle('joined', res.is_member);
     btn.textContent = res.is_member ? (btn.classList.contains('comm-join-btn') ? '✓ Participando' : 'Entrou') : (btn.classList.contains('comm-join-btn') ? 'Participar' : 'Entrar');
+    showToast(res.is_member ? t('comm.joined') : t('comm.left'));
   } catch (err) { showToast(err.message); }
 }
 
@@ -2981,6 +2984,7 @@ async function submitComment(form) {
     }
     const cnt = document.getElementById(`comm-count-${reviewId}`);
     if (cnt) cnt.textContent = parseInt(cnt.textContent || 0) + 1;
+    showToast(t('review.commented'));
   } catch (err) { showToast(err.message); }
 }
 
@@ -3163,6 +3167,7 @@ window.markAllNotifsRead = async function() {
   const badge = document.getElementById('notifBadge');
   if (badge) badge.hidden = true;
   document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+  showToast(t('notif.allRead'));
 };
 
 /* ── Forgot / Reset password ──────────────────────────────────────────── */
