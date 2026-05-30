@@ -38,13 +38,22 @@ function setLang(lang) {
   location.reload();
 }
 
+window.toggleLangFromAuth = function() {
+  const newLang = CURRENT_LANG === 'pt' ? 'en' : 'pt';
+  setLang(newLang);
+};
+
 function applyShellTranslations() {
   const lang = CURRENT_LANG;
   const flag = lang === 'en' ? '🇺🇸' : '🇧🇷';
 
-  // Botão de bandeira
+  // Botão de bandeira no app
   const langBtn = document.getElementById('langToggleBtn');
   if (langBtn) langBtn.textContent = flag;
+
+  // Botão de bandeira no modal de autenticação
+  const authLangFlag = document.getElementById('authLangFlag');
+  if (authLangFlag) authLangFlag.textContent = flag;
 
   // Tagline da marca
   const brandSmall = document.querySelector('.brand small');
