@@ -1162,6 +1162,17 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   transition: color .2s, background .2s;
 }
 .landing-nav-link:hover { color: #fff; background: rgba(255,255,255,.12); }
+.landing-lang-btn {
+  background: rgba(255,255,255,.12); color: #fff;
+  border: 2px solid rgba(255,255,255,.3);
+  padding: 8px 12px; border-radius: 50%; font-size: 18px;
+  font-family: inherit; transition: background .2s, transform .2s;
+  cursor: pointer; line-height: 1;
+}
+.landing-lang-btn:hover { 
+  background: rgba(255,255,255,.25); 
+  transform: scale(1.1);
+}
 .landing-login-btn {
   background: rgba(255,255,255,.12); color: #fff;
   border: 2px solid rgba(255,255,255,.3);
@@ -1712,6 +1723,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 @media (max-width: 600px) {
   .landing-header { padding: 0 16px; }
   .landing-nav { gap: 8px; }
+  .landing-lang-btn { padding: 6px 10px; font-size: 16px; }
   .landing-login-btn { padding: 8px 14px; font-size: 13px; }
   .landing-register-btn { padding: 8px 14px; font-size: 13px; }
   .landing-hero { padding: 60px 16px 48px; }

@@ -43,6 +43,16 @@ window.toggleLangFromAuth = function() {
   setLang(newLang);
 };
 
+window.toggleLang = function() {
+  const newLang = CURRENT_LANG === 'pt' ? 'en' : 'pt';
+  setLang(newLang);
+  // Recarregar landing page se estiver visível
+  const landingRoot = document.getElementById('landingRoot');
+  if (landingRoot && landingRoot.style.display !== 'none') {
+    showLandingPage();
+  }
+};
+
 function applyShellTranslations() {
   const lang = CURRENT_LANG;
   const flag = lang === 'en' ? '🇺🇸' : '🇧🇷';
@@ -62,6 +72,13 @@ function applyShellTranslations() {
     console.log('[applyShellTranslations] authLangFlag updated:', flag);
   } else {
     console.log('[applyShellTranslations] authLangFlag element NOT FOUND');
+  }
+
+  // Botão de bandeira na landing page
+  const landingLangFlag = document.getElementById('landingLangFlag');
+  if (landingLangFlag) {
+    landingLangFlag.textContent = flag;
+    console.log('[applyShellTranslations] landingLangFlag updated:', flag);
   }
 
   // Tagline da marca
@@ -472,6 +489,10 @@ async function showLandingPage() {
   if (!root) return;
   root.style.cssText = 'display:block; position:fixed; inset:0; z-index:3500; background:#F5E6D3; overflow-y:auto; scroll-behavior:smooth;';
   root.innerHTML = buildLandingHTML();
+  
+  // Atualizar bandeira de idioma na landing page
+  applyShellTranslations();
+  
   // Carregar stats reais e atualizar
   try {
     const stats = await fetch(`${API}/users/stats`).then(r => r.json());
@@ -503,6 +524,7 @@ function buildLandingHTML() {
           </div>
         </div>
         <nav class="landing-nav">
+          <button id="landingLangFlag" class="landing-lang-btn" type="button" onclick="window.toggleLang()" title="Change language / Mudar idioma">🇧🇷</button>
           <button class="landing-login-btn" type="button" onclick="window._landingAuth('login')">Entrar</button>
           <button class="landing-register-btn" type="button" onclick="window._landingAuth('register')">Criar conta grátis</button>
         </nav>
