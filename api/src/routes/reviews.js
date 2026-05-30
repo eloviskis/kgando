@@ -90,8 +90,7 @@ router.put('/:id', requireAuth, (req, res) => {
       duration = ?,
       relief = ?,
       smell = ?,
-      sticker = ?,
-      updated_at = CURRENT_TIMESTAMP
+      sticker = ?
     WHERE id = ?
   `).run(
     bathroom_id || null,
