@@ -1,0 +1,57 @@
+---
+description: Regra de internacionalização (i18n) — todo texto visível ao usuário deve ter tradução PT-BR e EN-US
+globs: app.js,locales/*.js,index.html
+alwaysApply: true
+---
+
+# i18n — Português (PT-BR) e English (EN-US)
+
+Todo texto visível ao usuário **deve** usar `t('chave')` em `app.js` e ter entradas em **ambos** os arquivos de locale.
+
+## Arquivos de locale
+
+- `locales/pt.js` → Português (Brasil) — idioma principal, temática de cocô 💩
+- `locales/en.js` → English (US) — mesmo estilo irreverente
+
+## Regras obrigatórias
+
+1. **Nunca** use strings hardcoded em `app.js` para texto visível ao usuário.
+2. Ao criar qualquer nova funcionalidade, adicione as chaves nos **dois** locales simultaneamente.
+3. Textos estáticos em `index.html` devem ser atualizados via `applyShellTranslations()` em `app.js`.
+4. Nomes de chaves seguem padrão `namespace.subchave` (ex: `notifPref.title`, `settings.account`).
+
+## Exemplo correto
+
+```js
+// ✅ BOM — usa t() com fallback defensivo
+<h3>${t('minhaFeature.titulo') || 'Título padrão'}</h3>
+
+// ✅ Locale pt.js
+'minhaFeature.titulo': 'Meu Título 💩',
+
+// ✅ Locale en.js
+'minhaFeature.titulo': 'My Title 💩',
+```
+
+```js
+// ❌ RUIM — string hardcoded
+<h3>Meu Título</h3>
+```
+
+## Namespaces existentes
+
+| Namespace | Uso |
+|---|---|
+| `settings.*` | Página de configurações |
+| `notifPref.*` | Preferências de notificação |
+| `shell.*` | Elementos estáticos (nav, footer, topbar) |
+| `profile.*` | Página de perfil |
+| `home.*` | Feed principal |
+| `community.*` | Comunidades |
+| `people.*` | Lista de usuários |
+| `ranking.*` | Ranking |
+| `scraps.*` | Recados |
+| `bathroom.*` | Banheiros |
+| `auth.*` | Login/registro |
+| `invite.*` | Convites |
+| `notif.*` | Painel de notificações |

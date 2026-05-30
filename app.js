@@ -2677,23 +2677,23 @@ async function renderSettingsPage(root) {
   ];
 
   const prefsRows = NOTIF_TYPES.map(({ key, label }) => {
-    const app   = notifPrefs?.[key]?.app   !== false;
-    const email = notifPrefs?.[key]?.email === true;
-    return `<tr class="notif-pref-row" data-key="${key}">
-      <td style="padding:10px 8px;font-size:14px;color:var(--text)">${esc(label)}</td>
-      <td style="padding:10px 8px;text-align:center">
-        <label class="toggle-switch">
-          <input type="checkbox" data-pref="${key}" data-channel="app" ${app ? 'checked' : ''}>
-          <span class="toggle-slider"></span>
+    const appOn   = notifPrefs?.[key]?.app   !== false;
+    const emailOn = notifPrefs?.[key]?.email === true;
+    return `<div class="notif-pref-row" data-key="${key}">
+      <span class="notif-pref-label">${esc(label)}</span>
+      <div class="notif-pref-toggles">
+        <label class="notif-pref-toggle-wrap">
+          <input type="checkbox" data-pref="${key}" data-channel="app" ${appOn ? 'checked' : ''}>
+          <span class="notif-pref-toggle-slider"></span>
+          <span class="notif-pref-toggle-caption">App</span>
         </label>
-      </td>
-      <td style="padding:10px 8px;text-align:center">
-        <label class="toggle-switch">
-          <input type="checkbox" data-pref="${key}" data-channel="email" ${email ? 'checked' : ''}>
-          <span class="toggle-slider"></span>
+        <label class="notif-pref-toggle-wrap">
+          <input type="checkbox" data-pref="${key}" data-channel="email" ${emailOn ? 'checked' : ''}>
+          <span class="notif-pref-toggle-slider"></span>
+          <span class="notif-pref-toggle-caption">Email</span>
         </label>
-      </td>
-    </tr>`;
+      </div>
+    </div>`;
   }).join('');
 
   root.innerHTML = `
@@ -2721,25 +2721,14 @@ async function renderSettingsPage(root) {
       </div>
 
       <div class="settings-card" id="notif-prefs-card">
-        <h3>💩 ${t('notifPref.title') || 'Preferências de Notificações'}</h3>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
-          ${t('notifPref.desc') || 'Escolha quais notificações quer receber no app e por e-mail.'}
+        <h3>💩 ${t('notifPref.title')}</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+          ${t('notifPref.desc')}
         </p>
         ${notifPrefs !== null ? `
-        <div style="overflow-x:auto">
-          <table class="notif-prefs-table" style="width:100%;border-collapse:collapse">
-            <thead>
-              <tr>
-                <th style="padding:8px;text-align:left;font-size:12px;color:var(--muted);font-weight:600">${t('notifPref.event') || 'Evento'}</th>
-                <th style="padding:8px;text-align:center;font-size:12px;color:var(--muted);font-weight:600">💩 App</th>
-                <th style="padding:8px;text-align:center;font-size:12px;color:var(--muted);font-weight:600">📧 Email</th>
-              </tr>
-            </thead>
-            <tbody id="notifPrefsBody">${prefsRows}</tbody>
-          </table>
-        </div>
-        <p id="notifPrefsSaved" style="color:#27ae60;font-size:13px;margin:12px 0 0;display:none">✅ ${t('notifPref.saved') || 'Preferências salvas!'}</p>
-        ` : `<p style="font-size:13px;color:var(--muted)">${t('notifPref.loginRequired') || 'Faça login para gerenciar preferências.'}</p>`}
+        <div class="notif-prefs-list" id="notifPrefsBody">${prefsRows}</div>
+        <p id="notifPrefsSaved" class="notif-prefs-saved" style="display:none">✅ ${t('notifPref.saved')}</p>
+        ` : `<p style="font-size:13px;color:var(--muted)">${t('notifPref.loginRequired')}</p>`}
       </div>
 
       <div class="settings-card" id="twofa-card">
@@ -2801,7 +2790,7 @@ async function renderSettingsPage(root) {
   root.querySelector('#notifPrefsBody')?.addEventListener('change', () => {
     clearTimeout(notifSaveTimer);
     notifSaveTimer = setTimeout(async () => {
-      const rows = root.querySelectorAll('.notif-pref-row');
+      const rows = root.querySelectorAll('#notifPrefsBody .notif-pref-row');
       const prefs = {};
       rows.forEach(row => {
         const key = row.dataset.key;
