@@ -107,6 +107,22 @@ try {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
     "ALTER TABLE users ADD COLUMN notification_prefs TEXT DEFAULT NULL",
+    `CREATE TABLE IF NOT EXISTS custom_review_options (
+      id           TEXT PRIMARY KEY,
+      user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category     TEXT NOT NULL CHECK(category IN ('quality','duration','relief','smell')),
+      emoji        TEXT NOT NULL,
+      label        TEXT NOT NULL,
+      mapped_value TEXT NOT NULL,
+      UNIQUE(user_id, category)
+    )`,
+    "ALTER TABLE reviews ADD COLUMN custom_display TEXT",
+    `CREATE TABLE IF NOT EXISTS comment_reactions (
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      comment_id TEXT NOT NULL REFERENCES review_comments(id) ON DELETE CASCADE,
+      emoji      TEXT NOT NULL,
+      PRIMARY KEY (user_id, comment_id)
+    )`,
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* coluna já existe */ }

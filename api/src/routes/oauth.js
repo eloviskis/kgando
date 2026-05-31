@@ -7,9 +7,9 @@ const GOOGLE_AUTH_URL  = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_INFO_URL  = 'https://www.googleapis.com/oauth2/v2/userinfo';
 
-function getRedirectUri(req) {
-  const host = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-  return `${host}/api/auth/google/callback`;
+function getRedirectUri() {
+  const base = (process.env.APP_URL || 'https://kgando.com').replace(/\/$/, '');
+  return `${base}/api/auth/google/callback`;
 }
 
 function signToken(user) {
@@ -28,7 +28,7 @@ router.get('/google', (req, res) => {
 
   const params = new URLSearchParams({
     client_id:     process.env.GOOGLE_CLIENT_ID,
-    redirect_uri:  getRedirectUri(req),
+    redirect_uri:  getRedirectUri(),
     response_type: 'code',
     scope:         'openid email profile',
     access_type:   'online',
@@ -55,12 +55,23 @@ router.get('/google/callback', async (req, res) => {
         code,
         client_id:     process.env.GOOGLE_CLIENT_ID,
         client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri:  getRedirectUri(req),
+        redirect_uri:  getRedirectUri(),
         grant_type:    'authorization_code',
       }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) throw new Error('Token inválido');
+    if (!tokenData.access_token) {
+      const detail = tokenData.error_description || tokenData.error || 'unknown';
+      console.error('[Google OAuth] token exchange failed:', detail, { redirect_uri: getRedirectUri() });
+      const userMsg = tokenData.error === 'redirect_uri_mismatch'
+        ? 'Redirect URI não autorizado no Google Cloud. Adicione https://kgando.com/api/auth/google/callback'
+        : tokenData.error === 'invalid_client'
+        ? 'Credenciais Google inválidas no servidor (CLIENT_ID/SECRET).'
+        : tokenData.error === 'invalid_grant'
+        ? 'Código de autorização expirado ou já usado. Tente login com Google novamente.'
+        : 'Erro ao fazer login com Google. Tente novamente.';
+      throw new Error(userMsg);
+    }
 
     // 2. Buscar dados do usuário no Google
     const infoRes = await fetch(GOOGLE_INFO_URL, {
@@ -127,7 +138,7 @@ router.get('/google/callback', async (req, res) => {
 
   } catch (err) {
     console.error('[Google OAuth]', err.message);
-    res.redirect('/?google_error=' + encodeURIComponent('Erro ao fazer login com Google. Tente novamente.'));
+    res.redirect('/?google_error=' + encodeURIComponent(err.message || 'Erro ao fazer login com Google. Tente novamente.'));
   }
 });
 

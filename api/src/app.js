@@ -59,7 +59,8 @@ app.use('/api/auth/reset-password', resetLimiter);
 
 app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/auth',         require('./routes/oauth'));
-app.use('/api/reviews',      require('./routes/reviews'));
+app.use('/api/reviews',        require('./routes/reviews'));
+app.use('/api/review-options', require('./routes/review-options'));
 app.use('/api/bathrooms',    require('./routes/bathrooms'));
 app.use('/api/communities',  require('./routes/communities'));
 app.use('/api/users',        require('./routes/users'));

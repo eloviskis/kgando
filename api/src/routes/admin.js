@@ -319,4 +319,78 @@ router.delete('/scraps/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Analytics ───────────────────────────────────────────────────────────────
+router.get('/analytics/growth', (req, res) => {
+  const days = Math.min(Math.max(parseInt(req.query.days) || 30, 7), 90);
+  const usersGrowth    = db.prepare(`SELECT date(created_at) AS day, COUNT(*) AS count FROM users WHERE created_at >= date('now','-'||?||' days') GROUP BY day ORDER BY day`).all(days);
+  const reviewsGrowth  = db.prepare(`SELECT date(created_at) AS day, COUNT(*) AS count FROM reviews WHERE created_at >= date('now','-'||?||' days') GROUP BY day ORDER BY day`).all(days);
+  const commentsGrowth = db.prepare(`SELECT date(created_at) AS day, COUNT(*) AS count FROM review_comments WHERE created_at >= date('now','-'||?||' days') GROUP BY day ORDER BY day`).all(days);
+  res.json({ users: usersGrowth, reviews: reviewsGrowth, comments: commentsGrowth });
+});
+
+router.get('/analytics/top-bathrooms', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT b.id, b.name, b.neighborhood, b.reviews_count, ROUND(b.rating,1) AS rating
+    FROM bathrooms b ORDER BY b.reviews_count DESC, b.rating DESC LIMIT 10
+  `).all();
+  res.json(rows);
+});
+
+router.get('/analytics/top-users', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT u.id, u.username, u.display_name, u.avatar_text, u.avatar_color,
+           COUNT(DISTINCT r.id) AS reviews_count,
+           COALESCE(SUM(r.likes_count),0) AS likes_total,
+           COALESCE(SUM(r.comments_count),0) AS comments_received
+    FROM users u LEFT JOIN reviews r ON r.user_id = u.id
+    GROUP BY u.id ORDER BY reviews_count DESC, likes_total DESC LIMIT 10
+  `).all();
+  res.json(rows);
+});
+
+router.get('/analytics/ratings-distribution', (_req, res) => {
+  const quality = db.prepare(`SELECT quality AS v, COUNT(*) AS c FROM reviews WHERE quality IS NOT NULL GROUP BY quality ORDER BY quality`).all();
+  const relief  = db.prepare(`SELECT relief AS v, COUNT(*) AS c FROM reviews WHERE relief IS NOT NULL GROUP BY relief ORDER BY c DESC`).all();
+  const smell   = db.prepare(`SELECT smell AS v, COUNT(*) AS c FROM reviews WHERE smell IS NOT NULL GROUP BY smell ORDER BY c DESC`).all();
+  const avg_dur = db.prepare(`SELECT ROUND(AVG(duration),0) AS avg FROM reviews`).get()?.avg || 0;
+  res.json({ quality, relief, smell, avg_duration: avg_dur });
+});
+
+router.get('/analytics/stickers', (_req, res) => {
+  const rows = db.prepare(`SELECT sticker, COUNT(*) AS count FROM reviews WHERE sticker IS NOT NULL GROUP BY sticker ORDER BY count DESC`).all();
+  res.json(rows);
+});
+
+router.get('/analytics/reactions', (_req, res) => {
+  const rows = db.prepare(`SELECT emoji, COUNT(*) AS count FROM comment_reactions GROUP BY emoji ORDER BY count DESC`).all();
+  res.json({ reactions: rows, total: rows.reduce((s, r) => s + r.count, 0) });
+});
+
+router.get('/analytics/invites-summary', (_req, res) => {
+  const total = db.prepare('SELECT COUNT(*) AS c FROM invites').get().c;
+  const used  = db.prepare('SELECT COUNT(*) AS c FROM invites WHERE used_by IS NOT NULL').get().c;
+  const topInviters = db.prepare(`
+    SELECT u.display_name, u.username, u.avatar_text, u.avatar_color,
+           COUNT(*) AS sent,
+           SUM(CASE WHEN i.used_by IS NOT NULL THEN 1 ELSE 0 END) AS converted
+    FROM invites i JOIN users u ON u.id = i.created_by
+    GROUP BY i.created_by ORDER BY sent DESC LIMIT 5
+  `).all();
+  res.json({ total, used, pending: total-used, conversion: total>0 ? Math.round(used/total*100) : 0, topInviters });
+});
+
+router.get('/analytics/communities', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT c.id, c.name, c.icon, c.members_count,
+           COUNT(DISTINCT r.id) AS reviews_from_members,
+           u.display_name AS creator_name
+    FROM communities c
+    LEFT JOIN community_members cm ON cm.community_id = c.id
+    LEFT JOIN reviews r ON r.user_id = cm.user_id
+    LEFT JOIN users u ON u.id = c.created_by
+    GROUP BY c.id ORDER BY c.members_count DESC
+  `).all();
+  res.json(rows);
+});
+
 module.exports = router;

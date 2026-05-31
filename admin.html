@@ -131,7 +131,48 @@
     .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--secondary); color: #fff; padding: 11px 22px; border-radius: 22px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; z-index: 9999; transition: opacity .3s, transform .3s; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    @media (max-width: 860px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .sidebar { display: none; } }
+    /* ── Analytics ── */
+    .period-btns { display:flex; gap:6px; flex-wrap:wrap; }
+    .period-btn { padding:6px 14px; border-radius:10px; border:2px solid var(--primary); background:none; color:var(--secondary); font-size:12px; font-weight:800; cursor:pointer; transition:.15s; }
+    .period-btn.active { background:var(--secondary); color:#fff; border-color:var(--secondary); }
+    .analytics-section { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:20px; }
+    .analytics-section-title { font-size:14px; font-weight:800; color:var(--secondary); margin-bottom:14px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .hbar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .hbar-label { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:100px; max-width:150px; }
+    .hbar-fill-wrap { flex:1; background:var(--bg); border-radius:6px; height:14px; overflow:hidden; }
+    .hbar-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--secondary),var(--primary)); }
+    .hbar-count { font-size:12px; font-weight:800; color:var(--secondary); min-width:30px; text-align:right; white-space:nowrap; }
+    .mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+    .chart-legend { display:flex; gap:10px; font-size:11px; font-weight:700; flex-wrap:wrap; }
+    .legend-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:3px; }
+    .filter-btn { padding:6px 12px; border-radius:10px; border:2px solid var(--primary); background:none; color:var(--secondary); font-size:12px; font-weight:700; cursor:pointer; transition:.15s; }
+    .filter-btn.active { background:var(--secondary); color:#fff; border-color:var(--secondary); }
+    /* ── Mobile nav ── */
+    .mobile-nav-toggle { display:none; }
+    .mobile-bottom-nav { display:none; }
+    @media (max-width: 860px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .mini-grid { grid-template-columns:1fr; }
+      .sidebar { display: none; }
+      .mobile-bottom-nav {
+        display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+        background: var(--card); border-top: 2px solid var(--primary);
+        overflow-x: auto; padding: 0; gap: 0;
+        box-shadow: 0 -4px 16px rgba(139,69,19,.12);
+      }
+      .mob-nav-btn {
+        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; padding: 8px 10px; border: none; background: none; color: var(--muted);
+        font-size: 10px; font-weight: 700; cursor: pointer; min-width: 64px; transition: color .15s;
+      }
+      .mob-nav-btn .mob-icon { font-size: 20px; line-height: 1; }
+      .mob-nav-btn.active { color: var(--secondary); }
+      .mob-nav-btn.active .mob-icon-bar {
+        width: 28px; height: 3px; background: var(--secondary); border-radius: 2px;
+        margin-top: 3px;
+      }
+      .content { padding: 16px; padding-bottom: 80px; }
+    }
   </style>
 </head>
 <body>
@@ -171,9 +212,25 @@
       <button class="nav-btn" data-section="communities" onclick="nav('communities',this)"><span class="icon">☷</span>Comunidades</button>
       <button class="nav-btn" data-section="scraps"    onclick="nav('scraps',this)"><span class="icon">✉</span>Scraps</button>
       <button class="nav-btn" data-section="invites"   onclick="nav('invites',this)"><span class="icon">📨</span>Convites</button>
+      <button class="nav-btn" data-section="analytics" onclick="nav('analytics',this)"><span class="icon">📈</span>Analytics</button>
+      <button class="nav-btn" data-section="reactions"  onclick="nav('reactions',this)"><span class="icon">🎭</span>Reações</button>
     </nav>
     <main class="content" id="content"><div class="spinner"></div></main>
   </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-bottom-nav" id="mobileNav">
+    <button class="mob-nav-btn active" data-section="dashboard"    onclick="nav('dashboard',this,true)"><span class="mob-icon">📊</span>Dashboard<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="users"        onclick="nav('users',this,true)"><span class="mob-icon">👤</span>Usuários<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="reviews"      onclick="nav('reviews',this,true)"><span class="mob-icon">💩</span>Reviews<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="comments"     onclick="nav('comments',this,true)"><span class="mob-icon">💬</span>Comentários<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="bathrooms"    onclick="nav('bathrooms',this,true)"><span class="mob-icon">🚽</span>Banheiros<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="communities"  onclick="nav('communities',this,true)"><span class="mob-icon">☷</span>Comunidades<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="scraps"       onclick="nav('scraps',this,true)"><span class="mob-icon">✉</span>Scraps<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="invites"      onclick="nav('invites',this,true)"><span class="mob-icon">📨</span>Convites<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="analytics"    onclick="nav('analytics',this,true)"><span class="mob-icon">📈</span>Analytics<span class="mob-icon-bar"></span></button>
+    <button class="mob-nav-btn"        data-section="reactions"    onclick="nav('reactions',this,true)"><span class="mob-icon">🎭</span>Reações<span class="mob-icon-bar"></span></button>
+  </nav>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -220,15 +277,21 @@ function toast(msg, err=false) {
 }
 
 // ── Nav ──────────────────────────────────────────────────
-function nav(name, btn) {
+function nav(name, btn, isMobile=false) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  (btn || document.querySelector(`[data-section="${name}"]`))?.classList.add('active');
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  const sidebarBtn = document.querySelector(`.nav-btn[data-section="${name}"]`);
+  const mobileBtn  = document.querySelector(`.mob-nav-btn[data-section="${name}"]`);
+  if (sidebarBtn) sidebarBtn.classList.add('active');
+  if (mobileBtn)  mobileBtn.classList.add('active');
+  if (btn && !sidebarBtn && !mobileBtn) btn.classList.add('active');
   const el = document.getElementById('content');
   el.innerHTML = '<div class="spinner"></div>';
      ({ dashboard: renderDashboard, users: renderUsers, reviews: renderReviews,
      comments: renderComments, bathrooms: renderBathrooms,
      communities: renderCommunities, scraps: renderScraps,
-     invites: renderInvites })[name]?.(el);
+     invites: renderInvites, analytics: renderAnalytics,
+     reactions: renderReactions })[name]?.(el);
 }
 
 // ── Dashboard ─────────────────────────────────────────────
@@ -268,15 +331,244 @@ function statCard(icon, label, num, today=0) {
   </div>`;
 }
 
+// ── Analytics ─────────────────────────────────────────────
+async function renderAnalytics(el, days=30) {
+  el.innerHTML = `
+    <div class="page-title">📈 Analytics</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:700;color:var(--muted)">Período:</span>
+      <div class="period-btns">
+        ${[7,30,90].map(d => `<button class="period-btn${d===days?' active':''}" onclick="renderAnalytics(document.getElementById('content'),${d})">${d} dias</button>`).join('')}
+      </div>
+    </div>
+    <div id="an-loading"><div class="spinner"></div></div>
+    <div id="an-body" style="display:none"></div>`;
+
+  const [stats, growth, topBath, topUsers, ratings, stickers, reactions, invSummary] = await Promise.all([
+    api('/stats').catch(() => null),
+    api(`/analytics/growth?days=${days}`).catch(() => ({users:[],reviews:[],comments:[]})),
+    api('/analytics/top-bathrooms').catch(() => []),
+    api('/analytics/top-users').catch(() => []),
+    api('/analytics/ratings-distribution').catch(() => ({quality:[],relief:[],smell:[],avg_duration:0})),
+    api('/analytics/stickers').catch(() => []),
+    api('/analytics/reactions').catch(() => ({reactions:[],total:0})),
+    api('/analytics/invites-summary').catch(() => ({total:0,used:0,pending:0,conversion:0,topInviters:[]}))
+  ]);
+
+  document.getElementById('an-loading')?.remove();
+  const body = document.getElementById('an-body');
+  if (!body) return;
+  body.style.display = '';
+
+  const totalNewU = growth.users.reduce((s,r)=>s+r.count,0);
+  const totalNewR = growth.reviews.reduce((s,r)=>s+r.count,0);
+  const totalNewC = growth.comments.reduce((s,r)=>s+r.count,0);
+
+  // merge all days for growth chart
+  const daySet = new Set([...growth.users, ...growth.reviews, ...growth.comments].map(r=>r.day));
+  const allDays = [...daySet].sort();
+  const uMap={}, rMap={}, cMap={};
+  growth.users.forEach(r    => uMap[r.day]=r.count);
+  growth.reviews.forEach(r  => rMap[r.day]=r.count);
+  growth.comments.forEach(r => cMap[r.day]=r.count);
+  const maxVal     = Math.max(...allDays.flatMap(d=>[uMap[d]||0,rMap[d]||0,cMap[d]||0]),1);
+  const maxBath    = Math.max(...topBath.map(b=>b.reviews_count),1);
+  const maxUser    = Math.max(...topUsers.map(u=>u.reviews_count),1);
+  const maxQ       = Math.max(...(ratings.quality||[]).map(r=>r.c),1);
+  const maxRelief  = Math.max(...(ratings.relief||[]).map(r=>r.c),1);
+  const maxSmell   = Math.max(...(ratings.smell||[]).map(r=>r.c),1);
+  const maxSt      = Math.max(...stickers.map(s=>s.count),1);
+  const maxReact   = Math.max(...reactions.reactions.map(r=>r.count),1);
+  const barW       = allDays.length > 25 ? '3px' : '5px';
+
+  body.innerHTML = `
+    <!-- KPIs -->
+    <div class="stats-grid">
+      ${statCard('📅','Novos usuários ('+days+'d)',totalNewU)}
+      ${statCard('💩','Novas reviews ('+days+'d)',totalNewR)}
+      ${statCard('💬','Novos comentários ('+days+'d)',totalNewC)}
+      ${statCard('📨','Conversão convites',invSummary.conversion+'%')}
+    </div>
+
+    <!-- Crescimento diário -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">
+        📅 Crescimento diário — últimos ${days} dias
+        <div class="chart-legend" style="margin-left:auto">
+          <span><span class="legend-dot" style="background:#8B4513"></span>Usuários</span>
+          <span><span class="legend-dot" style="background:#D4A574"></span>Reviews</span>
+          <span><span class="legend-dot" style="background:#6BBF59"></span>Comentários</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:108px;overflow-x:auto;padding-bottom:22px">
+        ${allDays.length ? allDays.map(d => {
+          const u=uMap[d]||0, r=rMap[d]||0, c=cMap[d]||0;
+          return `<div style="flex:0 0 auto;min-width:${allDays.length>25?'10px':'18px'};display:flex;flex-direction:column;align-items:center">
+            <div style="display:flex;gap:1px;align-items:flex-end;height:80px">
+              <div style="width:${barW};background:#8B4513;border-radius:2px 2px 0 0;height:${Math.max(2,Math.round(u/maxVal*76))}px" title="Usuários: ${u}"></div>
+              <div style="width:${barW};background:#D4A574;border-radius:2px 2px 0 0;height:${Math.max(2,Math.round(r/maxVal*76))}px" title="Reviews: ${r}"></div>
+              <div style="width:${barW};background:#6BBF59;border-radius:2px 2px 0 0;height:${Math.max(2,Math.round(c/maxVal*76))}px" title="Comentários: ${c}"></div>
+            </div>
+            <span style="font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap">${d.slice(5)}</span>
+          </div>`;
+        }).join('') : '<span style="color:var(--muted);font-size:13px;margin:auto">Sem dados para este período</span>'}
+      </div>
+    </div>
+
+    <!-- Top Banheiros + Top Usuários -->
+    <div class="mini-grid">
+      <div class="analytics-section">
+        <div class="analytics-section-title">🚽 Top Banheiros (por reviews)</div>
+        ${topBath.length ? topBath.map(b => `
+          <div class="hbar-row">
+            <div class="hbar-label" title="${esc(b.name)}">${esc(b.name)}<br><span style="font-size:10px;color:var(--muted)">${esc(b.neighborhood||'')}</span></div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(b.reviews_count/maxBath*100)}%"></div></div>
+            <span class="hbar-count">${b.reviews_count} ⭐${b.rating}</span>
+          </div>`).join('') : '<p class="empty">Sem dados</p>'}
+      </div>
+      <div class="analytics-section">
+        <div class="analytics-section-title">🏆 Top Usuários (por reviews)</div>
+        ${topUsers.length ? topUsers.map((u,i) => `
+          <div class="hbar-row">
+            <div style="display:flex;align-items:center;gap:5px;min-width:130px;max-width:150px">
+              <span style="font-size:11px;color:var(--muted);font-weight:800;width:14px">${i+1}.</span>
+              <div class="avatar-cell" style="background:${esc(u.avatar_color)};width:22px;height:22px;font-size:9px;flex-shrink:0">${esc(u.avatar_text)}</div>
+              <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${esc(u.username)}</span>
+            </div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(u.reviews_count/maxUser*100)}%"></div></div>
+            <span class="hbar-count" style="min-width:60px;font-size:11px">${u.reviews_count}💩 ❤️${u.likes_total}</span>
+          </div>`).join('') : '<p class="empty">Sem dados</p>'}
+      </div>
+    </div>
+
+    <!-- Distribuição de Ratings + Stickers + Reações -->
+    <div class="mini-grid">
+      <div class="analytics-section">
+        <div class="analytics-section-title">⭐ Distribuição de Ratings</div>
+        <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Qualidade</div>
+        ${[1,2,3,4,5].map(v => {
+          const row=(ratings.quality||[]).find(r=>r.v===v)||{c:0};
+          return `<div class="hbar-row">
+            <div class="hbar-label">${'💩'.repeat(v)}</div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(row.c/maxQ*100)}%"></div></div>
+            <span class="hbar-count">${row.c}</span>
+          </div>`;
+        }).join('')}
+        ${(ratings.relief||[]).length ? `
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin:10px 0 6px;text-transform:uppercase">Alívio</div>
+          ${(ratings.relief||[]).map(r=>`<div class="hbar-row">
+            <div class="hbar-label">${esc(r.v)}</div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(r.c/maxRelief*100)}%;background:linear-gradient(90deg,#6BBF59,#3a8a2a)"></div></div>
+            <span class="hbar-count">${r.c}</span>
+          </div>`).join('')}` : ''}
+        ${(ratings.smell||[]).length ? `
+          <div style="font-size:11px;font-weight:800;color:var(--muted);margin:10px 0 6px;text-transform:uppercase">Cheiro</div>
+          ${(ratings.smell||[]).map(r=>`<div class="hbar-row">
+            <div class="hbar-label">${esc(r.v)}</div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(r.c/maxSmell*100)}%;background:linear-gradient(90deg,#E74C3C,#922b21)"></div></div>
+            <span class="hbar-count">${r.c}</span>
+          </div>`).join('')}` : ''}
+        <div style="font-size:12px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--bg)">
+          ⏱ Duração média: <strong>${ratings.avg_duration} min</strong>
+        </div>
+      </div>
+      <div>
+        <!-- Stickers -->
+        <div class="analytics-section" style="margin-bottom:16px">
+          <div class="analytics-section-title">🏷 Stickers Usados</div>
+          ${stickers.length ? stickers.map(s=>`
+            <div class="hbar-row">
+              <div class="hbar-label" style="font-size:20px;min-width:42px;max-width:42px;text-align:center">${esc(s.sticker)}</div>
+              <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(s.count/maxSt*100)}%;background:linear-gradient(90deg,#F39C12,#f1c40f)"></div></div>
+              <span class="hbar-count">${s.count}</span>
+            </div>`).join('') : '<p class="empty" style="padding:6px 0;text-align:left">Nenhum sticker ainda</p>'}
+        </div>
+        <!-- Reações -->
+        <div class="analytics-section">
+          <div class="analytics-section-title">🎭 Reações em Comentários
+            <span style="margin-left:auto;font-size:12px;font-weight:400;color:var(--muted)">${reactions.total} total</span>
+          </div>
+          ${reactions.reactions.length ? reactions.reactions.map(r=>`
+            <div class="hbar-row">
+              <div class="hbar-label" style="font-size:22px;min-width:42px;max-width:42px;text-align:center">${r.emoji}</div>
+              <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${Math.round(r.count/maxReact*100)}%"></div></div>
+              <span class="hbar-count">${r.count} <span style="font-size:10px;color:var(--muted)">${reactions.total>0?Math.round(r.count/reactions.total*100)+'%':''}</span></span>
+            </div>`).join('') : '<p class="empty" style="padding:6px 0;text-align:left">Nenhuma reação ainda</p>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Funil de Convites -->
+    <div class="analytics-section">
+      <div class="analytics-section-title">📨 Funil de Convites</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:${invSummary.topInviters.length?'16px':'0'}">
+        ${[['📨','Gerados',invSummary.total],['✅','Usados',invSummary.used],['⏳','Pendentes',invSummary.pending],['📊','Conversão',invSummary.conversion+'%']].map(([i,l,n])=>`<div style="flex:1;min-width:110px">${statCard(i,l,n)}</div>`).join('')}
+      </div>
+      ${invSummary.topInviters.length ? `
+        <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Top convidadores</div>
+        ${invSummary.topInviters.map(u=>`
+          <div class="hbar-row">
+            <div style="display:flex;align-items:center;gap:6px;min-width:140px;max-width:180px">
+              <div class="avatar-cell" style="background:${esc(u.avatar_color)};width:22px;height:22px;font-size:9px;flex-shrink:0">${esc(u.avatar_text)}</div>
+              <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${esc(u.username)}</span>
+            </div>
+            <div class="hbar-fill-wrap"><div class="hbar-fill" style="width:${u.sent>0?Math.round(u.converted/u.sent*100):0}%"></div></div>
+            <span class="hbar-count" style="font-size:11px;min-width:80px">${u.converted}/${u.sent} (${u.sent>0?Math.round(u.converted/u.sent*100):0}%)</span>
+          </div>`).join('')}` : ''}
+    </div>
+
+    <!-- Comunidades -->
+    ${stats ? `<div class="analytics-section">
+      <div class="analytics-section-title">☷ Resumo Geral da Plataforma</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${[['👤','Usuários',stats.users],['💩','Reviews',stats.reviews],['🚽','Banheiros',stats.bathrooms],['☷','Comunidades',stats.communities],['❤️','Curtidas',stats.likes],['💬','Comentários',stats.comments]].map(([i,l,n])=>`<div style="flex:1;min-width:100px">${statCard(i,l,n)}</div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// ── Reações (seção dedicada) ───────────────────────────────
+async function renderReactions(el) {
+  const reactions = await api('/analytics/reactions').catch(() => ({reactions:[],total:0}));
+  const maxR = Math.max(...reactions.reactions.map(r=>r.count), 1);
+  el.innerHTML = `
+    <div class="page-title">🎭 Reações em Comentários</div>
+    <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);max-width:380px;margin-bottom:24px">
+      ${statCard('🎭','Total de reações',reactions.total)}
+      ${statCard('📝','Tipos diferentes',reactions.reactions.length)}
+    </div>
+    <div class="analytics-section">
+      <div class="analytics-section-title">Por emoji</div>
+      ${reactions.reactions.length ? reactions.reactions.map(r=>`
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <span style="font-size:30px;min-width:40px;text-align:center">${r.emoji}</span>
+          <div style="flex:1">
+            <div class="hbar-fill-wrap" style="height:18px">
+              <div class="hbar-fill" style="width:${Math.round(r.count/maxR*100)}%;height:100%"></div>
+            </div>
+          </div>
+          <span style="font-size:15px;font-weight:800;color:var(--secondary);min-width:36px;text-align:right">${r.count}</span>
+          <span style="font-size:12px;color:var(--muted);min-width:36px">${reactions.total>0?Math.round(r.count/reactions.total*100)+'%':''}</span>
+        </div>`).join('') : '<p class="empty">Nenhuma reação registrada ainda.</p>'}
+    </div>`;
+}
+
 // ── Usuários ─────────────────────────────────────────────
-async function renderUsers(el, q='') {
-  const users = await api(`/users${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+async function renderUsers(el, q='', filter='') {
+  let users = await api(`/users${q?'?q='+encodeURIComponent(q):''}`).catch(()=>[]);
+  if (filter === 'banned')   users = users.filter(u => u.banned_at);
+  if (filter === 'inactive') users = users.filter(u => u.reviews_count === 0);
   el.innerHTML = `
     <div class="page-title">👤 Usuários</div>
-    <div class="toolbar">
+    <div class="toolbar" style="flex-wrap:wrap">
       <input class="search-input" type="search" placeholder="Buscar nome, usuário, e-mail…" value="${esc(q)}"
-             oninput="renderUsers(document.getElementById('content'),this.value)">
+             oninput="renderUsers(document.getElementById('content'),this.value,'${esc(filter)}')">
       <span class="count-badge">${users.length}</span>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+        <button class="filter-btn${!filter?' active':''}" onclick="renderUsers(document.getElementById('content'),'${esc(q)}','')">Todos</button>
+        <button class="filter-btn${filter==='banned'?' active':''}" onclick="renderUsers(document.getElementById('content'),'${esc(q)}','banned')">&#128683; Banidos</button>
+        <button class="filter-btn${filter==='inactive'?' active':''}" onclick="renderUsers(document.getElementById('content'),'${esc(q)}','inactive')">&#128164; Inativos</button>
+      </div>
     </div>
     <div class="table-wrap"><table>
       <thead><tr><th>Usuário</th><th>E-mail</th><th>Reviews</th><th>Status</th><th>Cadastro</th><th>Ações</th></tr></thead>
@@ -355,13 +647,14 @@ async function renderReviews(el, q='') {
       <span class="count-badge">${reviews.length}</span>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Autor</th><th>Título</th><th>Qualidade</th><th>❤️</th><th>💬</th><th>Data</th><th>Ações</th></tr></thead>
+      <thead><tr><th>Autor</th><th>Título</th><th>Sticker</th><th>Qualidade</th><th>❤️</th><th>💬</th><th>Data</th><th>Ações</th></tr></thead>
       <tbody>${reviews.length ? reviews.map(r => `<tr>
         <td><div class="user-cell">
           <div class="avatar-cell" style="background:${esc(r.avatar_color)}">${esc(r.avatar_text)}</div>
           <span>@${esc(r.username)}</span>
         </div></td>
         <td>${esc(r.title||'—')}</td>
+        <td style="font-size:18px">${esc(r.sticker||'—')}</td>
         <td>${QUALITY[r.quality]||'?'}</td>
         <td>${r.likes_count}</td>
         <td>${r.comments_count}</td>
@@ -370,7 +663,7 @@ async function renderReviews(el, q='') {
           <button class="btn-sm btn-edit"   onclick='editReview(${JSON.stringify(r)})'>✏️</button>
           <button class="btn-sm btn-delete" onclick="del('reviews','${r.id}','review de ${esc(r.username)}',()=>renderReviews(document.getElementById('content'),'${esc(q)}'))">🗑</button>
         </div></td>
-      </tr>`).join('') : '<tr><td colspan="7" class="empty">Nenhuma review</td></tr>'}</tbody>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty">Nenhuma review</td></tr>'}</tbody>
     </table></div>`;
 }
 

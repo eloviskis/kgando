@@ -361,7 +361,7 @@ async function boot() {
         const inv = await r.json();
         if (inv.valid && banner) {
           banner.style.display = 'block';
-          banner.textContent = `🎉 Você foi convidado(a) por ${inv.inviter_name || 'alguém'}! Crie sua conta abaixo.`;
+          banner.textContent = t('invite.banner').replace('{name}', inv.inviter_name || '?');
         }
       } catch { /* silencioso */ }
       // Mudar tab para register
@@ -678,7 +678,7 @@ window.handleAuthSubmit = async function(e, type) {
       if (totpField) { totpField.style.display = ''; totpInput?.focus(); }
       btn.disabled = false;
       btn.textContent = 'Verificar código 🔐';
-      errEl.textContent = '🔐 Insira o código do seu app autenticador.';
+      errEl.textContent = t('auth.totpNeeded');
       errEl.style.color = '#8B4513';
       errEl.hidden = false;
       return;
@@ -898,9 +898,46 @@ function handleClick(e) {
         el.closest('.comment-item')?.remove();
         const counter = document.querySelector(`[data-action="toggle-comments"][data-id="${rid}"]`);
         if (counter) { const m = counter.textContent.match(/\d+/); if (m) counter.textContent = `💬 ${Math.max(0, parseInt(m[0])-1)}`; }
-        showToast('Comentário deletado.');
+        showToast(t('misc.commentDeleted'));
       })
       .catch(err => showToast(err.message));
+    return;
+  }
+  if (action === 'toggle-react-picker') {
+    const picker = document.getElementById(`react-picker-${el.dataset.cid}`);
+    if (picker) picker.hidden = !picker.hidden;
+    return;
+  }
+  if (action === 'do-comment-react') {
+    const { cid, rid, emoji } = el.dataset;
+    if (!currentUser) { showToast('Entre para reagir.'); return; }
+    if (el.disabled) return;
+    el.disabled = true;
+    apiFetch(`/reviews/${rid}/comments/${cid}/react`, { method: 'POST', body: JSON.stringify({ emoji }) })
+      .then(res => {
+        // Atualiza pills
+        const pillsEl = document.getElementById(`react-pills-${cid}`);
+        if (pillsEl) {
+          pillsEl.innerHTML = res.reactions.map(r => `
+            <button type="button" class="react-pill${res.my_reaction === r.emoji ? ' mine' : ''}"
+                    data-action="do-comment-react" data-cid="${cid}" data-rid="${rid}" data-emoji="${r.emoji}">
+              ${r.emoji} <span>${r.count}</span>
+            </button>`).join('');
+        }
+        // Atualiza picker
+        const picker = document.getElementById(`react-picker-${cid}`);
+        if (picker) {
+          picker.querySelectorAll('.react-pick-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.emoji === res.my_reaction);
+          });
+          picker.hidden = true;
+        }
+        // Atualiza botão toggle
+        const toggleBtn = document.querySelector(`[data-action="toggle-react-picker"][data-cid="${cid}"]`);
+        if (toggleBtn) toggleBtn.classList.toggle('has-react', !!res.my_reaction);
+      })
+      .catch(err => showToast(err.message))
+      .finally(() => { el.disabled = false; });
     return;
   }
   if (action === 'delete-scrap') {
@@ -1298,10 +1335,9 @@ function renderPage() {
 async function renderHomePage(root) {
   root.innerHTML = '<div class="spinner"></div>';
 
-  let feedData, scraps, userReviews;
+  let scraps, userReviews;
   try {
-    [feedData, scraps, userReviews] = await Promise.all([
-      apiFetch('/reviews?limit=15').catch(() => ({ reviews: [] })),
+    [scraps, userReviews] = await Promise.all([
       apiFetch('/scraps').catch(() => []),
       apiFetch(`/users/${currentUser.id}/reviews`).catch(() => []),
     ]);
@@ -1310,7 +1346,8 @@ async function renderHomePage(root) {
     return;
   }
 
-  const reviews = feedData.reviews || [];
+  const reviews = [];
+  const feedData = { reviews: [], total: 0 };
   const badges  = computeBadges(userReviews);
 
   // "Quem sou eu" box
@@ -1380,39 +1417,19 @@ async function renderHomePage(root) {
     </div>
   `;
 
-  // Activity feed
-  const topReview = [...reviews].sort((a, b) => b.likes_count - a.likes_count)[0];
-  const highlight = topReview ? `
-    <div class="daily-highlight" style="margin-bottom:0">
-      <div class="hl-badge">${t('home.topDump')}</div>
-      <div class="hl-content">
-        <div class="avatar avatar--medium${avCls(topReview.avatar_text)}" style="${avBg(topReview.avatar_text,topReview.avatar_color)};border:4px solid white;flex-shrink:0">${avTxt(topReview.avatar_text)}</div>
-        <div class="hl-info">
-          <h3>${esc(topReview.title || (CURRENT_LANG === 'pt' ? 'Sem título' : 'Untitled'))}</h3>
-          <p>${CURRENT_LANG === 'pt' ? 'por' : 'by'} @${esc(topReview.username)} · ${timeAgo(topReview.created_at)}</p>
-        </div>
-        <div class="hl-rating">
-          <div class="big">${qualityIcon(topReview.quality)}</div>
-          <div class="lbl">${topReview.likes_count} ${t('ranking.likes')}</div>
-        </div>
-      </div>
-    </div>
-  ` : '';
-
+  // Activity feed (abas Parcas / Descobrir)
   const activityBox = `
     <div class="orkut-box">
       <div class="orkut-box-header">
         <h3>${t('home.activity')}</h3>
         <button class="orkut-box-link" type="button" data-page="new">${t('home.newReview')}</button>
       </div>
-      <div class="orkut-box-body">
-        ${highlight}
-        <div class="feed" id="mainFeed" style="${highlight ? 'margin-top:16px' : ''}">
-          ${reviews.map(r => reviewCard(r)).join('') || emptyState('💩', t('home.feedEmpty'), t('home.feedEmptySub'))}
-        </div>
-        ${(feedData.total || 0) > reviews.length
-          ? `<button class="load-more-btn" id="loadMoreBtn" data-page-num="2">Carregar mais 💩</button>`
-          : ''}
+      <div class="feed-tabs">
+        <button class="feed-tab active" id="tabFriends" data-feed="friends">💩 Parcas</button>
+        <button class="feed-tab" id="tabGlobal" data-feed="global">🌍 Descobrir</button>
+      </div>
+      <div class="orkut-box-body" id="feedBody">
+        <div class="spinner"></div>
       </div>
     </div>
   `;
@@ -1445,18 +1462,85 @@ async function renderHomePage(root) {
 
   root.querySelector('[data-action="edit-profile"]')?.addEventListener('click', () => openEditProfileModal(currentUser));
 
-  document.getElementById('loadMoreBtn')?.addEventListener('click', async function() {
-    const pageNum = parseInt(this.dataset.pageNum || 2);
-    this.disabled = true; this.textContent = t('btn.loading');
-    try {
-      const more = await apiFetch(`/reviews?limit=15&page=${pageNum}`);
+  // ── Lógica de abas do feed ────────────────────────────
+  let activeFeedTab = 'friends';
+
+  async function loadFeed(feedType, page = 1) {
+    const feedBody = document.getElementById('feedBody');
+    if (!feedBody) return;
+    if (page === 1) feedBody.innerHTML = '<div class="spinner"></div>';
+
+    const url = feedType === 'friends'
+      ? `/reviews?feed=friends&limit=15&page=${page}`
+      : `/reviews?limit=15&page=${page}`;
+
+    const data = await apiFetch(url).catch(() => ({ reviews: [], total: 0 }));
+    const revs = data.reviews || [];
+
+    if (page === 1) {
+      if (data.no_friends) {
+        feedBody.innerHTML = `
+          <div style="padding:24px 16px;text-align:center">
+            <div style="font-size:36px;margin-bottom:10px">💩</div>
+            <div style="font-weight:800;font-size:16px;color:var(--primary-dark);margin-bottom:6px">Ainda sem parcas de cocô</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Adicione parcas para ver as reviews delas aqui.<br>Enquanto isso, veja o que todo mundo está cagando:</div>
+            <button class="feed-tab" id="switchToGlobal" style="margin:0 auto">🌍 Ver Descobrir</button>
+          </div>`;
+        document.getElementById('switchToGlobal')?.addEventListener('click', () => {
+          document.getElementById('tabFriends')?.classList.remove('active');
+          document.getElementById('tabGlobal')?.classList.add('active');
+          activeFeedTab = 'global';
+          loadFeed('global');
+        });
+        return;
+      }
+      if (revs.length === 0) {
+        feedBody.innerHTML = emptyState('💩', t('home.feedEmpty'), t('home.feedEmptySub'));
+        return;
+      }
+      feedBody.innerHTML = `<div class="feed" id="mainFeed">${revs.map(r => reviewCard(r)).join('')}</div>`;
+      if ((data.total || 0) > revs.length) {
+        feedBody.insertAdjacentHTML('beforeend',
+          `<button class="load-more-btn" id="loadMoreBtn" data-page-num="2">Carregar mais 💩</button>`);
+        wireLoadMore(feedType);
+      }
+    } else {
       const feed = document.getElementById('mainFeed');
-      feed.insertAdjacentHTML('beforeend', (more.reviews || []).map(r => reviewCard(r)).join(''));
-      this.dataset.pageNum = pageNum + 1;
-      this.disabled = false; this.textContent = t('home.loadMore');
-      if ((more.reviews || []).length < 15) this.hidden = true;
-    } catch(e) { showToast(e.message); this.disabled = false; this.textContent = t('home.loadMore'); }
+      if (feed) feed.insertAdjacentHTML('beforeend', revs.map(r => reviewCard(r)).join(''));
+      const btn = document.getElementById('loadMoreBtn');
+      if (btn) {
+        btn.dataset.pageNum = page + 1;
+        btn.disabled = false; btn.textContent = t('home.loadMore');
+        if (revs.length < 15) btn.hidden = true;
+      }
+    }
+  }
+
+  function wireLoadMore(feedType) {
+    document.getElementById('loadMoreBtn')?.addEventListener('click', async function() {
+      const pageNum = parseInt(this.dataset.pageNum || 2);
+      this.disabled = true; this.textContent = t('btn.loading');
+      await loadFeed(feedType, pageNum);
+    });
+  }
+
+  document.getElementById('tabFriends')?.addEventListener('click', function() {
+    if (activeFeedTab === 'friends') return;
+    activeFeedTab = 'friends';
+    document.getElementById('tabGlobal')?.classList.remove('active');
+    this.classList.add('active');
+    loadFeed('friends');
   });
+  document.getElementById('tabGlobal')?.addEventListener('click', function() {
+    if (activeFeedTab === 'global') return;
+    activeFeedTab = 'global';
+    document.getElementById('tabFriends')?.classList.remove('active');
+    this.classList.add('active');
+    loadFeed('global');
+  });
+
+  // Carrega feed de parcas por padrão
+  loadFeed('friends');
 }
 
 /* ── Review card ────────────────────────────────── */
@@ -1469,6 +1553,12 @@ function reviewCard(r) {
   const rel  = reliefOpts.find(x => x.value === r.relief)     || {};
   const sml  = smellOpts.find(x => x.value === r.smell)       || {};
   const stk  = stickerOpts.find(x => x.value === r.sticker);
+
+  const cd = (() => { try { return r.custom_display ? JSON.parse(r.custom_display) : {}; } catch { return {}; } })();
+  const qualVal = cd.quality  ? `${cd.quality.emoji} ${esc(cd.quality.label)}`   : qualityIcon(r.quality);
+  const durVal  = cd.duration ? `${cd.duration.emoji} ${esc(cd.duration.label)}` : `${dur.icon || ''} ${esc(dur.label || '')}`;
+  const relVal  = cd.relief   ? `${cd.relief.emoji} ${esc(cd.relief.label)}`     : `${rel.icon || ''} ${esc(rel.label || '')}`;
+  const smlVal  = cd.smell    ? `${cd.smell.emoji} ${esc(cd.smell.label)}`       : `${sml.icon || ''} ${esc(sml.label || '')}`;
 
   return `
   <div class="review-card">
@@ -1491,19 +1581,19 @@ function reviewCard(r) {
     <div class="review-ratings">
       <div class="rating-item">
         <div class="lbl">${t('review.quality')}</div>
-        <div class="val">${qualityIcon(r.quality)}</div>
+        <div class="val">${qualVal}</div>
       </div>
       <div class="rating-item">
         <div class="lbl">${t('review.duration')}</div>
-        <div class="val">${dur.icon || ''} ${esc(dur.label || '')}</div>
+        <div class="val">${durVal}</div>
       </div>
       <div class="rating-item">
         <div class="lbl">${t('review.relief')}</div>
-        <div class="val">${rel.icon || ''} ${esc(rel.label || '')}</div>
+        <div class="val">${relVal}</div>
       </div>
       <div class="rating-item">
         <div class="lbl">${t('review.smell')}</div>
-        <div class="val">${sml.icon || ''} ${esc(sml.label || '')}</div>
+        <div class="val">${smlVal}</div>
       </div>
     </div>
 
@@ -1527,8 +1617,8 @@ function reviewCard(r) {
       </button>
       ${currentUser && r.user_id === currentUser.id
         ? `<button class="action-btn-sm" data-action="instagram-review" data-id="${r.id}" title="${t('review.instagram')}">📸</button>
-           <button class="action-btn-sm" data-action="edit-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Editar avaliação' : 'Edit review'}">✏️</button>
-           <button class="action-btn-sm action-btn-danger" data-action="delete-review" data-id="${r.id}" title="${CURRENT_LANG === 'pt' ? 'Deletar avaliação' : 'Delete review'}">🗑</button>`
+           <button class="action-btn-sm" data-action="edit-review" data-id="${r.id}" title="${t('misc.editTooltip')}">✏️</button>
+           <button class="action-btn-sm action-btn-danger" data-action="delete-review" data-id="${r.id}" title="${t('misc.deleteTooltip')}">🗑</button>`
         : ''}
     </div>
 
@@ -1536,12 +1626,200 @@ function reviewCard(r) {
       <div class="comments-section">
         <div id="comment-list-${r.id}" class="comment-list-container"></div>
         <form class="comment-form" data-review-id="${r.id}">
-          <input type="text" placeholder="${CURRENT_LANG === 'pt' ? 'Escreva um comentário…' : 'Write a comment…'}" maxlength="300" required>
+          <input type="text" placeholder="${t('misc.commentPh')}" maxlength="300" required>
           <button type="submit">${t('btn.send')}</button>
         </form>
       </div>
     </div>
   </div>`;
+}
+
+/* ── Custom Review Options ──────────────────────── */
+async function initCustomOptions(container, initialCD) {
+  const pt = CURRENT_LANG === 'pt';
+  let myOpts;
+  try { myOpts = await apiFetch('/review-options'); } catch { myOpts = []; }
+
+  const optsMap = {};
+  myOpts.forEach(o => { optsMap[o.category] = o; });
+
+  // cd = seleções customizadas para a sessão atual do formulário
+  const cd = {};
+  if (initialCD) {
+    try {
+      const parsed = typeof initialCD === 'string' ? JSON.parse(initialCD) : initialCD;
+      Object.assign(cd, parsed);
+    } catch { /* ignore */ }
+  }
+
+  // Adiciona input hidden para custom_display no form
+  const form = container.querySelector('form');
+  if (form && !form.querySelector('[name="custom_display"]')) {
+    const h = document.createElement('input');
+    h.type = 'hidden'; h.name = 'custom_display'; h.id = 'fCustomDisplay';
+    form.appendChild(h);
+  }
+
+  function syncHidden() {
+    const h = container.querySelector('[name="custom_display"]');
+    if (h) h.value = Object.keys(cd).length ? JSON.stringify(cd) : '';
+  }
+
+  for (const cat of ['quality', 'duration', 'relief', 'smell']) {
+    const firstBtn = container.querySelector(`.emoji-btn[data-field="${cat}"]`);
+    if (!firstBtn) continue;
+    const ratingDiv = firstBtn.closest('.emoji-rating');
+    if (!ratingDiv) continue;
+
+    // Quando botão regular é clicado, limpa seleção custom desta categoria
+    ratingDiv.querySelectorAll(`.emoji-btn:not(.custom-opt-btn)`).forEach(btn => {
+      btn.addEventListener('click', () => { delete cd[cat]; syncHidden(); });
+    });
+
+    // Cria seção custom abaixo do form-group
+    const formGroup = ratingDiv.closest('.form-group');
+    if (!formGroup) continue;
+    let section = formGroup.querySelector(`.custom-opt-section[data-cat="${cat}"]`);
+    if (!section) {
+      section = document.createElement('div');
+      section.className = 'custom-opt-section';
+      section.dataset.cat = cat;
+      formGroup.appendChild(section);
+    }
+
+    _renderCustomSection({ cat, section, ratingDiv, optsMap, cd, myOpts, syncHidden, pt });
+  }
+
+  syncHidden();
+}
+
+function _renderCustomSection({ cat, section, ratingDiv, optsMap, cd, myOpts, syncHidden, pt }) {
+  section.innerHTML = '';
+  const opt = optsMap[cat];
+
+  if (opt) {
+    const isSelected = !!cd[cat];
+
+    // Adiciona/atualiza botão custom no ratingDiv
+    let customBtn = ratingDiv.querySelector(`.custom-opt-btn[data-custom-cat="${cat}"]`);
+    if (!customBtn) {
+      customBtn = document.createElement('button');
+      customBtn.type = 'button';
+      customBtn.dataset.customCat = cat;
+      ratingDiv.appendChild(customBtn);
+    }
+    customBtn.dataset.field = cat;
+    customBtn.dataset.value = opt.mapped_value;
+    customBtn.innerHTML = `${esc(opt.emoji)}<small>${esc(opt.label)}</small>`;
+    customBtn.className = `emoji-btn custom-opt-btn${isSelected ? ' active' : ''}`;
+
+    // Se já está selecionado (form de edição), ativa o botão e o campo hidden
+    if (isSelected) {
+      ratingDiv.querySelectorAll(`.emoji-btn[data-field="${cat}"]:not(.custom-opt-btn)`).forEach(b => b.classList.remove('active'));
+      const hf = document.getElementById(`f${cat.charAt(0).toUpperCase() + cat.slice(1)}`);
+      if (hf) hf.value = opt.mapped_value;
+    }
+
+    customBtn.onclick = () => {
+      ratingDiv.querySelectorAll(`.emoji-btn[data-field="${cat}"]`).forEach(b => b.classList.remove('active'));
+      customBtn.classList.add('active');
+      const hf = document.getElementById(`f${cat.charAt(0).toUpperCase() + cat.slice(1)}`);
+      if (hf) hf.value = opt.mapped_value;
+      cd[cat] = { emoji: opt.emoji, label: opt.label };
+      syncHidden();
+    };
+
+    section.innerHTML = `
+      <div class="custom-opt-controls-row">
+        <span class="custom-opt-tag">${esc(opt.emoji)} <em>${esc(opt.label)}</em></span>
+        <button type="button" class="custom-opt-edit-btn" title="${pt ? 'Editar' : 'Edit'}">✏️</button>
+        <button type="button" class="custom-opt-del-btn" title="${pt ? 'Excluir' : 'Delete'}">🗑️</button>
+      </div>
+      <div class="custom-form-host"></div>`;
+
+    section.querySelector('.custom-opt-edit-btn').addEventListener('click', () => {
+      _showCustomForm({ cat, existing: opt, formHost: section.querySelector('.custom-form-host'), optsMap, myOpts, cd, syncHidden, ratingDiv, section, pt });
+    });
+    section.querySelector('.custom-opt-del-btn').addEventListener('click', async () => {
+      if (!confirm(t('misc.deleteCustomOpt'))) return;
+      try {
+        await apiFetch(`/review-options/${cat}`, { method: 'DELETE' });
+        const idx = myOpts.findIndex(o => o.category === cat);
+        if (idx >= 0) myOpts.splice(idx, 1);
+        delete optsMap[cat];
+        delete cd[cat];
+        syncHidden();
+        ratingDiv.querySelector(`.custom-opt-btn[data-custom-cat="${cat}"]`)?.remove();
+        _renderCustomSection({ cat, section, ratingDiv, optsMap, cd, myOpts, syncHidden, pt });
+        showToast(t('misc.customOptDeleted'));
+      } catch (err) { showToast(err.message); }
+    });
+  } else {
+    section.innerHTML = `
+      <button type="button" class="custom-opt-create-btn">${t('misc.createOpt')}</button>
+      <div class="custom-form-host"></div>`;
+    section.querySelector('.custom-opt-create-btn').addEventListener('click', () => {
+      _showCustomForm({ cat, existing: null, formHost: section.querySelector('.custom-form-host'), optsMap, myOpts, cd, syncHidden, ratingDiv, section, pt });
+    });
+  }
+}
+
+function _showCustomForm({ cat, existing, formHost, optsMap, myOpts, cd, syncHidden, ratingDiv, section, pt }) {
+  if (formHost.innerHTML) { formHost.innerHTML = ''; return; } // toggle
+
+  const catOptions = {
+    quality:  getQualityOptions(),
+    duration: getDurationOptions(),
+    relief:   getReliefOptions(),
+    smell:    getSmellOptions(),
+  };
+
+  const mappedOpts = catOptions[cat].map(o =>
+    `<option value="${o.value}" ${existing?.mapped_value == o.value ? 'selected' : ''}>${o.icon} ${esc(o.label)}</option>`
+  ).join('');
+
+  formHost.innerHTML = `
+    <div class="custom-opt-form">
+      <div class="custom-form-row">
+        <input class="co-emoji" type="text" placeholder="🎯" maxlength="8" value="${existing ? esc(existing.emoji) : ''}">
+        <input class="co-label" type="text" placeholder="${pt ? 'Meu texto…' : 'My text…'}" maxlength="30" value="${existing ? esc(existing.label) : ''}">
+        <select class="co-mapped">${mappedOpts}</select>
+        <button type="button" class="co-save submit-btn" style="padding:6px 14px;font-size:13px">${pt ? 'Salvar' : 'Save'}</button>
+        <button type="button" class="co-cancel" style="padding:6px 10px;font-size:13px;background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer">✕</button>
+      </div>
+      <p class="co-hint">📌 ${pt ? 'A imagem deve ser um emoji (ex: 🎯 🌟 💎)' : 'Image must be an emoji (e.g. 🎯 🌟 💎)'}</p>
+    </div>`;
+
+  formHost.querySelector('.co-cancel').addEventListener('click', () => { formHost.innerHTML = ''; });
+  formHost.querySelector('.co-save').addEventListener('click', async () => {
+    const emoji = formHost.querySelector('.co-emoji').value.trim();
+    const label = formHost.querySelector('.co-label').value.trim();
+    const mapped_value = formHost.querySelector('.co-mapped').value;
+
+    if (!emoji) { showToast(pt ? 'Digite um emoji.' : 'Enter an emoji.'); return; }
+    if (!label) { showToast(pt ? 'Digite um texto.' : 'Enter text.'); return; }
+
+    const saveBtn = formHost.querySelector('.co-save');
+    saveBtn.disabled = true; saveBtn.textContent = '…';
+
+    try {
+      const saved = await apiFetch('/review-options', {
+        method: 'POST',
+        body: JSON.stringify({ category: cat, emoji, label, mapped_value }),
+      });
+      formHost.innerHTML = '';
+      const idx = myOpts.findIndex(o => o.category === cat);
+      if (idx >= 0) myOpts[idx] = saved;
+      else myOpts.push(saved);
+      optsMap[cat] = saved;
+      _renderCustomSection({ cat, section, ratingDiv, optsMap, cd, myOpts, syncHidden, pt });
+      showToast(t('misc.optSaved'));
+    } catch (err) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = pt ? 'Salvar' : 'Save';
+      showToast(err.message);
+    }
+  });
 }
 
 /* ── New review page ────────────────────────────── */
@@ -1614,8 +1892,8 @@ async function renderNewPage(root) {
       </div>
 
       <div class="form-group">
-        <label class="form-label">${CURRENT_LANG === 'pt' ? 'Título' : 'Title'} <span class="form-sublabel">(${CURRENT_LANG === 'pt' ? 'opcional' : 'optional'})</span></label>
-        <input class="form-text-input" type="text" name="title" placeholder="${CURRENT_LANG === 'pt' ? 'Ex: Operação Relâmpago 🥷' : 'e.g. Lightning Operation 🥷'}" maxlength="120">
+        <label class="form-label">${t('misc.titleLabel')} <span class="form-sublabel">(${t('misc.optional')})</span></label>
+        <input class="form-text-input" type="text" name="title" placeholder="${t('misc.titlePt')}" maxlength="120">
       </div>
 
       <div class="form-group">
@@ -1646,6 +1924,9 @@ async function renderNewPage(root) {
       if (hidden) hidden.value = val;
     });
   });
+
+  // Carrega opções personalizadas por categoria
+  if (currentUser) initCustomOptions(root, null);
 }
 
 async function submitReview(form, reviewId = null) {
@@ -1667,13 +1948,14 @@ async function submitReview(form, reviewId = null) {
     console.error('Campos obrigatórios faltando:', { quality: body.quality, duration: body.duration, relief: body.relief, smell: body.smell });
     showToast(t('new.error'));
     btn.disabled = false; 
-    btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
+    btn.textContent = isEdit ? t('misc.saveBtn') : t('misc.publishBtn');
     return;
   }
   body.quality  = Number(body.quality);
   body.duration = Number(body.duration);
-  if (!body.bathroom_id) delete body.bathroom_id;
-  if (!body.sticker)     delete body.sticker;
+  if (!body.bathroom_id)   delete body.bathroom_id;
+  if (!body.sticker)       delete body.sticker;
+  if (!body.custom_display) delete body.custom_display;
 
   try {
     console.log('Submitting review:', { isEdit, reviewId, body });
@@ -1681,7 +1963,7 @@ async function submitReview(form, reviewId = null) {
       console.log('Chamando API PUT para /reviews/' + reviewId);
       const result = await apiFetch(`/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify(body) });
       console.log('Edit result:', result);
-      showToast(CURRENT_LANG === 'pt' ? 'Avaliação atualizada! 💩' : 'Review updated! 💩');
+      showToast(t('misc.reviewUpdated'));
       console.log('Toast exibido, fechando modal...');
       document.getElementById('modalHost').innerHTML = '';
       console.log('Renderizando app...');
@@ -1704,7 +1986,7 @@ async function submitReview(form, reviewId = null) {
     const errorMsg = err.message || 'Erro desconhecido';
     showToast('❌ ' + errorMsg);
     btn.disabled = false; 
-    btn.textContent = isEdit ? (CURRENT_LANG === 'pt' ? '💾 Salvar' : '💾 Save') : 'Publicar Avaliação 💩';
+    btn.textContent = isEdit ? t('misc.saveBtn') : t('misc.publishBtn');
   }
 }
 
@@ -1714,7 +1996,7 @@ async function openEditReviewModal(reviewId) {
     <div class="modal-overlay">
       <div class="modal modal--wide">
         <div class="modal-header">
-          <h2>✏️ ${CURRENT_LANG === 'pt' ? 'Editar Avaliação' : 'Edit Review'}</h2>
+          <h2>✏️ ${t('misc.editReview')}</h2>
           <button class="modal-close" data-action="close-modal">✕</button>
         </div>
         <div class="modal-body"><div class="spinner"></div></div>
@@ -1787,8 +2069,8 @@ async function openEditReviewModal(reviewId) {
         </div>
 
         <div class="form-group">
-          <label class="form-label">${CURRENT_LANG === 'pt' ? 'Título' : 'Title'} <span class="form-sublabel">(${CURRENT_LANG === 'pt' ? 'opcional' : 'optional'})</span></label>
-          <input class="form-text-input" type="text" name="title" value="${esc(review.title || '')}" placeholder="${CURRENT_LANG === 'pt' ? 'Ex: Operação Relâmpago 🥷' : 'e.g. Lightning Operation 🥷'}" maxlength="120">
+          <label class="form-label">${t('misc.titleLabel')} <span class="form-sublabel">(${t('misc.optional')})</span></label>
+          <input class="form-text-input" type="text" name="title" value="${esc(review.title || '')}" placeholder="${t('misc.titlePt')}" maxlength="120">
         </div>
 
         <div class="form-group">
@@ -1819,6 +2101,9 @@ async function openEditReviewModal(reviewId) {
         if (hidden) hidden.value = val;
       });
     });
+
+    // Carrega opções personalizadas por categoria (pré-seleciona se houver custom_display)
+    if (currentUser) initCustomOptions(body, review.custom_display || null);
 
     // Submit handler
     const form = document.getElementById('editReviewForm');
@@ -1865,7 +2150,7 @@ async function renderBathroomsPage(root, filterType = '') {
             <div class="bath-icon">${bt.icon}</div>
             <div class="bath-name">${esc(b.name)}</div>
             <div class="bath-neighborhood">📍 ${esc(b.neighborhood)}</div>
-            <div class="bath-rating">⭐ ${Number(b.rating||0).toFixed(1)} <span>(${b.reviews_count} ${CURRENT_LANG === 'pt' ? 'avaliações' : 'reviews'})</span></div>
+            <div class="bath-rating">⭐ ${Number(b.rating||0).toFixed(1)} <span>(${b.reviews_count} ${t('misc.reviews')})</span></div>
             <span class="bath-type-badge">${esc(bt.label)}</span>
           </div>`;
       }).join('') || emptyState('🚽', t('bath.empty'), t('bath.emptySub'))}
@@ -1907,7 +2192,7 @@ async function openBathroomDetail(bathroomId) {
         <h2 style="margin:8px 0 4px">${esc(bath.name)}</h2>
         <div style="color:var(--muted);font-size:13px">📍 ${esc(bath.neighborhood)} · ${esc(bt.label)}</div>
         <div style="margin-top:8px;font-size:20px;font-weight:700">⭐ ${Number(bath.rating||0).toFixed(1)}</div>
-        <div style="font-size:12px;color:var(--muted)">${bath.reviews_count} ${CURRENT_LANG === 'pt' ? 'avaliações' : 'reviews'}</div>
+        <div style="font-size:12px;color:var(--muted)">${bath.reviews_count} ${t('misc.reviews')}</div>
       </div>
       <div class="feed">
         ${allReviews.map(r => reviewCard(r)).join('') || emptyState('💩', t('bath.noReviews'), '')}
@@ -1972,7 +2257,7 @@ async function renderCommunitiesPage(root) {
 
   root.innerHTML = `
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div><h2>${t('comm.title')}</h2><p>${CURRENT_LANG === 'pt' ? 'Encontre pessoas com as mesmas experiências' : 'Find people with the same experiences'}</p></div>
+      <div><h2>${t('comm.title')}</h2><p>${t('misc.findPeople')}</p></div>
       <button class="primary-action" style="width:auto;padding:10px 20px;font-size:14px" data-action="create-community" type="button">
         ${t('comm.create')}
       </button>
@@ -2036,7 +2321,7 @@ async function renderScrapsPage(root) {
       <div class="scrap-form-card">
         <h3>${CURRENT_LANG === 'pt' ? 'Enviar recado' : 'Send message'}</h3>
         <form id="scrapForm" class="auth-form">
-          <input class="auth-input" type="text" name="to_username" placeholder="${CURRENT_LANG === 'pt' ? 'Usuário do destinatário' : 'Recipient username'}" required>
+          <input class="auth-input" type="text" name="to_username" placeholder="${t('misc.recipientPh')}" required>
           <textarea class="auth-input" name="message" placeholder="${CURRENT_LANG === 'pt' ? 'Mensagem…' : 'Message…'}" rows="3" required maxlength="500" style="resize:vertical"></textarea>
           <button class="auth-submit" type="submit">${t('scraps.btn')}</button>
         </form>
@@ -2053,8 +2338,12 @@ async function submitScrap(form) {
   try {
     let targetId = to_user_id;
     if (!targetId) {
-      const found = await apiFetch(`/users/search?username=${encodeURIComponent(to_username.trim())}`);
-      targetId = found.id;
+      const results = await apiFetch(`/users/search?username=${encodeURIComponent(to_username.trim())}`);
+      const match = Array.isArray(results)
+        ? results.find(u => u.username.toLowerCase() === to_username.trim().toLowerCase())
+        : null;
+      if (!match) throw new Error(t('misc.userNotFound'));
+      targetId = match.id;
     }
     await apiFetch('/scraps', { method: 'POST', body: JSON.stringify({ to_user_id: targetId, message }) });
     showToast(t('scraps.success'));
@@ -2141,7 +2430,7 @@ function personCard(u) {
       <div class="person-card__name">${esc(u.display_name)}</div>
       <div class="person-card__username">@${esc(u.username)}</div>
       ${u.bio ? `<div class="person-card__bio">${esc(u.bio.slice(0, 60))}${u.bio.length > 60 ? '…' : ''}</div>` : ''}
-      ${u.reviews_count ? `<div class="person-card__stat">💩 ${u.reviews_count} ${t('review.quality') === 'Quality' ? 'reviews' : 'avaliações'}</div>` : ''}
+      ${u.reviews_count ? `<div class="person-card__stat">💩 ${u.reviews_count} ${t('misc.reviews')}</div>` : ''}
     </button>`;
 }
 
@@ -2365,7 +2654,7 @@ function openTestimonialModal(userId, userName) {
       <div class="modal">
         <div class="modal-header"><h2>${t('testimonial.title', { name: esc(userName) })}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
         <div class="modal-body">
-          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">${CURRENT_LANG === 'pt' ? 'Escreva algo genuíno sobre essa pessoa!' : 'Write something genuine about this person!'}</p>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">${t('misc.testimonialPh')}</p>
           <textarea id="testimonialText" class="form-textarea" rows="4" placeholder="${t('testimonial.ph')}" maxlength="500"></textarea>
           <button class="submit-btn" style="margin-top:12px" id="testimonialSubmitBtn">${t('testimonial.btn')}</button>
         </div>
@@ -2390,7 +2679,7 @@ async function openUserReviewsModal(userId, userName) {
     <div class="modal-overlay">
       <div class="modal modal--wide">
         <div class="modal-header">
-          <h2>💩 ${CURRENT_LANG === 'pt' ? 'Avaliações de' : 'Reviews by'} ${esc(userName)}</h2>
+          <h2>💩 ${t('misc.reviewsOf')} ${esc(userName)}</h2>
           <button class="modal-close" data-action="close-modal">✕</button>
         </div>
         <div class="modal-body"><div class="spinner"></div></div>
@@ -2400,7 +2689,7 @@ async function openUserReviewsModal(userId, userName) {
     const reviews = await apiFetch(`/users/${userId}/reviews`);
     const body = host.querySelector('.modal-body');
     if (!reviews || reviews.length === 0) {
-      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhuma avaliação ainda.' : 'No reviews yet.'}</p>`;
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${t('misc.noReviews')}</p>`;
     } else {
       body.innerHTML = `<div class="feed">${reviews.map(r => reviewCard(r)).join('')}</div>`;
     }
@@ -2426,7 +2715,7 @@ async function openUserLikesModal(userId, userName) {
     const sorted = [...reviews].sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
     const body = host.querySelector('.modal-body');
     if (!sorted || sorted.length === 0) {
-      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhuma avaliação curtida ainda.' : 'No liked reviews yet.'}</p>`;
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${t('misc.noLikedRevs')}</p>`;
     } else {
       body.innerHTML = `<div class="feed">${sorted.map(r => reviewCard(r)).join('')}</div>`;
     }
@@ -2441,7 +2730,7 @@ async function openUserParcasModal(userId, userName) {
     <div class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
-          <h2>👥 ${CURRENT_LANG === 'pt' ? 'Parças de' : 'Friends of'} ${esc(userName)}</h2>
+          <h2>👥 ${t('misc.friendsOf')} ${esc(userName)}</h2>
           <button class="modal-close" data-action="close-modal">✕</button>
         </div>
         <div class="modal-body"><div class="spinner"></div></div>
@@ -2451,7 +2740,7 @@ async function openUserParcasModal(userId, userName) {
     const friends = await apiFetch(`/friends/of/${userId}`);
     const body = host.querySelector('.modal-body');
     if (!friends || friends.length === 0) {
-      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${CURRENT_LANG === 'pt' ? 'Nenhum parça ainda.' : 'No friends yet.'}</p>`;
+      body.innerHTML = `<p style="text-align:center;color:var(--muted);padding:40px 20px">${t('misc.noFriends')}</p>`;
     } else {
       body.innerHTML = `
         <div class="friends-grid">
@@ -2483,12 +2772,19 @@ function buildShareImageHTML(review, format) {
   const rel = reliefOpts.find(x => x.value === review.relief) || {};
   const sml = smellOpts.find(x => x.value === review.smell) || {};
   const stk = stickerOpts.find(x => x.value === review.sticker);
+  const qualOpt = getQualityOptions().find(x => x.value === Number(review.quality)) || {};
   const poop = getPoopAvatar(review.avatar_text);
   const avatarBg = poop ? '#FFF0DC' : (review.avatar_color || '#8B4513');
   const avatarTxt = poop ? poop.emoji : (review.avatar_text || '??');
+  const dateStr = review.created_at
+    ? new Date(review.created_at.replace(' ','T') + (review.created_at.includes('T') ? '' : 'Z')).toLocaleDateString('pt-BR')
+    : '';
 
   return `
     <div class="share-image-card ${fmt.cls}">
+      <div class="share-image-accent-bar"></div>
+      ${stk ? `<div class="share-image-stamp">${stk.icon}</div>` : ''}
+
       <div class="share-image-brand">
         <div class="share-image-brand-mark">🚽</div>
         <div class="share-image-brand-text">
@@ -2496,20 +2792,27 @@ function buildShareImageHTML(review, format) {
           <small>${t('landing.brandSub')}</small>
         </div>
       </div>
+
       <div class="share-image-header">
         <div class="share-image-avatar" style="background:${avatarBg}">${avatarTxt}</div>
         <div class="share-image-user">
           <strong>${esc(review.display_name)}</strong>
           <span>@${esc(review.username)}</span>
+          <div class="share-image-meta">
+            ${(review.likes_count > 0) ? `<span class="share-image-badge-pill">❤️ ${fmtNum(review.likes_count)}</span>` : ''}
+            ${dateStr ? `<span class="share-image-badge-pill">📅 ${dateStr}</span>` : ''}
+          </div>
         </div>
-        ${stk ? `<span class="share-image-sticker">${stk.icon}</span>` : ''}
       </div>
+
+      <div class="share-image-quality-hero">
+        <div class="share-image-quality-icons">${qualityIcon(review.quality)}</div>
+        ${qualOpt.label ? `<div class="share-image-quality-label">${esc(qualOpt.label)}</div>` : ''}
+      </div>
+
       ${review.title ? `<div class="share-image-title">${esc(review.title)}</div>` : ''}
-      <div class="share-image-ratings">
-        <div class="share-image-rating">
-          <div class="lbl">${t('review.quality')}</div>
-          <div class="val">${qualityIcon(review.quality)}</div>
-        </div>
+
+      <div class="share-image-ratings share-image-ratings--3">
         <div class="share-image-rating">
           <div class="lbl">${t('review.duration')}</div>
           <div class="val">${dur.icon || ''} ${esc(dur.label || '')}</div>
@@ -2523,6 +2826,7 @@ function buildShareImageHTML(review, format) {
           <div class="val">${sml.icon || ''} ${esc(sml.label || '')}</div>
         </div>
       </div>
+
       ${review.comment ? `<div class="share-image-comment">"${esc(review.comment)}"</div>` : ''}
       ${review.bathroom_name ? `
         <div class="share-image-location">
@@ -2891,7 +3195,7 @@ async function openInviteModal() {
   host.innerHTML = `
     <div class="modal-overlay">
       <div class="modal">
-        <div class="modal-header"><h2>📨 Convidar amigo</h2><button class="modal-close" data-action="close-modal">✕</button></div>
+        <div class="modal-header"><h2>${t('invite.modalTitle')}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
         <div class="modal-body">
           <div class="spinner" id="inviteSpinner"></div>
           <div id="inviteContent" hidden></div>
@@ -2905,18 +3209,18 @@ async function openInviteModal() {
     const el = document.getElementById('inviteContent');
     el.innerHTML = `
       <p style="font-size:14px;color:var(--muted);margin-bottom:20px">
-        Gere um link de convite ou envie diretamente por email. Cada convite é exclusivo e vincula seu nome!
+        ${t('invite.modalDesc')}
       </p>
 
       <!-- Aba Email -->
       <div class="invite-tabs">
-        <button class="invite-tab active" id="tabEmail">✉ ${CURRENT_LANG === 'pt' ? 'Enviar por email' : 'Send by email'}</button>
-        <button class="invite-tab" id="tabLink">🔗 ${CURRENT_LANG === 'pt' ? 'Copiar link' : 'Copy link'}</button>
+        <button class="invite-tab active" id="tabEmail">${t('invite.tabEmail')}</button>
+        <button class="invite-tab" id="tabLink">${t('invite.tabLink')}</button>
       </div>
 
       <div id="panelEmail" class="invite-panel">
         <div class="form-group">
-          <label class="form-label">${CURRENT_LANG === 'pt' ? 'Email do convidado' : "Guest's email"}</label>
+          <label class="form-label">${t('invite.guestEmail')}</label>
           <input id="inviteEmailInput" class="form-text-input" type="email" placeholder="${t('invite.emailPh')}">
         </div>
         <button class="submit-btn" id="sendEmailBtn">${t('invite.emailBtn')}</button>
@@ -2925,16 +3229,15 @@ async function openInviteModal() {
 
       <div id="panelLink" class="invite-panel" hidden>
         <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
-          Este link pode ser usado <strong>uma vez</strong> e já fica com seu nome!
+          ${t('invite.onceNote')}
         </p>
         <div style="display:flex;gap:8px">
           <input id="inviteLinkInput" class="form-text-input" style="flex:1;font-size:13px" value="${esc(link)}" readonly>
-          <button class="submit-btn" style="width:auto;padding:12px 16px" id="copyLinkBtn">📋 Copiar</button>
+          <button class="submit-btn" style="width:auto;padding:12px 16px" id="copyLinkBtn">${t('invite.copyBtn')}</button>
         </div>
         <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:14px;font-size:13px;color:var(--muted)">
-          <strong>Mensagem sugerida para WhatsApp/Telegram:</strong><br><br>
-          Ei! Entra no Kgando comigo 💩 — a rede social do trono! 🚽<br>
-          Cadastra pelo link: <em>${esc(link)}</em>
+          <strong>${t('invite.waTitle')}</strong><br><br>
+          ${t('invite.waMsg')} <em>${esc(link)}</em>
         </div>
       </div>`;
 
@@ -2974,22 +3277,22 @@ async function openInviteModal() {
       feedback.style.display = 'none';
       try {
         const r = await apiFetch('/invites/email', { method: 'POST', body: JSON.stringify({ to_email: email }) });
-        btn.textContent = '✅ Enviado!';
+        btn.textContent = t('invite.sentBtn');
         feedback.style.display = 'block';
         feedback.style.color = 'var(--secondary)';
-        feedback.innerHTML = `✅ Convite enviado para <strong>${esc(email)}</strong>! Peça para a pessoa verificar a caixa de entrada (e spam).`;
+        feedback.innerHTML = t('invite.emailSent').replace('{email}', esc(email));
         document.getElementById('inviteEmailInput').value = '';
-        setTimeout(() => { btn.disabled = false; btn.textContent = 'Enviar convite por email ✉'; }, 3000);
+        setTimeout(() => { btn.disabled = false; btn.textContent = t('invite.sendBtn'); }, 3000);
       } catch (err) {
-        btn.disabled = false; btn.textContent = 'Enviar convite por email ✉';
+        btn.disabled = false; btn.textContent = t('invite.sendBtn');
         feedback.style.display = 'block';
         feedback.style.color = '#c0392b';
-        feedback.textContent = '❌ ' + (err.message || 'Erro ao enviar email.');
+        feedback.textContent = '❌ ' + (err.message || t('invite.errSend'));
       }
     });
 
   } catch (e) {
-    showToast(e.message || 'Erro ao gerar convite');
+    showToast(e.message || t('invite.error'));
     host.innerHTML = '';
   }
 }
@@ -3050,7 +3353,7 @@ async function openCommunityModal(communityId) {
       apiFetch(`/communities`).then(list => list.find(c => c.id === communityId)),
       apiFetch(`/communities/${communityId}/members`)
     ]);
-    if (!comm) throw new Error('Comunidade não encontrada.');
+    if (!comm) throw new Error(t('misc.commNotFound'));
     const isOwner = comm.created_by === currentUser?.id;
     const ICONS = ['💩','🚽','🧻','💦','🪠','🧴','🚿','🛁','🪣','🎭','🤣','🏆','⭐','🔥','💎','🌈'];
 
@@ -3117,7 +3420,7 @@ async function openCommunityModal(communityId) {
 
     // Deletar
     document.getElementById('deleteCommBtn')?.addEventListener('click', async () => {
-      if (!confirm(`Deletar a comunidade "${comm.name}"? Esta ação remove todos os membros.`)) return;
+      if (!confirm(t('misc.deleteComm').replace('{name}', comm.name))) return;
       try {
         await apiFetch(`/communities/${communityId}`, { method: 'DELETE' });
         showToast(t('comm.deleted'));
@@ -3137,7 +3440,7 @@ async function openCommunityForumModal(communityId, communityName) {
   host.innerHTML = `
     <div class="modal-overlay">
       <div class="modal modal--wide">
-        <div class="modal-header"><h2>☷ ${esc(communityName || 'Fórum')}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
+        <div class="modal-header"><h2>☷ ${esc(communityName || t('misc.commForum'))}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
         <div class="modal-body"><div class="spinner"></div></div>
       </div>
     </div>`;
@@ -3160,7 +3463,7 @@ async function openCommunityForumModal(communityId, communityName) {
               <div style="font-weight:700">${esc(t.title)}</div>
               <div style="font-size:12px;color:var(--muted)">por @${esc(t.username)} · ${timeAgo(t.created_at)} · 💬 ${t.replies_count}</div>
             </div>
-          </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Nenhum tópico ainda. Seja o primeiro!</p>'}
+          </div>`).join('') || `<p style="color:var(--muted);font-size:13px">${t('forum.noTopics')}</p>`}
       </div>`;
 
     document.getElementById('newTopicBtn').addEventListener('click', () => {
@@ -3176,7 +3479,7 @@ async function openCommunityForumModal(communityId, communityName) {
         await apiFetch(`/communities/${communityId}/topics`, { method: 'POST', body: JSON.stringify({ title, content }) });
         showToast(t('comm.topicCreated'));
         openCommunityForumModal(communityId, communityName);
-      } catch(err) { showToast(err.message); btn.disabled=false; btn.textContent='Publicar tópico'; }
+      } catch(err) { showToast(err.message); btn.disabled=false; btn.textContent=t('forum.publishTopic'); }
     });
   } catch(e) { showToast(e.message); host.innerHTML = ''; }
 }
@@ -3196,7 +3499,7 @@ async function openTopicModal(communityId, topicId) {
       apiFetch(`/communities/${communityId}/topics/${topicId}/replies`),
     ]);
     const topic = topics.find(t => t.id === topicId);
-    if (!topic) throw new Error('Tópico não encontrado.');
+    if (!topic) throw new Error(t('forum.notFound'));
 
     host.querySelector('.modal-body').innerHTML = `
       <div class="topic-header-card">
@@ -3581,6 +3884,8 @@ function showDisable2FA(root) {
 
 /* ── Likes / communities ────────────────────────── */
 async function toggleLike(reviewId, liked, btn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
   try {
     const res = liked
       ? await apiFetch(`/reviews/${reviewId}/like`, { method: 'DELETE' })
@@ -3589,8 +3894,22 @@ async function toggleLike(reviewId, liked, btn) {
     btn.classList.toggle('liked', res.liked);
     const countEl = document.getElementById(`likes-${reviewId}`);
     if (countEl) countEl.textContent = res.likes_count;
+
+    // Atualiza o contador "CURTIDAS" no painel de perfil se for review do próprio usuário
+    if (currentUser) {
+      const card = btn.closest('.review-card');
+      const reviewUserId = card?.querySelector('[data-action="view-profile"]')?.dataset?.userId;
+      if (reviewUserId === currentUser.id) {
+        const delta = res.liked ? 1 : -1;
+        currentUser.likes_total = Math.max(0, (currentUser.likes_total || 0) + delta);
+        const statEl = document.querySelector('.panel-stat-btn[data-action="show-user-likes"] .stat-num');
+        if (statEl) statEl.textContent = currentUser.likes_total;
+      }
+    }
+
     showToast(res.liked ? t('review.liked') : t('review.unliked'));
   } catch (err) { showToast(err.message); }
+  finally { btn.disabled = false; }
 }
 
 async function toggleCommunity(id, joined, btn) {
@@ -3606,14 +3925,37 @@ async function toggleCommunity(id, joined, btn) {
 }
 
 /* ── Comments ───────────────────────────────────── */
+const COMMENT_REACTIONS = ['👍','❤️','😂','😮','😢','😡'];
+
 function commentItemHTML(comment) {
   const isMine = currentUser && comment.user_id === currentUser.id;
+  const reactions = comment.reactions || [];
+  const myReact   = comment.my_reaction || null;
+
+  const reactPills = reactions.length
+    ? reactions.map(r => `
+        <button type="button" class="react-pill${myReact === r.emoji ? ' mine' : ''}"
+                data-action="do-comment-react" data-cid="${comment.id}" data-rid="${comment.review_id}" data-emoji="${r.emoji}">
+          ${r.emoji} <span>${r.count}</span>
+        </button>`).join('')
+    : '';
+
+  const pickerBtns = currentUser ? COMMENT_REACTIONS.map(e =>
+    `<button type="button" class="react-pick-btn${myReact === e ? ' active' : ''}"
+             data-action="do-comment-react" data-cid="${comment.id}" data-rid="${comment.review_id}" data-emoji="${e}">${e}</button>`
+  ).join('') : '';
+
   return `
     <div class="comment-item" data-cid="${comment.id}">
       <div class="avatar avatar--small${avCls(comment.avatar_text)}" style="${avBg(comment.avatar_text,comment.avatar_color)}">${avTxt(comment.avatar_text)}</div>
       <div class="comment-body" style="flex:1">
         <div class="comment-author">${esc(comment.display_name)}</div>
         <div class="comment-text">${esc(comment.text)}</div>
+        <div class="comment-footer">
+          <div class="react-pills" id="react-pills-${comment.id}">${reactPills}</div>
+          ${currentUser ? `<button type="button" class="comment-react-toggle${myReact ? ' has-react' : ''}" data-action="toggle-react-picker" data-cid="${comment.id}" title="Reagir">😊</button>` : ''}
+        </div>
+        ${currentUser ? `<div class="react-picker" id="react-picker-${comment.id}" hidden>${pickerBtns}</div>` : ''}
       </div>
       ${isMine ? `<button class="action-btn-sm action-btn-danger" style="padding:2px 8px;font-size:11px"
         data-action="delete-comment" data-id="${comment.id}" data-review-id="${comment.review_id}">✕</button>` : ''}
@@ -3630,7 +3972,7 @@ async function loadComments(reviewId) {
     list.dataset.loaded = '1';
     list.innerHTML = comments.length
       ? comments.map(commentItemHTML).join('')
-      : '<p style="font-size:12px;color:var(--muted);padding:8px 0">Nenhum comentário ainda.</p>';
+      : `<p style="font-size:12px;color:var(--muted);padding:8px 0">${t('misc.noComments')}</p>`;
     const cnt = document.getElementById(`comm-count-${reviewId}`);
     if (cnt) cnt.textContent = comments.length;
   } catch { list.innerHTML = ''; }
@@ -3728,10 +4070,10 @@ function timeAgo(iso) {
   if (!iso) return '';
   const d = new Date(iso.replace(' ','T') + (iso.includes('T') ? '' : 'Z'));
   const s = (Date.now() - d.getTime()) / 1000;
-  if (s < 60) return 'agora';
-  if (s < 3600)   return `${Math.floor(s/60)}min atrás`;
-  if (s < 86400)  return `${Math.floor(s/3600)}h atrás`;
-  if (s < 604800) return `${Math.floor(s/86400)}d atrás`;
+  if (s < 60) return t('time.now');
+  if (s < 3600)   return t('time.minAgo').replace('{n}', Math.floor(s/60));
+  if (s < 86400)  return t('time.hAgo').replace('{n}', Math.floor(s/3600));
+  if (s < 604800) return t('time.dAgo').replace('{n}', Math.floor(s/86400));
   return d.toLocaleDateString('pt-BR');
 }
 
@@ -3755,6 +4097,11 @@ const NOTIF_ICONS = {
   scrap: '✉️',
   testimonial: '💬',
   vote: '⭐',
+  review_like: '❤️',
+  review_comment: '💬',
+  comment_reaction: '😊',
+  community_topic: '🏘️',
+  community_reply: '↩️',
   default: '🔔',
 };
 
@@ -3782,10 +4129,7 @@ async function loadNotifCount() {
         
         // Notificação discreta no canto direito (estilo Orkut)
         const diff = newCount - lastNotifCount;
-        const msg = CURRENT_LANG === 'pt' 
-          ? `${diff} nova${diff > 1 ? 's' : ''} notificação${diff > 1 ? 'ões' : ''} 🔔`
-          : `${diff} new notification${diff > 1 ? 's' : ''} 🔔`;
-        showOrkutNotif(msg);
+        showOrkutNotif(t('notif.newCount').replace('{n}', diff).replace('{s}', diff > 1 ? 's' : '').replace('{oes}', diff > 1 ? 'ões' : ''));
       }
     } else {
       badge.hidden = true;
@@ -3834,7 +4178,7 @@ async function renderNotifList() {
       else badge.hidden = true;
     }
     if (!data.notifications.length) {
-      list.innerHTML = '<p class="notif-empty">🔔 Nenhuma notificação ainda.</p>';
+      list.innerHTML = `<p class="notif-empty">${t('notif.emptyFull')}</p>`;
       return;
     }
     list.innerHTML = data.notifications.map(n => `
@@ -3847,7 +4191,40 @@ async function renderNotifList() {
       </div>
     `).join('');
   } catch (e) {
-    list.innerHTML = `<p class="notif-empty">Erro ao carregar notificações.</p>`;
+    list.innerHTML = `<p class="notif-empty">${t('notif.loadError')}</p>`;
+  }
+}
+
+async function openReviewFromNotif(reviewId, expandComments) {
+  const host = document.getElementById('modalHost');
+  const label = t('misc.reviewLabel');
+  host.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>💩 ${label}</h2>
+          <button class="modal-close" data-action="close-modal">✕</button>
+        </div>
+        <div class="modal-body" id="reviewNotifBody">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>`;
+  try {
+    const review = await apiFetch(`/reviews/${reviewId}`);
+    const body = document.getElementById('reviewNotifBody');
+    if (!body) return;
+    body.innerHTML = `<div class="feed" style="padding:0">${reviewCard(review)}</div>`;
+    if (expandComments) {
+      const section = document.getElementById(`comments-${reviewId}`);
+      if (section) {
+        section.hidden = false;
+        loadComments(reviewId);
+      }
+    }
+  } catch (err) {
+    const body = document.getElementById('reviewNotifBody');
+    if (body) body.innerHTML = `<p style="color:var(--muted);text-align:center;padding:24px">${t('misc.reviewNotFound')}</p>`;
   }
 }
 
@@ -3863,6 +4240,11 @@ async function handleNotifClick(id, type, entityId) {
   if (type === 'scrap') navigateTo('scraps');
   else if (type === 'friend_request') navigateTo('profile');
   else if (type === 'friend_accepted') navigateTo('profile');
+  else if (type === 'testimonial') navigateTo('profile');
+  else if (type === 'vote') navigateTo('profile');
+  else if (type === 'review_like') openReviewFromNotif(entityId, false);
+  else if (type === 'review_comment') openReviewFromNotif(entityId, true);
+  else if (type === 'community_topic' || type === 'community_reply') navigateTo('communities');
 }
 
 window.markAllNotifsRead = async function() {
@@ -3874,18 +4256,15 @@ window.markAllNotifsRead = async function() {
 };
 
 window.clearAllNotifications = async function() {
-  const msg = CURRENT_LANG === 'pt' 
-    ? 'Tem certeza que deseja limpar todas as notificações?' 
-    : 'Are you sure you want to clear all notifications?';
-  if (!confirm(msg)) return;
+  if (!confirm(t('notif.clearConfirm'))) return;
   
   try {
     await apiFetch('/notifications', { method: 'DELETE' });
     const badge = document.getElementById('notifBadge');
     if (badge) badge.hidden = true;
     const list = document.getElementById('notifList');
-    if (list) list.innerHTML = '<p class="notif-empty">🔔 ' + (CURRENT_LANG === 'pt' ? 'Nenhuma notificação ainda.' : 'No notifications yet.') + '</p>';
-    showToast(CURRENT_LANG === 'pt' ? '🗑️ Notificações limpas!' : '🗑️ Notifications cleared!');
+    if (list) list.innerHTML = `<p class="notif-empty">${t('notif.emptyFull')}</p>`;
+    showToast(t('notif.cleared'));
   } catch(err) {
     showToast(err.message);
   }
@@ -3933,7 +4312,7 @@ window.handleResetPassword = async function(e) {
   const password = form.password.value;
   const password2 = form.password2.value;
   if (password !== password2) {
-    msg.textContent = 'As senhas não coincidem.'; msg.hidden = false; return;
+    msg.textContent = t('misc.passNoMatch'); msg.hidden = false; return;
   }
   const token = new URLSearchParams(window.location.search).get('reset_token');
   btn.disabled = true; btn.textContent = 'Salvando…';
