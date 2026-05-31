@@ -71,6 +71,7 @@ app.use('/api/testimonials',  require('./routes/testimonials'));
 app.use('/api/votes',         require('./routes/votes'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin',         require('./routes/admin'));
+app.use('/api/giphy',         require('./routes/giphy'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 

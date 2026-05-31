@@ -1058,6 +1058,14 @@ function handleClick(e) {
     document.getElementById('modalHost').innerHTML = '';
     return;
   }
+  if (action === 'open-gif-picker') {
+    const targetId = el.dataset.targetId;
+    const targetEl = targetId
+      ? document.getElementById(targetId)
+      : el.closest('form')?.querySelector('input[type="text"], textarea');
+    if (targetEl) openGifPicker(targetEl);
+    return;
+  }
   if (action === 'invite-friend') {
     openInviteModal();
     return;
@@ -1626,7 +1634,8 @@ function reviewCard(r) {
       <div class="comments-section">
         <div id="comment-list-${r.id}" class="comment-list-container"></div>
         <form class="comment-form" data-review-id="${r.id}">
-          <input type="text" placeholder="${t('misc.commentPh')}" maxlength="300" required>
+          <input type="text" placeholder="${t('misc.commentPh')}" maxlength="2000" required>
+          <button class="gif-btn" type="button" data-action="open-gif-picker" title="GIF">GIF</button>
           <button type="submit">${t('btn.send')}</button>
         </form>
       </div>
@@ -2308,7 +2317,7 @@ async function renderScrapsPage(root) {
       <div class="avatar avatar--medium${avCls(s.avatar_text)}" style="${avBg(s.avatar_text,s.avatar_color)}">${avTxt(s.avatar_text)}</div>
       <div class="scrap-body" style="flex:1">
         <div class="scrap-author">${esc(s.display_name)} <span style="font-weight:400;color:var(--muted)">@${esc(s.username)}</span></div>
-        <div class="scrap-msg">${esc(s.message)}</div>
+        <div class="scrap-msg">${renderGifInText(s.message)}</div>
         <div class="scrap-time">${timeAgo(s.created_at)}</div>
       </div>
       <button class="action-btn-sm action-btn-danger" style="align-self:flex-start;padding:4px 8px"
@@ -2322,8 +2331,11 @@ async function renderScrapsPage(root) {
         <h3>${CURRENT_LANG === 'pt' ? 'Enviar recado' : 'Send message'}</h3>
         <form id="scrapForm" class="auth-form">
           <input class="auth-input" type="text" name="to_username" placeholder="${t('misc.recipientPh')}" required>
-          <textarea class="auth-input" name="message" placeholder="${CURRENT_LANG === 'pt' ? 'Mensagem…' : 'Message…'}" rows="3" required maxlength="500" style="resize:vertical"></textarea>
-          <button class="auth-submit" type="submit">${t('scraps.btn')}</button>
+          <textarea class="auth-input" id="scrapPageMsg" name="message" placeholder="${CURRENT_LANG === 'pt' ? 'Mensagem…' : 'Message…'}" rows="3" required maxlength="2000" style="resize:vertical"></textarea>
+          <div style="display:flex;gap:8px">
+            <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="scrapPageMsg" title="GIF">GIF</button>
+            <button class="auth-submit" type="submit" style="flex:1">${t('scraps.btn')}</button>
+          </div>
         </form>
       </div>
       <div class="page-header"><h2>${CURRENT_LANG === 'pt' ? 'Recados recebidos' : 'Received messages'}</h2></div>
@@ -2369,9 +2381,12 @@ function openSendScrapModal(userId, userName) {
             <input type="hidden" name="to_user_id" value="${esc(userId)}">
             <div class="form-group">
               <label class="form-label">Mensagem</label>
-              <textarea class="form-textarea" name="message" placeholder="Escreva seu recado…" rows="4" required maxlength="500"></textarea>
+              <textarea class="form-textarea" id="scrapModalMsg" name="message" placeholder="Escreva seu recado…" rows="4" required maxlength="2000"></textarea>
             </div>
-            <button class="submit-btn" type="submit">Enviar ✉</button>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="scrapModalMsg" title="GIF">GIF</button>
+              <button class="submit-btn" type="submit" style="flex:1">Enviar ✉</button>
+            </div>
           </form>
         </div>
       </div>
@@ -2637,7 +2652,7 @@ function testimonialCard(t, canDelete) {
       <div class="avatar avatar--small${avCls(t.avatar_text)}" style="${avBg(t.avatar_text,t.avatar_color)}">${avTxt(t.avatar_text)}</div>
       <div style="flex:1">
         <div style="font-weight:700;font-size:13px">${esc(t.display_name)} <span style="color:var(--muted);font-weight:400">@${esc(t.username)}</span></div>
-        <div style="font-size:13px;margin-top:4px;line-height:1.5;color:var(--text)">"${esc(t.content)}"</div>
+        <div style="font-size:13px;margin-top:4px;line-height:1.5;color:var(--text)">"${renderGifInText(t.content)}"</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">${timeAgo(t.created_at)}</div>
       </div>
       ${canDelete || (currentUser && t.from_user_id === currentUser.id)
@@ -2655,8 +2670,11 @@ function openTestimonialModal(userId, userName) {
         <div class="modal-header"><h2>${t('testimonial.title', { name: esc(userName) })}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
         <div class="modal-body">
           <p style="font-size:13px;color:var(--muted);margin-bottom:16px">${t('misc.testimonialPh')}</p>
-          <textarea id="testimonialText" class="form-textarea" rows="4" placeholder="${t('testimonial.ph')}" maxlength="500"></textarea>
-          <button class="submit-btn" style="margin-top:12px" id="testimonialSubmitBtn">${t('testimonial.btn')}</button>
+          <textarea id="testimonialText" class="form-textarea" rows="4" placeholder="${t('testimonial.ph')}" maxlength="2000"></textarea>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="testimonialText" title="GIF">GIF</button>
+            <button class="submit-btn" style="flex:1" id="testimonialSubmitBtn">${t('testimonial.btn')}</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -3026,7 +3044,7 @@ async function renderScrapsWidget(userId) {
         <div class="avatar avatar--medium${avCls(s.avatar_text)}" style="${avBg(s.avatar_text,s.avatar_color)}">${avTxt(s.avatar_text)}</div>
         <div class="scrap-body">
           <div class="scrap-author">${esc(s.display_name)}</div>
-          <div class="scrap-msg">${esc(s.message)}</div>
+          <div class="scrap-msg">${renderGifInText(s.message)}</div>
           <div class="scrap-time">${timeAgo(s.created_at)}</div>
         </div>
       </div>`).join('');
@@ -3452,8 +3470,11 @@ async function openCommunityForumModal(communityId, communityName) {
       </div>
       <div id="newTopicForm" hidden style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px">
         <input id="topicTitle" class="form-text-input" placeholder="Título do tópico" maxlength="100" style="margin-bottom:10px">
-        <textarea id="topicContent" class="form-textarea" rows="3" placeholder="Conteúdo…" maxlength="1000"></textarea>
-        <button class="submit-btn" style="margin-top:10px" id="topicSubmitBtn">Publicar tópico</button>
+        <textarea id="topicContent" class="form-textarea" rows="3" placeholder="Conteúdo…" maxlength="2000"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="topicContent" title="GIF">GIF</button>
+          <button class="submit-btn" style="flex:1" id="topicSubmitBtn">Publicar tópico</button>
+        </div>
       </div>
       <div id="topics-list">
         ${topics.map(t => `
@@ -3507,7 +3528,7 @@ async function openTopicModal(communityId, topicId) {
         <div style="flex:1">
           <div style="font-weight:800;font-size:16px">${esc(topic.title)}</div>
           <div style="font-size:12px;color:var(--muted)">por @${esc(topic.username)} · ${timeAgo(topic.created_at)}</div>
-          <div style="margin-top:8px;font-size:13px;line-height:1.6">${esc(topic.content)}</div>
+          <div style="margin-top:8px;font-size:13px;line-height:1.6">${renderGifInText(topic.content)}</div>
         </div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--secondary);margin:14px 0 10px">Respostas (${replies.length})</div>
@@ -3517,13 +3538,14 @@ async function openTopicModal(communityId, topicId) {
             <div class="avatar avatar--small${avCls(r.avatar_text)}" style="${avBg(r.avatar_text,r.avatar_color)}">${avTxt(r.avatar_text)}</div>
             <div style="flex:1">
               <div style="font-weight:700;font-size:13px">@${esc(r.username)}</div>
-              <div style="font-size:13px;margin-top:2px">${esc(r.content)}</div>
+              <div style="font-size:13px;margin-top:2px">${renderGifInText(r.content)}</div>
               <div style="font-size:11px;color:var(--muted)">${timeAgo(r.created_at)}</div>
             </div>
           </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Sem respostas ainda.</p>'}
       </div>
-      <div style="margin-top:16px;display:flex;gap:8px">
-        <input id="replyInput" class="form-text-input" style="flex:1" placeholder="Sua resposta…" maxlength="500">
+      <div style="margin-top:16px;display:flex;gap:8px;align-items:center">
+        <input id="replyInput" class="form-text-input" style="flex:1" placeholder="Sua resposta…" maxlength="2000">
+        <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="replyInput" title="GIF">GIF</button>
         <button class="submit-btn" style="width:auto;padding:12px 18px" id="replyBtn">Responder</button>
       </div>`;
 
@@ -3543,7 +3565,7 @@ async function openTopicModal(communityId, topicId) {
             <div class="avatar avatar--small${avCls(reply.avatar_text)}" style="${avBg(reply.avatar_text,reply.avatar_color)}">${avTxt(reply.avatar_text)}</div>
             <div style="flex:1">
               <div style="font-weight:700;font-size:13px">@${esc(reply.username)}</div>
-              <div style="font-size:13px;margin-top:2px">${esc(reply.content)}</div>
+              <div style="font-size:13px;margin-top:2px">${renderGifInText(reply.content)}</div>
               <div style="font-size:11px;color:var(--muted)">agora</div>
             </div>
           </div>`);
@@ -3950,7 +3972,7 @@ function commentItemHTML(comment) {
       <div class="avatar avatar--small${avCls(comment.avatar_text)}" style="${avBg(comment.avatar_text,comment.avatar_color)}">${avTxt(comment.avatar_text)}</div>
       <div class="comment-body" style="flex:1">
         <div class="comment-author">${esc(comment.display_name)}</div>
-        <div class="comment-text">${esc(comment.text)}</div>
+        <div class="comment-text">${renderGifInText(comment.text)}</div>
         <div class="comment-footer">
           <div class="react-pills" id="react-pills-${comment.id}">${reactPills}</div>
           ${currentUser ? `<button type="button" class="comment-react-toggle${myReact ? ' has-react' : ''}" data-action="toggle-react-picker" data-cid="${comment.id}" title="Reagir">😊</button>` : ''}
@@ -4058,6 +4080,95 @@ function showOrkutNotif(msg, ms = 4000) {
 function esc(str) {
   if (str == null) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ── GIF helpers ─────────────────────────────────── */
+// Converte tokens [gif:URL] no texto em <img> seguras (somente domínio giphy)
+function renderGifInText(rawText) {
+  if (!rawText) return '';
+  const GIF_RE = /\[gif:(https:\/\/media[0-9]*\.giphy\.com\/[^\]]{0,300})\]/g;
+  const parts = [];
+  let last = 0, m;
+  while ((m = GIF_RE.exec(rawText)) !== null) {
+    if (m.index > last) parts.push(esc(rawText.slice(last, m.index)));
+    parts.push(`<img class="chat-gif" src="${esc(m[1])}" alt="GIF" loading="lazy">`);
+    last = m.index + m[0].length;
+  }
+  if (last < rawText.length) parts.push(esc(rawText.slice(last)));
+  return parts.join('');
+}
+
+let _gifPickerEl = null;
+
+function openGifPicker(inputEl) {
+  // Toggle: se o picker já existe, fechar
+  if (_gifPickerEl) { _gifPickerEl.remove(); _gifPickerEl = null; return; }
+
+  const picker = document.createElement('div');
+  picker.className = 'gif-picker';
+  picker.innerHTML = `
+    <input class="gif-search" type="text" placeholder="🔍 Buscar GIF…" autocomplete="off">
+    <div class="gif-grid"></div>
+  `;
+  document.body.appendChild(picker);
+  _gifPickerEl = picker;
+
+  // Posicionar acima ou abaixo do input
+  const rect = inputEl.getBoundingClientRect();
+  const PICKER_H = 290;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  if (spaceBelow >= PICKER_H || spaceBelow >= rect.top) {
+    picker.style.top = (rect.bottom + 6) + 'px';
+  } else {
+    picker.style.top = (rect.top - PICKER_H - 6) + 'px';
+  }
+  picker.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 320)) + 'px';
+
+  const searchInput = picker.querySelector('.gif-search');
+  const grid = picker.querySelector('.gif-grid');
+
+  const loadGifs = async (q = '') => {
+    grid.innerHTML = '<div class="gif-loading">Carregando…</div>';
+    try {
+      const ep = q
+        ? `/api/giphy/search?q=${encodeURIComponent(q)}&limit=18`
+        : '/api/giphy/trending?limit=18';
+      const res = await apiFetch(ep);
+      if (!res.data?.length) { grid.innerHTML = '<div class="gif-loading">Nenhum resultado.</div>'; return; }
+      grid.innerHTML = res.data.map(g =>
+        `<img class="gif-item" src="${esc(g.preview || g.url)}" data-url="${esc(g.url)}" alt="${esc(g.title)}" loading="lazy">`
+      ).join('');
+      grid.querySelectorAll('.gif-item').forEach(img => {
+        img.addEventListener('click', () => {
+          const gifTag = `[gif:${img.dataset.url}]`;
+          inputEl.value = inputEl.value ? inputEl.value + ' ' + gifTag : gifTag;
+          inputEl.dispatchEvent(new Event('input'));
+          picker.remove();
+          _gifPickerEl = null;
+        });
+      });
+    } catch { grid.innerHTML = '<div class="gif-loading">Erro ao carregar.</div>'; }
+  };
+
+  let debounce;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => loadGifs(searchInput.value.trim()), 450);
+  });
+
+  loadGifs();
+
+  setTimeout(() => {
+    document.addEventListener('click', function onOut(e) {
+      if (!picker.contains(e.target)) {
+        picker.remove();
+        _gifPickerEl = null;
+        document.removeEventListener('click', onOut);
+      }
+    });
+  }, 0);
+
+  searchInput.focus();
 }
 
 function qualityIcon(q) {
