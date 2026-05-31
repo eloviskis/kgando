@@ -566,9 +566,10 @@ img { max-width: 100%; }
   background: var(--bg); color: var(--text);
 }
 .comment-form input:focus { outline: none; border-color: var(--primary); }
-.comment-form button {
+.comment-form button:not(.gif-btn) {
   background: var(--primary); color: #fff; border: none;
-  padding: 10px 18px; border-radius: 20px; font-weight: 700; font-size: 13px;
+  padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 13px;
+  white-space: nowrap; flex-shrink: 0;
 }
 
 /* ── GIF button ─────────────────────────────────── */

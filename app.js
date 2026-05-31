@@ -4131,8 +4131,8 @@ function openGifPicker(inputEl) {
     grid.innerHTML = '<div class="gif-loading">Carregando…</div>';
     try {
       const ep = q
-        ? `/api/giphy/search?q=${encodeURIComponent(q)}&limit=18`
-        : '/api/giphy/trending?limit=18';
+        ? `/giphy/search?q=${encodeURIComponent(q)}&limit=18`
+        : '/giphy/trending?limit=18';
       const res = await apiFetch(ep);
       if (!res.data?.length) { grid.innerHTML = '<div class="gif-loading">Nenhum resultado.</div>'; return; }
       grid.innerHTML = res.data.map(g =>
