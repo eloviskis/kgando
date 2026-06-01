@@ -1413,12 +1413,13 @@ function renderPage() {
 async function renderHomePage(root) {
   root.innerHTML = '<div class="spinner"></div>';
 
-  let scraps, userReviews, userComms;
+  let scraps, userReviews, userComms, friends;
   try {
-    [scraps, userReviews, userComms] = await Promise.all([
+    [scraps, userReviews, userComms, friends] = await Promise.all([
       apiFetch('/scraps').catch(() => []),
       apiFetch(`/users/${currentUser.id}/reviews`).catch(() => []),
       apiFetch('/communities').catch(() => []),
+      apiFetch(`/friends/${currentUser.id}`).catch(() => []),
     ]);
   } catch {
     root.innerHTML = errorState(t('error.loadPage'));
@@ -1428,6 +1429,8 @@ async function renderHomePage(root) {
   const reviews = [];
   const feedData = { reviews: [], total: 0 };
   const badges  = computeBadges(userReviews);
+  const parcasCount = Array.isArray(friends) ? friends.length : 0;
+  currentUser.parcas_count = parcasCount;
 
   // "Quem sou eu" box
   const badgesHTML = badges.length
@@ -1455,6 +1458,10 @@ async function renderHomePage(root) {
               <button class="owai-stat" data-action="show-user-reviews" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
                 <div class="owai-stat-num">${currentUser.reviews_count || userReviews.length || 0}</div>
                 <div class="owai-stat-lbl">${t('home.reviews')}</div>
+              </button>
+              <button class="owai-stat" data-action="show-user-parcas" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
+                <div class="owai-stat-num">${parcasCount}</div>
+                <div class="owai-stat-lbl">${t('mini.parcas')}</div>
               </button>
               <button class="owai-stat" data-action="show-user-likes" data-user-id="${currentUser.id}" data-user-name="${esc(currentUser.display_name)}" type="button">
                 <div class="owai-stat-num">${currentUser.likes_total || 0}</div>
