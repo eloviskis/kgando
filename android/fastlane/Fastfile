@@ -2,6 +2,18 @@ default_platform(:android)
 
 platform :android do
 
+  # Lê senha do keystore do arquivo
+  before_all do
+    password_file = File.expand_path("../.keystore-password")
+    if File.exist?(password_file)
+      ENV["KEYSTORE_PASSWORD"] = File.read(password_file).strip
+      ENV["KEY_PASSWORD"] = ENV["KEYSTORE_PASSWORD"]
+    end
+    ENV["ANDROID_HOME"] ||= File.expand_path("~/Library/Android/sdk")
+    ENV["KEY_ALIAS"] ||= "kgando"
+    ENV["KEYSTORE_PATH"] ||= File.expand_path("../kgando.keystore")
+  end
+
   # Lane: build release AAB
   lane :build do
     gradle(
@@ -9,11 +21,10 @@ platform :android do
       task:         "bundle",
       build_type:   "Release",
       properties: {
-        "android.injected.signing.store.file"     => ENV["KEYSTORE_PATH"] || File.expand_path("./kgando.keystore"),
+        "android.injected.signing.store.file"     => ENV["KEYSTORE_PATH"],
         "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
-        "android.injected.signing.key.alias"      => ENV["KEY_ALIAS"]      || "kgando",
+        "android.injected.signing.key.alias"      => ENV["KEY_ALIAS"],
         "android.injected.signing.key.password"   => ENV["KEY_PASSWORD"],
-        "ANDROID_HOME"                            => ENV["ANDROID_HOME"]   || File.expand_path("~/Library/Android/sdk"),
       }
     )
   end
