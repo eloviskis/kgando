@@ -1204,7 +1204,7 @@ async function renderMiniProfile() {
   if (!el || !currentUser) return;
   let parcasCount = currentUser.parcas_count ?? '—';
   try {
-    const friends = await apiFetch(`/friends/${currentUser.id}`).catch(() => []);
+    const friends = await apiFetch('/friends').catch(() => []);
     parcasCount = friends.length;
     currentUser.parcas_count = parcasCount;
   } catch { /* usa o cache */ }
@@ -1419,7 +1419,7 @@ async function renderHomePage(root) {
       apiFetch('/scraps').catch(() => []),
       apiFetch(`/users/${currentUser.id}/reviews`).catch(() => []),
       apiFetch('/communities').catch(() => []),
-      apiFetch(`/friends/${currentUser.id}`).catch(() => []),
+      apiFetch('/friends').catch(() => []),
     ]);
   } catch {
     root.innerHTML = errorState(t('error.loadPage'));
