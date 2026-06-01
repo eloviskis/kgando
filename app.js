@@ -803,10 +803,17 @@ function bindEvents() {
   });
   document.addEventListener('submit', handleSubmit);
   document.addEventListener('input',  handleInput);
-  window.addEventListener('popstate', () => {
-    currentPage = location.hash.slice(1) || 'home';
+  
+  // Helper para extrair página do hash (sem query params)
+  const handleHashChange = () => {
+    const hash = location.hash.slice(1);
+    const [page] = hash.split('?'); // separa página de query params
+    currentPage = page || 'home';
     renderApp();
-  });
+  };
+  
+  window.addEventListener('popstate', handleHashChange);
+  window.addEventListener('hashchange', handleHashChange);
   window.addEventListener('online',  updateConnectionStatus);
   window.addEventListener('offline', updateConnectionStatus);
 }
