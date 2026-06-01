@@ -1392,11 +1392,12 @@ function renderPage() {
 async function renderHomePage(root) {
   root.innerHTML = '<div class="spinner"></div>';
 
-  let scraps, userReviews;
+  let scraps, userReviews, userComms;
   try {
-    [scraps, userReviews] = await Promise.all([
+    [scraps, userReviews, userComms] = await Promise.all([
       apiFetch('/scraps').catch(() => []),
       apiFetch(`/users/${currentUser.id}/reviews`).catch(() => []),
+      apiFetch('/communities').catch(() => []),
     ]);
   } catch {
     root.innerHTML = errorState(t('error.loadPage'));
@@ -1515,7 +1516,29 @@ async function renderHomePage(root) {
     }
   } catch { /* silencioso */ }
 
-  root.innerHTML = `<div class="orkut-home">${birthdayBox}${whoAmI}${scrapsBox}${activityBox}</div>`;
+  // Box de comunidades do usuário
+  const myComms = Array.isArray(userComms) ? userComms.filter(c => c.is_member || c.created_by === currentUser?.id) : [];
+  const commBox = `
+    <div class="orkut-box">
+      <div class="orkut-box-header">
+        <h3>${t('home.myComms')}</h3>
+        <button class="orkut-box-link" type="button" data-page="communities">${t('home.myCommsSeeAll')}</button>
+      </div>
+      <div class="orkut-box-body">
+        ${myComms.length ? `
+          <div class="home-comms-grid">
+            ${myComms.slice(0, 6).map(c => `
+              <button class="home-comm-chip" type="button" data-action="open-community-page" data-id="${c.id}">
+                <span class="home-comm-icon">${c.icon || '🏘'}</span>
+                <span class="home-comm-name">${esc(c.name)}</span>
+              </button>`).join('')}
+          </div>`
+        : `<p class="home-scraps-empty">${t('home.myCommsEmpty')}</p>`}
+      </div>
+    </div>
+  `;
+
+  root.innerHTML = `<div class="orkut-home">${birthdayBox}${whoAmI}${commBox}${scrapsBox}${activityBox}</div>`;
 
   root.querySelector('[data-action="edit-profile"]')?.addEventListener('click', () => openEditProfileModal(currentUser));
 
@@ -2319,10 +2342,228 @@ async function renderCommunityPage(root) {
     const comm = allComms.find(c => c.id === currentCommunityId);
     if (!comm) { showToast(t('misc.commNotFound')); navigateTo('communities'); return; }
 
-    const isOwner  = comm.created_by === currentUser?.id;
-    const isMember = !!comm.is_member;
+    const isOwner   = comm.created_by === currentUser?.id;
+    const isMember  = !!comm.is_member;
     const allowAnon = !!comm.allow_anonymous;
-    const lang = CURRENT_LANG;
+
+    root.innerHTML = `
+      <!-- Back -->
+      <button class="comm-page-back" data-action="back-to-communities">← ${t('comm.page.back')}</button>
+
+      <!-- Header -->
+      <div class="comm-page-header">
+        <div class="comm-page-icon">${comm.icon}</div>
+        <div class="comm-page-info">
+          <h1 class="comm-page-title">
+            ${esc(comm.name)}
+            ${comm.is_private ? `<span class="comm-private-badge">${t('comm.page.privateInvite')}</span>` : `<span class="comm-private-badge comm-private-badge--pub">${t('comm.page.pub')}</span>`}
+            ${comm.allow_anonymous ? '<span class="comm-private-badge" style="background:rgba(155,89,182,.15);color:#8e44ad">🎭</span>' : ''}
+          </h1>
+          <p class="comm-page-desc">${comm.description ? esc(comm.description) : `<em style="color:var(--muted)">${t('comm.page.noDesc')}</em>`}</p>
+          <div class="comm-page-stats">
+            <span>👥 <strong>${fmtNum(comm.members_count || members.length)}</strong> ${t('comm.members')}</span>
+            <span>📋 <strong>${fmtNum(topics.length)}</strong> ${t('comm.topics')}</span>
+          </div>
+          <div class="comm-page-actions">
+            ${isOwner
+              ? `<button class="comm-page-btn comm-page-btn--primary" data-action="open-community" data-id="${comm.id}">${t('comm.manage')}</button>`
+              : isMember
+                ? `<button class="comm-page-btn comm-page-btn--leave" data-action="join-community" data-id="${comm.id}" data-joined="1">${t('comm.page.member')}</button>`
+                : `<button class="comm-page-btn comm-page-btn--join" data-action="join-community" data-id="${comm.id}" data-joined="0">${t('comm.join')}</button>`
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="comm-page-tabs">
+        <button class="comm-page-tab active" data-tab="topics">📋 ${t('comm.page.tabTopics')}</button>
+        <button class="comm-page-tab" data-tab="members">👥 ${t('comm.page.tabMembers')} <span class="comm-tab-count">${members.length}</span></button>
+        <button class="comm-page-tab" data-tab="about">ℹ ${t('comm.page.tabAbout')}</button>
+      </div>
+
+      <!-- Tab content -->
+      <div class="comm-page-body">
+
+        <!-- TÓPICOS -->
+        <div class="comm-tab-pane active" id="tab-topics">
+          ${isMember || isOwner ? `
+          <button class="submit-btn" style="width:100%;margin-bottom:14px" id="newTopicBtn">+ ${t('comm.newTopic')}</button>
+          <div id="newTopicForm" hidden style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px">
+            <input id="topicTitle" class="form-text-input" placeholder="${t('comm.topicTitle')}" maxlength="100" style="margin-bottom:10px">
+            <textarea id="topicContent" class="form-textarea" rows="3" placeholder="${t('comm.topicContent')}…" maxlength="2000"></textarea>
+            ${allowAnon ? `<label class="comm-anon-check"><input type="checkbox" id="topicAnon"> 🎭 ${t('comm.page.postAnon')}</label>` : ''}
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="topicContent">GIF</button>
+              <button class="submit-btn" style="flex:1" id="topicSubmitBtn">${t('comm.page.publish')}</button>
+            </div>
+          </div>` : ''}
+          <div id="topics-list">
+            ${topics.length ? topics.map(tp => `
+              <div class="topic-row" data-action="open-topic" data-community-id="${comm.id}" data-topic-id="${tp.id}" style="cursor:pointer">
+                <div class="avatar avatar--small${avCls(tp.avatar_text)}" style="${avBg(tp.avatar_text,tp.avatar_color)};pointer-events:none">${avTxt(tp.avatar_text)}</div>
+                <div style="flex:1;pointer-events:none">
+                  <div style="font-weight:700">${esc(tp.title)}</div>
+                  <div style="font-size:12px;color:var(--muted)">${tp.username ? `por @${esc(tp.username)}` : `🎭 ${esc(tp.display_name)}`} · ${timeAgo(tp.created_at)} · 💬 ${tp.replies_count}</div>
+                </div>
+              </div>`).join('')
+            : `<div class="comm-page-empty">💬 ${t('comm.noTopics')}</div>`}
+          </div>
+        </div>
+
+        <!-- MEMBROS -->
+        <div class="comm-tab-pane" id="tab-members">
+          <div class="comm-members-grid">
+            ${members.map(m => `
+              <div class="comm-member-card">
+                <button class="avatar avatar--large${avCls(m.avatar_text)}" style="${avBg(m.avatar_text,m.avatar_color)};border:none;cursor:pointer"
+                        data-action="view-profile" data-user-id="${m.id}">${avTxt(m.avatar_text)}</button>
+                <div class="comm-member-name">
+                  <button class="user-link" data-action="view-profile" data-user-id="${m.id}">${esc(m.display_name)}</button>
+                  ${m.id === comm.created_by ? `<span class="comm-owner-badge">${CURRENT_LANG === 'pt' ? 'dono' : 'owner'}</span>` : ''}
+                </div>
+                <div class="comm-member-username">@${esc(m.username)}</div>
+                ${isOwner && m.id !== currentUser?.id ? `
+                  <button class="comm-member-remove" onclick="removeMemberAndRefresh('${comm.id}','${m.id}')">✕</button>` : ''}
+              </div>`).join('')
+            || `<div class="comm-page-empty">👥 ${t('comm.page.noMembers')}</div>`}
+          </div>
+        </div>
+
+        <!-- SOBRE -->
+        <div class="comm-tab-pane" id="tab-about">
+          <div class="comm-about-box">
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.name')}</span>
+              <span>${esc(comm.name)}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.desc')}</span>
+              <span>${comm.description ? esc(comm.description) : `<em style="color:var(--muted)">${t('comm.page.noDesc')}</em>`}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.page.privacy')}</span>
+              <span>${comm.is_private ? t('comm.page.privateInvite') : t('comm.page.pub')}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.page.anonPosts')}</span>
+              <span>${comm.allow_anonymous ? t('comm.page.anonAllowed') : t('comm.page.no')}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.page.tabMembers')}</span>
+              <span>${fmtNum(comm.members_count || members.length)}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${t('comm.page.createdBy')}</span>
+              <span>${(() => { const owner = members.find(m => m.id === comm.created_by); return owner ? `<button class="user-link" data-action="view-profile" data-user-id="${owner.id}">${esc(owner.display_name)}</button>` : '—'; })()}</span>
+            </div>
+          </div>
+          ${isOwner ? `
+          <div style="margin-top:16px">
+            <div class="invite-link-box" id="inviteLinkBox">
+              <div style="font-size:13px;font-weight:700;color:var(--secondary);margin-bottom:8px">🔗 ${t('comm.page.inviteLink')}</div>
+              <div style="display:flex;gap:8px">
+                <input id="inviteLinkInput" class="form-text-input" style="flex:1;font-size:12px" readonly placeholder="${t('comm.page.invitePh')}">
+                <button class="submit-btn" style="width:auto;padding:10px 14px;font-size:13px" id="genInviteLinkBtn">${t('comm.page.generate')}</button>
+                <button class="btn-secondary" style="padding:10px 14px;font-size:13px;display:none" id="copyInviteLinkBtn">📋 ${t('comm.page.copy')}</button>
+              </div>
+              <button class="btn-secondary" style="font-size:11px;margin-top:6px;padding:4px 10px;display:none;color:#c0392b;background:rgba(231,76,60,.1)" id="revokeInviteLinkBtn">✕ ${t('comm.page.revoke')}</button>
+            </div>
+          </div>` : ''}
+        </div>
+
+      </div>`;
+
+    // ── Tab switching
+    root.querySelectorAll('.comm-page-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('.comm-page-tab').forEach(b => b.classList.remove('active'));
+        root.querySelectorAll('.comm-tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        root.querySelector(`#tab-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // ── Novo tópico
+    root.querySelector('#newTopicBtn')?.addEventListener('click', () => {
+      const f = root.querySelector('#newTopicForm');
+      f.hidden = !f.hidden;
+    });
+    root.querySelector('#topicSubmitBtn')?.addEventListener('click', async () => {
+      const title     = root.querySelector('#topicTitle').value.trim();
+      const content   = root.querySelector('#topicContent').value.trim();
+      const anonymous = root.querySelector('#topicAnon')?.checked || false;
+      if (!title || !content) return showToast(t('comm.topicErr'));
+      const btn = root.querySelector('#topicSubmitBtn');
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        await apiFetch(`/communities/${comm.id}/topics`, { method: 'POST', body: JSON.stringify({ title, content, anonymous }) });
+        showToast(t('comm.topicCreated'));
+        renderCommunityPage(root);
+      } catch(err) { showToast(err.message); btn.disabled = false; btn.textContent = t('comm.page.publish'); }
+    });
+
+    // ── Invite link (aba Sobre)
+    if (isOwner) {
+      if (comm.invite_token) {
+        const url = `${window.location.origin}/?join=${comm.invite_token}`;
+        const li = root.querySelector('#inviteLinkInput');
+        if (li) {
+          li.value = url;
+          root.querySelector('#copyInviteLinkBtn').style.display = '';
+          root.querySelector('#revokeInviteLinkBtn').style.display = '';
+        }
+      }
+      root.querySelector('#genInviteLinkBtn')?.addEventListener('click', async () => {
+        const btn = root.querySelector('#genInviteLinkBtn');
+        btn.disabled = true; btn.textContent = '…';
+        try {
+          const r = await apiFetch(`/communities/${comm.id}/invite-link`, { method: 'POST' });
+          root.querySelector('#inviteLinkInput').value = r.url;
+          root.querySelector('#copyInviteLinkBtn').style.display = '';
+          root.querySelector('#revokeInviteLinkBtn').style.display = '';
+          showToast(t('comm.page.linkGenerated'));
+        } catch(err) { showToast(err.message); }
+        btn.disabled = false; btn.textContent = t('comm.page.generate');
+      });
+      root.querySelector('#copyInviteLinkBtn')?.addEventListener('click', () => {
+        const url = root.querySelector('#inviteLinkInput').value;
+        navigator.clipboard.writeText(url).then(() => showToast(t('comm.page.linkCopied'))).catch(() => {
+          root.querySelector('#inviteLinkInput').select(); document.execCommand('copy');
+          showToast(t('comm.page.linkCopied'));
+        });
+      });
+      root.querySelector('#revokeInviteLinkBtn')?.addEventListener('click', async () => {
+        if (!confirm(t('comm.page.revokeQ'))) return;
+        try {
+          await apiFetch(`/communities/${comm.id}/invite-link`, { method: 'DELETE' });
+          root.querySelector('#inviteLinkInput').value = '';
+          root.querySelector('#copyInviteLinkBtn').style.display = 'none';
+          root.querySelector('#revokeInviteLinkBtn').style.display = 'none';
+          showToast(t('comm.page.linkRevoked'));
+        } catch(err) { showToast(err.message); }
+      });
+    }
+
+    // ── Back button
+    root.querySelector('.comm-page-back')?.addEventListener('click', () => {
+      currentCommunityId = null;
+      navigateTo('communities');
+    });
+
+  } catch(e) {
+    root.innerHTML = errorState(e.message);
+  }
+}
+
+window.removeMemberAndRefresh = async function(communityId, userId) {
+  if (!confirm(t('comm.removeMember', { name: '' }))) return;
+  try {
+    await apiFetch(`/communities/${communityId}/members/${userId}`, { method: 'DELETE' });
+    showToast(t('comm.memberRemoved', { name: '' }));
+    renderCommunityPage(document.getElementById('pageRoot'));
+  } catch(e) { showToast(e.message); }
+};
 
     root.innerHTML = `
       <!-- Back -->
@@ -2560,7 +2801,7 @@ async function renderCommunitiesPage(root) {
     </div>
 
     ${myComms.length ? `
-    <div class="comm-section-title">⭐ ${CURRENT_LANG === 'pt' ? 'Minhas comunidades (dono)' : 'My communities (owner)'}</div>
+    <div class="comm-section-title">⭐ ${t('comm.myComms')}</div>
     <div class="communities-grid" style="margin-bottom:24px">
       ${myComms.map(c => communityCard(c, true)).join('')}
     </div>` : ''}
