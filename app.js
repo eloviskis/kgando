@@ -3390,14 +3390,14 @@ function openCreateCommunityModal() {
                 <span>🔒 ${CURRENT_LANG === 'pt' ? 'Comunidade privada' : 'Private community'}</span>
                 <span style="font-size:12px;color:var(--muted);display:block;margin-top:2px">${CURRENT_LANG === 'pt' ? 'Só entram quem você convidar' : 'Only invited members can join'}</span>
               </label>
-              <label class="toggle-switch"><input type="checkbox" name="is_private" value="1"><span class="toggle-slider"></span></label>
+              <label class="toggle-switch"><input type="checkbox" name="is_private" value="1"><span class="comm-slider"></span></label>
             </div>
             <div class="comm-toggle-row">
               <label class="comm-toggle-label">
                 <span>🎭 ${CURRENT_LANG === 'pt' ? 'Permitir posts anônimos' : 'Allow anonymous posts'}</span>
                 <span style="font-size:12px;color:var(--muted);display:block;margin-top:2px">${CURRENT_LANG === 'pt' ? 'Membros podem postar como "Anônimo"' : 'Members can post as "Anonymous"'}</span>
               </label>
-              <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" value="1"><span class="toggle-slider"></span></label>
+              <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" value="1"><span class="comm-slider"></span></label>
             </div>
             <button class="submit-btn" type="submit">${t('comm.createBtn')}</button>
           </form>
@@ -3448,13 +3448,13 @@ async function openCommunityModal(communityId) {
           <label class="comm-toggle-label">
             <span>🔒 ${CURRENT_LANG === 'pt' ? 'Comunidade privada' : 'Private community'}</span>
           </label>
-          <label class="toggle-switch"><input type="checkbox" name="is_private" ${comm.is_private ? 'checked' : ''}><span class="toggle-slider"></span></label>
+          <label class="toggle-switch"><input type="checkbox" name="is_private" ${comm.is_private ? 'checked' : ''}><span class="comm-slider"></span></label>
         </div>
         <div class="comm-toggle-row">
           <label class="comm-toggle-label">
             <span>🎭 ${CURRENT_LANG === 'pt' ? 'Permitir posts anônimos' : 'Allow anonymous posts'}</span>
           </label>
-          <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" ${comm.allow_anonymous ? 'checked' : ''}><span class="toggle-slider"></span></label>
+          <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" ${comm.allow_anonymous ? 'checked' : ''}><span class="comm-slider"></span></label>
         </div>
         <div style="display:flex;gap:10px;margin-top:14px">
           <button class="submit-btn" type="submit" style="flex:1">Salvar</button>
