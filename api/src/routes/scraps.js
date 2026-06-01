@@ -28,7 +28,7 @@ router.post('/', requireAuth, (req, res) => {
     FROM scraps s JOIN users u ON u.id=s.from_user_id WHERE s.id=?
   `).get(id);
   const APP_URL = process.env.APP_URL || 'https://kgando.com';
-  createNotification({ userId: to_user_id, type: 'scrap', fromUserId: req.user.id, entityId: id, message: `${scrap.display_name} te deixou um recado!`, link: `${APP_URL}/#profile:${to_user_id}` });
+  createNotification({ userId: to_user_id, type: 'scrap', fromUserId: req.user.id, entityId: id, message: `${scrap.display_name} te deixou um recado!`, link: `${APP_URL}/#scraps` });
   res.status(201).json(scrap);
 });
 
