@@ -39,17 +39,38 @@ router.get('/', (req, res) => {
   res.json(rows);
 });
 
+// GET /api/communities/join/:token — info da comunidade pelo link de convite
+router.get('/join/:token', (req, res) => {
+  const c = db.prepare(
+    'SELECT id, name, description, icon, members_count, is_private FROM communities WHERE invite_token=?'
+  ).get(req.params.token);
+  if (!c) return res.status(404).json({ error: 'Link de convite inválido ou expirado.' });
+  res.json(c);
+});
+
+// POST /api/communities/join/:token — entrar na comunidade via link
+router.post('/join/:token', requireAuth, (req, res) => {
+  const c = db.prepare('SELECT * FROM communities WHERE invite_token=?').get(req.params.token);
+  if (!c) return res.status(404).json({ error: 'Link de convite inválido ou expirado.' });
+  try {
+    db.prepare('INSERT INTO community_members (user_id,community_id) VALUES (?,?)').run(req.user.id, c.id);
+    db.prepare('UPDATE communities SET members_count=members_count+1 WHERE id=?').run(c.id);
+  } catch { /* já é membro */ }
+  const updated = db.prepare('SELECT id, name, icon, members_count FROM communities WHERE id=?').get(c.id);
+  res.json({ ok: true, community: updated });
+});
+
 // POST /api/communities/:id/join
 router.post('/:id/join', requireAuth, (req, res) => {
   const comm = db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id);
   if (!comm) return res.status(404).json({ error: 'Comunidade não encontrada.' });
 
-  // Comunidade privada: precisa de convite aceito ou ser o dono
+  // Comunidade privada: precisa de convite ou link válido
   if (comm.is_private && comm.created_by !== req.user.id) {
     const invite = db.prepare(
       "SELECT status FROM community_invites WHERE community_id=? AND invited_user=?"
     ).get(req.params.id, req.user.id);
-    if (!invite) return res.status(403).json({ error: 'Comunidade privada. Peça um convite ao dono.' });
+    if (!invite) return res.status(403).json({ error: 'Comunidade privada. Use o link de convite para entrar.' });
   }
 
   try {
@@ -116,6 +137,26 @@ router.post('/:id/invite', requireAuth, (req, res) => {
     link: `${APP_URL}/#communities`,
   });
   res.json({ ok: true, invited: target.display_name });
+});
+
+// POST /api/communities/:id/invite-link — gerar/renovar link de convite (dono)
+router.post('/:id/invite-link', requireAuth, (req, res) => {
+  const c = db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Comunidade não encontrada.' });
+  if (c.created_by !== req.user.id) return res.status(403).json({ error: 'Só o dono pode gerar convites.' });
+  const token = randomUUID();
+  db.prepare('UPDATE communities SET invite_token=? WHERE id=?').run(token, req.params.id);
+  const APP_URL = process.env.APP_URL || 'https://kgando.com';
+  res.json({ token, url: `${APP_URL}/?join=${token}` });
+});
+
+// DELETE /api/communities/:id/invite-link — revogar link
+router.delete('/:id/invite-link', requireAuth, (req, res) => {
+  const c = db.prepare('SELECT created_by FROM communities WHERE id=?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Não encontrada.' });
+  if (c.created_by !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
+  db.prepare('UPDATE communities SET invite_token=NULL WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
 });
 
 // GET /api/communities/:id/invites — listar convites pendentes (dono)

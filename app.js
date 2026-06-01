@@ -383,6 +383,36 @@ async function boot() {
     return;
   }
 
+  // ── Link de convite de comunidade (?join=TOKEN) ────────────────────────────
+  const joinToken = urlParams.get('join');
+  if (joinToken) {
+    window.history.replaceState({}, '', '/');
+    // Verificar se o token é válido antes de mostrar qualquer coisa
+    try {
+      const comm = await fetch(`/api/communities/join/${joinToken}`).then(r => r.json());
+      if (comm && comm.id) {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+          // Usuário não logado — salvar token para usar após login
+          sessionStorage.setItem('pendingJoinToken', joinToken);
+          showLandingPage();
+          setTimeout(() => {
+            showAuthModal();
+            showToast(`Entre para participar de "${comm.name}"!`);
+          }, 400);
+          return;
+        }
+        // Usuário logado — entrar direto
+        const raw = localStorage.getItem(USER_KEY);
+        if (raw) { try { currentUser = JSON.parse(raw); } catch {} }
+        try {
+          await apiFetch(`/communities/join/${joinToken}`, { method: 'POST' });
+          showToast(`Você entrou em "${comm.name}"! 🎉`);
+        } catch(e) { /* já é membro ou outro erro — ignorar silenciosamente */ }
+      }
+    } catch { /* token inválido */ }
+  }
+
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token) { showLandingPage(); return; }
 
@@ -694,6 +724,15 @@ window.handleAuthSubmit = async function(e, type) {
     if (totpField) totpField.style.display = 'none';
     hideAuthModal();
     hideLandingPage();
+    // Verificar se havia um join pendente (via link de convite de comunidade)
+    const pendingJoin = sessionStorage.getItem('pendingJoinToken');
+    if (pendingJoin) {
+      sessionStorage.removeItem('pendingJoinToken');
+      try {
+        const r = await apiFetch(`/communities/join/${pendingJoin}`, { method: 'POST' });
+        if (r.community) showToast(`Você entrou em "${r.community.name}"! 🎉`);
+      } catch { /* ignorar — já é membro ou link expirou */ }
+    }
     initApp();
   } catch (err) {
     errEl.textContent = err.message;
@@ -3427,11 +3466,14 @@ async function openCommunityModal(communityId) {
         👥 Membros (${members.length}) ${comm.is_private ? '<span class="comm-private-badge">🔒 Privada</span>' : '<span class="comm-private-badge comm-private-badge--pub">🌍 Pública</span>'}
       </div>
       ${isOwner ? `
-      <div style="margin-bottom:14px">
+      <div class="invite-link-box" id="inviteLinkBox">
+        <div style="font-size:13px;font-weight:700;color:var(--secondary);margin-bottom:8px">🔗 Link de convite</div>
         <div style="display:flex;gap:8px">
-          <input id="inviteUsernameInput" class="form-text-input" style="flex:1" placeholder="@username para convidar" maxlength="40">
-          <button class="submit-btn" style="width:auto;padding:10px 16px" id="sendInviteBtn">Convidar ✉</button>
+          <input id="inviteLinkInput" class="form-text-input" style="flex:1;font-size:12px" readonly placeholder="Clique em Gerar para criar um link">
+          <button class="submit-btn" style="width:auto;padding:10px 14px;font-size:13px" id="genInviteLinkBtn">Gerar</button>
+          <button class="btn-secondary" style="padding:10px 14px;font-size:13px;display:none" id="copyInviteLinkBtn">📋 Copiar</button>
         </div>
+        <button class="btn-secondary" style="font-size:11px;margin-top:6px;padding:4px 10px;display:none;color:#c0392b;background:rgba(231,76,60,.1)" id="revokeInviteLinkBtn">✕ Revogar link</button>
       </div>` : ''}
       <div class="members-list">
         ${members.map(m => `
@@ -3477,20 +3519,54 @@ async function openCommunityModal(communityId) {
       } catch(err) { showToast(err.message); btn.disabled=false; btn.textContent='Salvar'; }
     });
 
-    // Convidar membro
-    document.getElementById('sendInviteBtn')?.addEventListener('click', async () => {
-      const input = document.getElementById('inviteUsernameInput');
-      const username = input.value.trim().replace(/^@/, '');
-      if (!username) return;
-      const btn = document.getElementById('sendInviteBtn');
-      btn.disabled = true; btn.textContent = 'Enviando…';
-      try {
-        const r = await apiFetch(`/communities/${communityId}/invite`, { method: 'POST', body: JSON.stringify({ username }) });
-        showToast(`Convite enviado para ${r.invited}!`);
-        input.value = '';
-      } catch(err) { showToast(err.message); }
-      btn.disabled = false; btn.textContent = 'Convidar ✉';
-    });
+    // Gerar / copiar / revogar link de convite
+    if (isOwner) {
+      // Se já tem token na comunidade, preencher o campo
+      if (comm.invite_token) {
+        const APP_URL = window.location.origin;
+        const existingUrl = `${APP_URL}/?join=${comm.invite_token}`;
+        const li = document.getElementById('inviteLinkInput');
+        if (li) {
+          li.value = existingUrl;
+          document.getElementById('copyInviteLinkBtn').style.display = '';
+          document.getElementById('revokeInviteLinkBtn').style.display = '';
+        }
+      }
+
+      document.getElementById('genInviteLinkBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('genInviteLinkBtn');
+        btn.disabled = true; btn.textContent = 'Gerando…';
+        try {
+          const r = await apiFetch(`/communities/${communityId}/invite-link`, { method: 'POST' });
+          const input = document.getElementById('inviteLinkInput');
+          input.value = r.url;
+          document.getElementById('copyInviteLinkBtn').style.display = '';
+          document.getElementById('revokeInviteLinkBtn').style.display = '';
+          showToast('Link gerado!');
+        } catch(err) { showToast(err.message); }
+        btn.disabled = false; btn.textContent = 'Gerar';
+      });
+
+      document.getElementById('copyInviteLinkBtn')?.addEventListener('click', () => {
+        const url = document.getElementById('inviteLinkInput').value;
+        navigator.clipboard.writeText(url).then(() => showToast('Link copiado!')).catch(() => {
+          document.getElementById('inviteLinkInput').select();
+          document.execCommand('copy');
+          showToast('Link copiado!');
+        });
+      });
+
+      document.getElementById('revokeInviteLinkBtn')?.addEventListener('click', async () => {
+        if (!confirm('Revogar o link? Quem tiver o link antigo não poderá mais entrar.')) return;
+        try {
+          await apiFetch(`/communities/${communityId}/invite-link`, { method: 'DELETE' });
+          document.getElementById('inviteLinkInput').value = '';
+          document.getElementById('copyInviteLinkBtn').style.display = 'none';
+          document.getElementById('revokeInviteLinkBtn').style.display = 'none';
+          showToast('Link revogado.');
+        } catch(err) { showToast(err.message); }
+      });
+    }
 
     // Deletar
     document.getElementById('deleteCommBtn')?.addEventListener('click', async () => {

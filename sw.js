@@ -1,4 +1,4 @@
-const CACHE_NAME = "kgando-shell-v36";
+const CACHE_NAME = "kgando-shell-v37";
 const APP_SHELL = [
   "./",
   "./index.html",

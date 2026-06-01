@@ -138,6 +138,8 @@ try {
     // anonymous_as em tópicos e replies
     "ALTER TABLE community_topics ADD COLUMN anonymous_as TEXT DEFAULT NULL",
     "ALTER TABLE community_topic_replies ADD COLUMN anonymous_as TEXT DEFAULT NULL",
+    // link de convite único por comunidade
+    "ALTER TABLE communities ADD COLUMN invite_token TEXT DEFAULT NULL",
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* coluna já existe */ }
