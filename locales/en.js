@@ -207,8 +207,11 @@ window.LOCALES.en = {
   'home.noBadges':   'No badges yet — keep rating!',
   'home.weeklyRanking': '★ Weekly Ranking',
   'home.yourBadges':    '🏅 Your badges',
-  'home.featuredBathrooms': '🚽 Featured Bathrooms',
-  'home.myComms':      '☷ My Communities',
+  'home.featuredBathrooms': '🚽 Featured Bathrooms',  'home.tabPals':    '💩 Pals',
+  'home.tabDiscover': '🌍 Discover',
+  'home.noPalsYet':  'No poop pals yet',
+  'home.noPalsSub':  'Add pals to see their reviews here.<br>Meanwhile, check out what everyone is dumping:',
+  'home.switchDiscover': '🌍 View Discover',  'home.myComms':      '☷ My Communities',
   'home.myCommsEmpty': 'You haven\'t joined any community yet.',
   'home.myCommsSeeAll':'see all →',
 

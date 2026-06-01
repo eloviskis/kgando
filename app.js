@@ -33,6 +33,14 @@ function t(key, vars) {
   return str;
 }
 
+// Helper para pluralização de "review/reviews" ou "avaliação/avaliações"
+function pluralReviews(count) {
+  if (CURRENT_LANG === 'en') {
+    return count === 1 ? 'review' : 'reviews';
+  }
+  return count === 1 ? 'avaliação' : 'avaliações';
+}
+
 function setLang(lang) {
   localStorage.setItem(LANG_KEY, lang);
   location.reload();
@@ -1281,7 +1289,7 @@ async function renderHomeRightRail(rail) {
               data-action="view-profile" data-user-id="${u.id}">${avTxt(u.avatar_text)}</button>
       <div class="rwi-info">
         <div class="rwi-name">${esc(u.name)}</div>
-        <div class="rwi-sub">${u.count} avaliações</div>
+        <div class="rwi-sub">${u.count} ${pluralReviews(u.count)}</div>
       </div>
       <div class="rwi-score">${u.likes} ❤️</div>
     </div>
@@ -1484,8 +1492,8 @@ async function renderHomePage(root) {
         <button class="orkut-box-link" type="button" data-page="new">${t('home.newReview')}</button>
       </div>
       <div class="feed-tabs">
-        <button class="feed-tab active" id="tabFriends" data-feed="friends">💩 Parcas</button>
-        <button class="feed-tab" id="tabGlobal" data-feed="global">🌍 Descobrir</button>
+        <button class="feed-tab active" id="tabFriends" data-feed="friends">${t('home.tabPals')}</button>
+        <button class="feed-tab" id="tabGlobal" data-feed="global">${t('home.tabDiscover')}</button>
       </div>
       <div class="orkut-box-body" id="feedBody">
         <div class="spinner"></div>
@@ -1563,9 +1571,9 @@ async function renderHomePage(root) {
         feedBody.innerHTML = `
           <div style="padding:24px 16px;text-align:center">
             <div style="font-size:36px;margin-bottom:10px">💩</div>
-            <div style="font-weight:800;font-size:16px;color:var(--primary-dark);margin-bottom:6px">Ainda sem parcas de cocô</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Adicione parcas para ver as reviews delas aqui.<br>Enquanto isso, veja o que todo mundo está cagando:</div>
-            <button class="feed-tab" id="switchToGlobal" style="margin:0 auto">🌍 Ver Descobrir</button>
+            <div style="font-weight:800;font-size:16px;color:var(--primary-dark);margin-bottom:6px">${t('home.noPalsYet')}</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${t('home.noPalsSub')}</div>
+            <button class="feed-tab" id="switchToGlobal" style="margin:0 auto">${t('home.switchDiscover')}</button>
           </div>`;
         document.getElementById('switchToGlobal')?.addEventListener('click', () => {
           document.getElementById('tabFriends')?.classList.remove('active');
