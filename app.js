@@ -296,9 +296,10 @@ function getBirthdayDisplay(birthday) {
 }
 
 /* ── State ──────────────────────────────────────── */
-let currentUser  = null;
-let currentPage  = 'home';
-let deferredPWA  = null;
+let currentUser       = null;
+let currentPage       = 'home';
+let currentCommunityId = null;
+let deferredPWA       = null;
 let newReviewForm = { quality: null, duration: null, relief: null, smell: null, sticker: null };
 
 /* ── Boot ───────────────────────────────────────── */
@@ -1043,6 +1044,14 @@ function handleClick(e) {
     openCommunityForumModal(el.dataset.id, el.dataset.name);
     return;
   }
+  if (action === 'open-community-page') {
+    currentCommunityId = el.dataset.id;
+    currentPage = 'community';
+    history.pushState(null, '', '#community');
+    renderApp();
+    document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   if (action === 'open-topic') {
     openTopicModal(el.dataset.communityId, el.dataset.topicId);
     return;
@@ -1366,6 +1375,7 @@ function renderPage() {
     case 'new':         renderNewPage(root);          break;
     case 'bathrooms':   renderBathroomsPage(root);    break;
     case 'communities': renderCommunitiesPage(root);  break;
+    case 'community':   renderCommunityPage(root);    break;
     case 'scraps':      renderScrapsPage(root);       break;
     case 'people':      renderPeoplePage(root);       break;
     case 'profile':     
@@ -2295,6 +2305,244 @@ async function submitBathroom(form) {
   }
 }
 
+/* ── Community page (Orkut style) ───────────────── */
+async function renderCommunityPage(root) {
+  if (!currentCommunityId) { navigateTo('communities'); return; }
+  root.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const [allComms, members, topics] = await Promise.all([
+      apiFetch('/communities'),
+      apiFetch(`/communities/${currentCommunityId}/members`),
+      apiFetch(`/communities/${currentCommunityId}/topics`),
+    ]);
+    const comm = allComms.find(c => c.id === currentCommunityId);
+    if (!comm) { showToast(t('misc.commNotFound')); navigateTo('communities'); return; }
+
+    const isOwner  = comm.created_by === currentUser?.id;
+    const isMember = !!comm.is_member;
+    const allowAnon = !!comm.allow_anonymous;
+    const lang = CURRENT_LANG;
+
+    root.innerHTML = `
+      <!-- Back -->
+      <button class="comm-page-back" data-action="back-to-communities">← ${lang === 'pt' ? 'Comunidades' : 'Communities'}</button>
+
+      <!-- Header -->
+      <div class="comm-page-header">
+        <div class="comm-page-icon">${comm.icon}</div>
+        <div class="comm-page-info">
+          <h1 class="comm-page-title">
+            ${esc(comm.name)}
+            ${comm.is_private ? '<span class="comm-private-badge">🔒 Privada</span>' : '<span class="comm-private-badge comm-private-badge--pub">🌍 Pública</span>'}
+            ${comm.allow_anonymous ? '<span class="comm-private-badge" style="background:rgba(155,89,182,.15);color:#8e44ad">🎭 Anônima</span>' : ''}
+          </h1>
+          <p class="comm-page-desc">${comm.description ? esc(comm.description) : '<em style="color:var(--muted)">' + (lang === 'pt' ? 'Sem descrição' : 'No description') + '</em>'}</p>
+          <div class="comm-page-stats">
+            <span>👥 <strong>${fmtNum(comm.members_count || members.length)}</strong> ${lang === 'pt' ? 'membros' : 'members'}</span>
+            <span>📋 <strong>${fmtNum(topics.length)}</strong> ${lang === 'pt' ? 'tópicos' : 'topics'}</span>
+          </div>
+          <div class="comm-page-actions">
+            ${isOwner
+              ? `<button class="comm-page-btn comm-page-btn--primary" data-action="open-community" data-id="${comm.id}">⚙ ${lang === 'pt' ? 'Gerenciar' : 'Manage'}</button>`
+              : isMember
+                ? `<button class="comm-page-btn comm-page-btn--leave" data-action="join-community" data-id="${comm.id}" data-joined="1">✓ ${lang === 'pt' ? 'Participando' : 'Member'}</button>`
+                : `<button class="comm-page-btn comm-page-btn--join" data-action="join-community" data-id="${comm.id}" data-joined="0">${lang === 'pt' ? 'Participar' : 'Join'}</button>`
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="comm-page-tabs">
+        <button class="comm-page-tab active" data-tab="topics">📋 ${lang === 'pt' ? 'Tópicos' : 'Topics'}</button>
+        <button class="comm-page-tab" data-tab="members">👥 ${lang === 'pt' ? 'Membros' : 'Members'} <span class="comm-tab-count">${members.length}</span></button>
+        <button class="comm-page-tab" data-tab="about">ℹ ${lang === 'pt' ? 'Sobre' : 'About'}</button>
+      </div>
+
+      <!-- Tab content -->
+      <div class="comm-page-body">
+
+        <!-- TÓPICOS -->
+        <div class="comm-tab-pane active" id="tab-topics">
+          ${isMember || isOwner ? `
+          <button class="submit-btn" style="width:100%;margin-bottom:14px" id="newTopicBtn">+ ${lang === 'pt' ? 'Novo tópico' : 'New topic'}</button>
+          <div id="newTopicForm" hidden style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px">
+            <input id="topicTitle" class="form-text-input" placeholder="${lang === 'pt' ? 'Título do tópico' : 'Topic title'}" maxlength="100" style="margin-bottom:10px">
+            <textarea id="topicContent" class="form-textarea" rows="3" placeholder="${lang === 'pt' ? 'Conteúdo…' : 'Content…'}" maxlength="2000"></textarea>
+            ${allowAnon ? `<label class="comm-anon-check"><input type="checkbox" id="topicAnon"> 🎭 ${lang === 'pt' ? 'Postar anonimamente' : 'Post anonymously'}</label>` : ''}
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="topicContent">GIF</button>
+              <button class="submit-btn" style="flex:1" id="topicSubmitBtn">${lang === 'pt' ? 'Publicar' : 'Publish'}</button>
+            </div>
+          </div>` : ''}
+          <div id="topics-list">
+            ${topics.length ? topics.map(tp => `
+              <div class="topic-row" data-action="open-topic" data-community-id="${comm.id}" data-topic-id="${tp.id}" style="cursor:pointer">
+                <div class="avatar avatar--small${avCls(tp.avatar_text)}" style="${avBg(tp.avatar_text,tp.avatar_color)};pointer-events:none">${avTxt(tp.avatar_text)}</div>
+                <div style="flex:1;pointer-events:none">
+                  <div style="font-weight:700">${esc(tp.title)}</div>
+                  <div style="font-size:12px;color:var(--muted)">${tp.username ? `por @${esc(tp.username)}` : `🎭 ${esc(tp.display_name)}`} · ${timeAgo(tp.created_at)} · 💬 ${tp.replies_count}</div>
+                </div>
+              </div>`).join('')
+            : `<div class="comm-page-empty">💬 ${lang === 'pt' ? 'Nenhum tópico ainda. Seja o primeiro!' : 'No topics yet. Be the first!'}</div>`}
+          </div>
+        </div>
+
+        <!-- MEMBROS -->
+        <div class="comm-tab-pane" id="tab-members">
+          <div class="comm-members-grid">
+            ${members.map(m => `
+              <div class="comm-member-card">
+                <button class="avatar avatar--large${avCls(m.avatar_text)}" style="${avBg(m.avatar_text,m.avatar_color)};border:none;cursor:pointer"
+                        data-action="view-profile" data-user-id="${m.id}">${avTxt(m.avatar_text)}</button>
+                <div class="comm-member-name">
+                  <button class="user-link" data-action="view-profile" data-user-id="${m.id}">${esc(m.display_name)}</button>
+                  ${m.id === comm.created_by ? '<span class="comm-owner-badge">dono</span>' : ''}
+                </div>
+                <div class="comm-member-username">@${esc(m.username)}</div>
+                ${isOwner && m.id !== currentUser?.id ? `
+                  <button class="comm-member-remove" onclick="removeMemberAndRefresh('${comm.id}','${m.id}')">✕</button>` : ''}
+              </div>`).join('')
+            || `<div class="comm-page-empty">👥 ${lang === 'pt' ? 'Nenhum membro ainda.' : 'No members yet.'}</div>`}
+          </div>
+        </div>
+
+        <!-- SOBRE -->
+        <div class="comm-tab-pane" id="tab-about">
+          <div class="comm-about-box">
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Nome' : 'Name'}</span>
+              <span>${esc(comm.name)}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Descrição' : 'Description'}</span>
+              <span>${comm.description ? esc(comm.description) : '<em style="color:var(--muted)">' + (lang === 'pt' ? 'Sem descrição' : 'No description') + '</em>'}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Privacidade' : 'Privacy'}</span>
+              <span>${comm.is_private ? (lang === 'pt' ? '🔒 Privada (convite)' : '🔒 Private (invite only)') : (lang === 'pt' ? '🌍 Pública' : '🌍 Public')}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Posts anônimos' : 'Anonymous posts'}</span>
+              <span>${comm.allow_anonymous ? (lang === 'pt' ? '🎭 Permitido' : '🎭 Allowed') : (lang === 'pt' ? 'Não' : 'No')}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Membros' : 'Members'}</span>
+              <span>${fmtNum(comm.members_count || members.length)}</span>
+            </div>
+            <div class="comm-about-row">
+              <span class="comm-about-label">${lang === 'pt' ? 'Criada por' : 'Created by'}</span>
+              <span>${(() => { const owner = members.find(m => m.id === comm.created_by); return owner ? `<button class="user-link" data-action="view-profile" data-user-id="${owner.id}">${esc(owner.display_name)}</button>` : '—'; })()}</span>
+            </div>
+          </div>
+          ${isOwner ? `
+          <div style="margin-top:16px">
+            <div class="invite-link-box" id="inviteLinkBox">
+              <div style="font-size:13px;font-weight:700;color:var(--secondary);margin-bottom:8px">🔗 ${lang === 'pt' ? 'Link de convite' : 'Invite link'}</div>
+              <div style="display:flex;gap:8px">
+                <input id="inviteLinkInput" class="form-text-input" style="flex:1;font-size:12px" readonly placeholder="${lang === 'pt' ? 'Clique em Gerar para criar' : 'Click Generate to create'}">
+                <button class="submit-btn" style="width:auto;padding:10px 14px;font-size:13px" id="genInviteLinkBtn">${lang === 'pt' ? 'Gerar' : 'Generate'}</button>
+                <button class="btn-secondary" style="padding:10px 14px;font-size:13px;display:none" id="copyInviteLinkBtn">📋 ${lang === 'pt' ? 'Copiar' : 'Copy'}</button>
+              </div>
+              <button class="btn-secondary" style="font-size:11px;margin-top:6px;padding:4px 10px;display:none;color:#c0392b;background:rgba(231,76,60,.1)" id="revokeInviteLinkBtn">✕ ${lang === 'pt' ? 'Revogar' : 'Revoke'}</button>
+            </div>
+          </div>` : ''}
+        </div>
+
+      </div>`;
+
+    // ── Tab switching
+    root.querySelectorAll('.comm-page-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('.comm-page-tab').forEach(b => b.classList.remove('active'));
+        root.querySelectorAll('.comm-tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        root.querySelector(`#tab-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // ── Novo tópico
+    root.querySelector('#newTopicBtn')?.addEventListener('click', () => {
+      const f = root.querySelector('#newTopicForm');
+      f.hidden = !f.hidden;
+    });
+    root.querySelector('#topicSubmitBtn')?.addEventListener('click', async () => {
+      const title     = root.querySelector('#topicTitle').value.trim();
+      const content   = root.querySelector('#topicContent').value.trim();
+      const anonymous = root.querySelector('#topicAnon')?.checked || false;
+      if (!title || !content) return showToast(t('comm.topicErr'));
+      const btn = root.querySelector('#topicSubmitBtn');
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        await apiFetch(`/communities/${comm.id}/topics`, { method: 'POST', body: JSON.stringify({ title, content, anonymous }) });
+        showToast(t('comm.topicCreated'));
+        renderCommunityPage(root);
+      } catch(err) { showToast(err.message); btn.disabled = false; btn.textContent = lang === 'pt' ? 'Publicar' : 'Publish'; }
+    });
+
+    // ── Invite link (aba Sobre)
+    if (isOwner) {
+      if (comm.invite_token) {
+        const url = `${window.location.origin}/?join=${comm.invite_token}`;
+        const li = root.querySelector('#inviteLinkInput');
+        if (li) {
+          li.value = url;
+          root.querySelector('#copyInviteLinkBtn').style.display = '';
+          root.querySelector('#revokeInviteLinkBtn').style.display = '';
+        }
+      }
+      root.querySelector('#genInviteLinkBtn')?.addEventListener('click', async () => {
+        const btn = root.querySelector('#genInviteLinkBtn');
+        btn.disabled = true; btn.textContent = '…';
+        try {
+          const r = await apiFetch(`/communities/${comm.id}/invite-link`, { method: 'POST' });
+          root.querySelector('#inviteLinkInput').value = r.url;
+          root.querySelector('#copyInviteLinkBtn').style.display = '';
+          root.querySelector('#revokeInviteLinkBtn').style.display = '';
+          showToast(lang === 'pt' ? 'Link gerado!' : 'Link generated!');
+        } catch(err) { showToast(err.message); }
+        btn.disabled = false; btn.textContent = lang === 'pt' ? 'Gerar' : 'Generate';
+      });
+      root.querySelector('#copyInviteLinkBtn')?.addEventListener('click', () => {
+        const url = root.querySelector('#inviteLinkInput').value;
+        navigator.clipboard.writeText(url).then(() => showToast(lang === 'pt' ? 'Copiado!' : 'Copied!')).catch(() => {
+          root.querySelector('#inviteLinkInput').select(); document.execCommand('copy');
+          showToast(lang === 'pt' ? 'Copiado!' : 'Copied!');
+        });
+      });
+      root.querySelector('#revokeInviteLinkBtn')?.addEventListener('click', async () => {
+        if (!confirm(lang === 'pt' ? 'Revogar o link?' : 'Revoke link?')) return;
+        try {
+          await apiFetch(`/communities/${comm.id}/invite-link`, { method: 'DELETE' });
+          root.querySelector('#inviteLinkInput').value = '';
+          root.querySelector('#copyInviteLinkBtn').style.display = 'none';
+          root.querySelector('#revokeInviteLinkBtn').style.display = 'none';
+          showToast(lang === 'pt' ? 'Link revogado.' : 'Link revoked.');
+        } catch(err) { showToast(err.message); }
+      });
+    }
+
+    // ── Back button
+    root.querySelector('.comm-page-back')?.addEventListener('click', () => {
+      currentCommunityId = null;
+      navigateTo('communities');
+    });
+
+  } catch(e) {
+    root.innerHTML = errorState(e.message);
+  }
+}
+
+window.removeMemberAndRefresh = async function(communityId, userId) {
+  if (!confirm(t('comm.removeMember', { name: '' }))) return;
+  try {
+    await apiFetch(`/communities/${communityId}/members/${userId}`, { method: 'DELETE' });
+    showToast(t('comm.memberRemoved', { name: '' }));
+    renderCommunityPage(document.getElementById('pageRoot'));
+  } catch(e) { showToast(e.message); }
+};
+
 /* ── Communities page ───────────────────────────── */
 async function renderCommunitiesPage(root) {
   let comms;
@@ -2327,9 +2575,9 @@ function communityCard(c, isOwnerSection) {
   const isOwner = c.created_by === currentUser?.id;
   return `
     <div class="community-card">
-      <div class="comm-banner" style="cursor:pointer" data-action="open-community-forum" data-id="${c.id}" data-name="${esc(c.name)}">${c.icon}</div>
+      <div class="comm-banner" style="cursor:pointer" data-action="open-community-page" data-id="${c.id}">${c.icon}</div>
       <div class="comm-name">
-        ${esc(c.name)}
+        <button class="comm-name-link" data-action="open-community-page" data-id="${c.id}">${esc(c.name)}</button>
         ${c.is_private ? '<span class="comm-private-badge">🔒</span>' : ''}
         ${c.allow_anonymous ? '<span class="comm-private-badge" style="background:rgba(155,89,182,.15);color:#8e44ad">🎭</span>' : ''}
       </div>
@@ -2338,7 +2586,7 @@ function communityCard(c, isOwnerSection) {
         <span class="comm-members">👥 ${fmtNum(c.members_count)}</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="comm-join-btn" style="background:rgba(139,69,19,.1);color:var(--secondary)"
-                  data-action="open-community-forum" data-id="${c.id}" data-name="${esc(c.name)}">📋 Fórum</button>
+                  data-action="open-community-page" data-id="${c.id}">📋 Fórum</button>
           ${isOwner ? `<button class="comm-join-btn" style="background:var(--secondary);color:#fff" data-action="open-community" data-id="${c.id}">⚙</button>` : ''}
           <button class="comm-join-btn${c.is_member ? ' joined' : ''}"
                   data-action="join-community" data-id="${c.id}" data-joined="${c.is_member ? 1 : 0}">
