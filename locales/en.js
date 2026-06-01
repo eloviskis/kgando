@@ -397,7 +397,7 @@ window.LOCALES.en = {
   'invite.sendBtn':    'Send email invite ✉',
   'invite.sentBtn':    '✅ Sent!',
   'invite.errSend':    'Error sending email.',
-  'invite.banner':     '🎉 You were invited by {name}! Create your account below.'
+  'invite.banner':     '🎉 You were invited by {name}! Create your account below.',
 
   /* ── Ranking ── */
   'ranking.title':    '★ Weekly Ranking',

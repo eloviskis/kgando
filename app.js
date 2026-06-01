@@ -2289,7 +2289,11 @@ function communityCard(c, isOwnerSection) {
   return `
     <div class="community-card">
       <div class="comm-banner" style="cursor:pointer" data-action="open-community-forum" data-id="${c.id}" data-name="${esc(c.name)}">${c.icon}</div>
-      <div class="comm-name">${esc(c.name)}</div>
+      <div class="comm-name">
+        ${esc(c.name)}
+        ${c.is_private ? '<span class="comm-private-badge">🔒</span>' : ''}
+        ${c.allow_anonymous ? '<span class="comm-private-badge" style="background:rgba(155,89,182,.15);color:#8e44ad">🎭</span>' : ''}
+      </div>
       <div class="comm-desc">${esc(c.description)}</div>
       <div class="comm-footer">
         <span class="comm-members">👥 ${fmtNum(c.members_count)}</span>
@@ -3194,6 +3198,8 @@ async function submitCreateCommunity(form) {
   btn.disabled = true; btn.textContent = 'Criando…';
   const body = Object.fromEntries(new FormData(form));
   body.icon = document.getElementById('selectedIcon')?.value || '💩';
+  body.is_private = form.querySelector('[name=is_private]')?.checked ? 1 : 0;
+  body.allow_anonymous = form.querySelector('[name=allow_anonymous]')?.checked ? 1 : 0;
   try {
     await apiFetch('/communities', { method: 'POST', body: JSON.stringify(body) });
     document.getElementById('modalHost').innerHTML = '';
@@ -3340,6 +3346,20 @@ function openCreateCommunityModal() {
               <label class="form-label">${t('comm.desc')}</label>
               <textarea class="form-textarea" name="description" placeholder="${t('comm.descPh')}" maxlength="300"></textarea>
             </div>
+            <div class="comm-toggle-row">
+              <label class="comm-toggle-label">
+                <span>🔒 ${CURRENT_LANG === 'pt' ? 'Comunidade privada' : 'Private community'}</span>
+                <span style="font-size:12px;color:var(--muted);display:block;margin-top:2px">${CURRENT_LANG === 'pt' ? 'Só entram quem você convidar' : 'Only invited members can join'}</span>
+              </label>
+              <label class="toggle-switch"><input type="checkbox" name="is_private" value="1"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="comm-toggle-row">
+              <label class="comm-toggle-label">
+                <span>🎭 ${CURRENT_LANG === 'pt' ? 'Permitir posts anônimos' : 'Allow anonymous posts'}</span>
+                <span style="font-size:12px;color:var(--muted);display:block;margin-top:2px">${CURRENT_LANG === 'pt' ? 'Membros podem postar como "Anônimo"' : 'Members can post as "Anonymous"'}</span>
+              </label>
+              <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" value="1"><span class="toggle-slider"></span></label>
+            </div>
             <button class="submit-btn" type="submit">${t('comm.createBtn')}</button>
           </form>
         </div>
@@ -3385,6 +3405,18 @@ async function openCommunityModal(communityId) {
         <input type="hidden" id="editIcon" value="${esc(comm.icon)}">
         <input class="form-text-input" type="text" name="name" value="${esc(comm.name)}" required maxlength="60" style="margin-bottom:10px">
         <textarea class="form-textarea" name="description" maxlength="300">${esc(comm.description)}</textarea>
+        <div class="comm-toggle-row" style="margin-top:12px">
+          <label class="comm-toggle-label">
+            <span>🔒 ${CURRENT_LANG === 'pt' ? 'Comunidade privada' : 'Private community'}</span>
+          </label>
+          <label class="toggle-switch"><input type="checkbox" name="is_private" ${comm.is_private ? 'checked' : ''}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="comm-toggle-row">
+          <label class="comm-toggle-label">
+            <span>🎭 ${CURRENT_LANG === 'pt' ? 'Permitir posts anônimos' : 'Allow anonymous posts'}</span>
+          </label>
+          <label class="toggle-switch"><input type="checkbox" name="allow_anonymous" ${comm.allow_anonymous ? 'checked' : ''}><span class="toggle-slider"></span></label>
+        </div>
         <div style="display:flex;gap:10px;margin-top:14px">
           <button class="submit-btn" type="submit" style="flex:1">Salvar</button>
           <button type="button" class="btn-secondary" style="background:rgba(231,76,60,.1);color:#c0392b" id="deleteCommBtn">🗑 Deletar</button>
@@ -3392,8 +3424,15 @@ async function openCommunityModal(communityId) {
       </form>` : ''}
 
       <div style="font-size:14px;font-weight:800;color:var(--secondary);margin-bottom:12px">
-        👥 Membros (${members.length})
+        👥 Membros (${members.length}) ${comm.is_private ? '<span class="comm-private-badge">🔒 Privada</span>' : '<span class="comm-private-badge comm-private-badge--pub">🌍 Pública</span>'}
       </div>
+      ${isOwner ? `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;gap:8px">
+          <input id="inviteUsernameInput" class="form-text-input" style="flex:1" placeholder="@username para convidar" maxlength="40">
+          <button class="submit-btn" style="width:auto;padding:10px 16px" id="sendInviteBtn">Convidar ✉</button>
+        </div>
+      </div>` : ''}
       <div class="members-list">
         ${members.map(m => `
           <div class="member-row">
@@ -3428,12 +3467,29 @@ async function openCommunityModal(communityId) {
       const fd = new FormData(e.target);
       try {
         await apiFetch(`/communities/${communityId}`, { method: 'PUT', body: JSON.stringify({
-          name: fd.get('name'), description: fd.get('description'), icon: document.getElementById('editIcon').value
+          name: fd.get('name'), description: fd.get('description'), icon: document.getElementById('editIcon').value,
+          is_private: e.target.querySelector('[name=is_private]')?.checked ? 1 : 0,
+          allow_anonymous: e.target.querySelector('[name=allow_anonymous]')?.checked ? 1 : 0,
         })});
         showToast(t('comm.updated'));
         host.innerHTML = '';
         renderApp();
       } catch(err) { showToast(err.message); btn.disabled=false; btn.textContent='Salvar'; }
+    });
+
+    // Convidar membro
+    document.getElementById('sendInviteBtn')?.addEventListener('click', async () => {
+      const input = document.getElementById('inviteUsernameInput');
+      const username = input.value.trim().replace(/^@/, '');
+      if (!username) return;
+      const btn = document.getElementById('sendInviteBtn');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      try {
+        const r = await apiFetch(`/communities/${communityId}/invite`, { method: 'POST', body: JSON.stringify({ username }) });
+        showToast(`Convite enviado para ${r.invited}!`);
+        input.value = '';
+      } catch(err) { showToast(err.message); }
+      btn.disabled = false; btn.textContent = 'Convidar ✉';
     });
 
     // Deletar
@@ -3463,7 +3519,13 @@ async function openCommunityForumModal(communityId, communityName) {
       </div>
     </div>`;
   try {
-    const topics = await apiFetch(`/communities/${communityId}/topics`);
+    const [topics, allComms] = await Promise.all([
+      apiFetch(`/communities/${communityId}/topics`),
+      apiFetch('/communities'),
+    ]);
+    const comm = allComms.find(c => c.id === communityId) || {};
+    const allowAnon = !!comm.allow_anonymous;
+
     host.querySelector('.modal-body').innerHTML = `
       <div style="margin-bottom:16px">
         <button class="submit-btn" style="width:100%" id="newTopicBtn">+ Novo tópico</button>
@@ -3471,18 +3533,19 @@ async function openCommunityForumModal(communityId, communityName) {
       <div id="newTopicForm" hidden style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px">
         <input id="topicTitle" class="form-text-input" placeholder="Título do tópico" maxlength="100" style="margin-bottom:10px">
         <textarea id="topicContent" class="form-textarea" rows="3" placeholder="Conteúdo…" maxlength="2000"></textarea>
+        ${allowAnon ? `<label class="comm-anon-check"><input type="checkbox" id="topicAnon"> 🎭 ${CURRENT_LANG === 'pt' ? 'Postar anonimamente' : 'Post anonymously'}</label>` : ''}
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="topicContent" title="GIF">GIF</button>
           <button class="submit-btn" style="flex:1" id="topicSubmitBtn">Publicar tópico</button>
         </div>
       </div>
       <div id="topics-list">
-        ${topics.map(t => `
-          <div class="topic-row" data-action="open-topic" data-community-id="${communityId}" data-topic-id="${t.id}" style="cursor:pointer">
-            <div class="avatar avatar--small${avCls(t.avatar_text)}" style="${avBg(t.avatar_text,t.avatar_color)};pointer-events:none">${avTxt(t.avatar_text)}</div>
+        ${topics.map(tp => `
+          <div class="topic-row" data-action="open-topic" data-community-id="${communityId}" data-topic-id="${tp.id}" style="cursor:pointer">
+            <div class="avatar avatar--small${avCls(tp.avatar_text)}" style="${avBg(tp.avatar_text,tp.avatar_color)};pointer-events:none">${avTxt(tp.avatar_text)}</div>
             <div style="flex:1;pointer-events:none">
-              <div style="font-weight:700">${esc(t.title)}</div>
-              <div style="font-size:12px;color:var(--muted)">por @${esc(t.username)} · ${timeAgo(t.created_at)} · 💬 ${t.replies_count}</div>
+              <div style="font-weight:700">${esc(tp.title)}</div>
+              <div style="font-size:12px;color:var(--muted)">${tp.username ? `por @${esc(tp.username)}` : `🎭 ${esc(tp.display_name)}`} · ${timeAgo(tp.created_at)} · 💬 ${tp.replies_count}</div>
             </div>
           </div>`).join('') || `<p style="color:var(--muted);font-size:13px">${t('forum.noTopics')}</p>`}
       </div>`;
@@ -3491,13 +3554,14 @@ async function openCommunityForumModal(communityId, communityName) {
       document.getElementById('newTopicForm').hidden = !document.getElementById('newTopicForm').hidden;
     });
     document.getElementById('topicSubmitBtn').addEventListener('click', async () => {
-      const title   = document.getElementById('topicTitle').value.trim();
-      const content = document.getElementById('topicContent').value.trim();
+      const title     = document.getElementById('topicTitle').value.trim();
+      const content   = document.getElementById('topicContent').value.trim();
+      const anonymous = document.getElementById('topicAnon')?.checked || false;
       if (!title || !content) return showToast(t('comm.topicErr'));
       const btn = document.getElementById('topicSubmitBtn');
       btn.disabled = true; btn.textContent = 'Publicando…';
       try {
-        await apiFetch(`/communities/${communityId}/topics`, { method: 'POST', body: JSON.stringify({ title, content }) });
+        await apiFetch(`/communities/${communityId}/topics`, { method: 'POST', body: JSON.stringify({ title, content, anonymous }) });
         showToast(t('comm.topicCreated'));
         openCommunityForumModal(communityId, communityName);
       } catch(err) { showToast(err.message); btn.disabled=false; btn.textContent=t('forum.publishTopic'); }
@@ -3515,19 +3579,26 @@ async function openTopicModal(communityId, topicId) {
       </div>
     </div>`;
   try {
-    const [topics, replies] = await Promise.all([
+    const [topics, replies, allComms] = await Promise.all([
       apiFetch(`/communities/${communityId}/topics`),
       apiFetch(`/communities/${communityId}/topics/${topicId}/replies`),
+      apiFetch('/communities'),
     ]);
     const topic = topics.find(t => t.id === topicId);
     if (!topic) throw new Error(t('forum.notFound'));
+    const comm = allComms.find(c => c.id === communityId) || {};
+    const allowAnon = !!comm.allow_anonymous;
+
+    const authorLine = topic.username
+      ? `por @${esc(topic.username)}`
+      : `🎭 ${esc(topic.display_name)}`;
 
     host.querySelector('.modal-body').innerHTML = `
       <div class="topic-header-card">
         <div class="avatar avatar--small${avCls(topic.avatar_text)}" style="${avBg(topic.avatar_text,topic.avatar_color)}">${avTxt(topic.avatar_text)}</div>
         <div style="flex:1">
           <div style="font-weight:800;font-size:16px">${esc(topic.title)}</div>
-          <div style="font-size:12px;color:var(--muted)">por @${esc(topic.username)} · ${timeAgo(topic.created_at)}</div>
+          <div style="font-size:12px;color:var(--muted)">${authorLine} · ${timeAgo(topic.created_at)}</div>
           <div style="margin-top:8px;font-size:13px;line-height:1.6">${renderGifInText(topic.content)}</div>
         </div>
       </div>
@@ -3537,13 +3608,14 @@ async function openTopicModal(communityId, topicId) {
           <div class="reply-row">
             <div class="avatar avatar--small${avCls(r.avatar_text)}" style="${avBg(r.avatar_text,r.avatar_color)}">${avTxt(r.avatar_text)}</div>
             <div style="flex:1">
-              <div style="font-weight:700;font-size:13px">@${esc(r.username)}</div>
+              <div style="font-weight:700;font-size:13px">${r.username ? `@${esc(r.username)}` : `🎭 ${esc(r.display_name)}`}</div>
               <div style="font-size:13px;margin-top:2px">${renderGifInText(r.content)}</div>
               <div style="font-size:11px;color:var(--muted)">${timeAgo(r.created_at)}</div>
             </div>
           </div>`).join('') || '<p style="color:var(--muted);font-size:13px">Sem respostas ainda.</p>'}
       </div>
-      <div style="margin-top:16px;display:flex;gap:8px;align-items:center">
+      ${allowAnon ? `<label class="comm-anon-check" style="margin-top:12px"><input type="checkbox" id="replyAnon"> 🎭 ${CURRENT_LANG === 'pt' ? 'Responder anonimamente' : 'Reply anonymously'}</label>` : ''}
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
         <input id="replyInput" class="form-text-input" style="flex:1" placeholder="Sua resposta…" maxlength="2000">
         <button class="gif-btn" type="button" data-action="open-gif-picker" data-target-id="replyInput" title="GIF">GIF</button>
         <button class="submit-btn" style="width:auto;padding:12px 18px" id="replyBtn">Responder</button>
@@ -3551,12 +3623,14 @@ async function openTopicModal(communityId, topicId) {
 
     const submitReply = async () => {
       const content = document.getElementById('replyInput').value.trim();
+      const anonymous = document.getElementById('replyAnon')?.checked || false;
       if (!content) return;
       const btn = document.getElementById('replyBtn');
       btn.disabled = true;
       try {
-        const reply = await apiFetch(`/communities/${communityId}/topics/${topicId}/replies`, { method: 'POST', body: JSON.stringify({ content }) });
+        const reply = await apiFetch(`/communities/${communityId}/topics/${topicId}/replies`, { method: 'POST', body: JSON.stringify({ content, anonymous }) });
         document.getElementById('replyInput').value = '';
+        if (document.getElementById('replyAnon')) document.getElementById('replyAnon').checked = false;
         const list = document.getElementById('replies-list');
         const empty = list.querySelector('p');
         if (empty) empty.remove();
@@ -3564,7 +3638,7 @@ async function openTopicModal(communityId, topicId) {
           <div class="reply-row">
             <div class="avatar avatar--small${avCls(reply.avatar_text)}" style="${avBg(reply.avatar_text,reply.avatar_color)}">${avTxt(reply.avatar_text)}</div>
             <div style="flex:1">
-              <div style="font-weight:700;font-size:13px">@${esc(reply.username)}</div>
+              <div style="font-weight:700;font-size:13px">${reply.username ? `@${esc(reply.username)}` : `🎭 ${esc(reply.display_name)}`}</div>
               <div style="font-size:13px;margin-top:2px">${renderGifInText(reply.content)}</div>
               <div style="font-size:11px;color:var(--muted)">agora</div>
             </div>

@@ -13,12 +13,16 @@ function currentUserId(req) {
 
 // POST /api/communities — criar comunidade
 router.post('/', requireAuth, (req, res) => {
-  const { name, description, icon } = req.body;
+  const { name, description, icon, is_private, allow_anonymous } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório.' });
   const id = randomUUID();
-  db.prepare('INSERT INTO communities (id,name,description,icon,created_by) VALUES (?,?,?,?,?)').run(
-    id, name.trim(), description || '', icon || '💩', req.user.id
+  db.prepare('INSERT INTO communities (id,name,description,icon,created_by,is_private,allow_anonymous) VALUES (?,?,?,?,?,?,?)').run(
+    id, name.trim(), description || '', icon || '💩', req.user.id,
+    is_private ? 1 : 0, allow_anonymous ? 1 : 0
   );
+  // Dono entra automaticamente como membro
+  try { db.prepare('INSERT INTO community_members (user_id,community_id) VALUES (?,?)').run(req.user.id, id);
+        db.prepare('UPDATE communities SET members_count=1 WHERE id=?').run(id); } catch {}
   res.status(201).json(db.prepare('SELECT * FROM communities WHERE id=?').get(id));
 });
 
@@ -37,12 +41,22 @@ router.get('/', (req, res) => {
 
 // POST /api/communities/:id/join
 router.post('/:id/join', requireAuth, (req, res) => {
-  if (!db.prepare('SELECT id FROM communities WHERE id=?').get(req.params.id))
-    return res.status(404).json({ error: 'Comunidade não encontrada.' });
+  const comm = db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id);
+  if (!comm) return res.status(404).json({ error: 'Comunidade não encontrada.' });
+
+  // Comunidade privada: precisa de convite aceito ou ser o dono
+  if (comm.is_private && comm.created_by !== req.user.id) {
+    const invite = db.prepare(
+      "SELECT status FROM community_invites WHERE community_id=? AND invited_user=?"
+    ).get(req.params.id, req.user.id);
+    if (!invite) return res.status(403).json({ error: 'Comunidade privada. Peça um convite ao dono.' });
+  }
 
   try {
     db.prepare('INSERT INTO community_members (user_id,community_id) VALUES (?,?)').run(req.user.id, req.params.id);
     db.prepare('UPDATE communities SET members_count=members_count+1 WHERE id=?').run(req.params.id);
+    // Marcar convite como aceito
+    db.prepare("UPDATE community_invites SET status='accepted' WHERE community_id=? AND invited_user=?").run(req.params.id, req.user.id);
   } catch { /* already member */ }
 
   const { members_count } = db.prepare('SELECT members_count FROM communities WHERE id=?').get(req.params.id);
@@ -63,10 +77,58 @@ router.put('/:id', requireAuth, (req, res) => {
   const c = db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id);
   if (!c) return res.status(404).json({ error: 'Comunidade não encontrada.' });
   if (c.created_by !== req.user.id) return res.status(403).json({ error: 'Só o dono pode editar.' });
-  const { name, description, icon } = req.body;
-  db.prepare(`UPDATE communities SET name=COALESCE(?,name), description=COALESCE(?,description), icon=COALESCE(?,icon) WHERE id=?`)
-    .run(name||null, description||null, icon||null, req.params.id);
+  const { name, description, icon, is_private, allow_anonymous } = req.body;
+  db.prepare(`UPDATE communities
+    SET name=COALESCE(?,name), description=COALESCE(?,description), icon=COALESCE(?,icon),
+        is_private=COALESCE(?,is_private), allow_anonymous=COALESCE(?,allow_anonymous)
+    WHERE id=?`)
+    .run(name||null, description||null, icon||null,
+         is_private != null ? (is_private ? 1 : 0) : null,
+         allow_anonymous != null ? (allow_anonymous ? 1 : 0) : null,
+         req.params.id);
   res.json(db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id));
+});
+
+// POST /api/communities/:id/invite — convidar usuário (dono)
+router.post('/:id/invite', requireAuth, (req, res) => {
+  const c = db.prepare('SELECT * FROM communities WHERE id=?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Comunidade não encontrada.' });
+  if (c.created_by !== req.user.id) return res.status(403).json({ error: 'Só o dono pode convidar.' });
+  const { username } = req.body;
+  if (!username?.trim()) return res.status(400).json({ error: 'Username obrigatório.' });
+  const target = db.prepare('SELECT id, display_name FROM users WHERE username=?').get(username.trim().toLowerCase());
+  if (!target) return res.status(404).json({ error: 'Usuário não encontrado.' });
+  if (target.id === req.user.id) return res.status(400).json({ error: 'Você já é o dono.' });
+  const alreadyMember = db.prepare('SELECT 1 FROM community_members WHERE community_id=? AND user_id=?').get(req.params.id, target.id);
+  if (alreadyMember) return res.status(400).json({ error: 'Usuário já é membro.' });
+  try {
+    db.prepare('INSERT INTO community_invites (id,community_id,invited_by,invited_user) VALUES (?,?,?,?)').run(
+      randomUUID(), req.params.id, req.user.id, target.id
+    );
+  } catch { /* already invited — update to pending */ }
+  const APP_URL = process.env.APP_URL || 'https://kgando.com';
+  createNotification({
+    userId: target.id,
+    type: 'community_invite',
+    fromUserId: req.user.id,
+    entityId: req.params.id,
+    message: `Você foi convidado para a comunidade "${c.name}"! Abra as comunidades para participar.`,
+    link: `${APP_URL}/#communities`,
+  });
+  res.json({ ok: true, invited: target.display_name });
+});
+
+// GET /api/communities/:id/invites — listar convites pendentes (dono)
+router.get('/:id/invites', requireAuth, (req, res) => {
+  const c = db.prepare('SELECT created_by FROM communities WHERE id=?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Não encontrada.' });
+  if (c.created_by !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
+  const rows = db.prepare(`
+    SELECT ci.*, u.username, u.display_name, u.avatar_text, u.avatar_color
+    FROM community_invites ci JOIN users u ON u.id=ci.invited_user
+    WHERE ci.community_id=? ORDER BY ci.created_at DESC
+  `).all(req.params.id);
+  res.json(rows);
 });
 
 // DELETE /api/communities/:id — deletar (somente dono)
@@ -105,7 +167,11 @@ router.delete('/:id/members/:uid', requireAuth, (req, res) => {
 // GET /api/communities/:id/topics
 router.get('/:id/topics', (req, res) => {
   const rows = db.prepare(`
-    SELECT t.*, u.display_name, u.username, u.avatar_text, u.avatar_color
+    SELECT t.*,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN t.anonymous_as ELSE u.display_name END AS display_name,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.username END AS username,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_text END AS avatar_text,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_color END AS avatar_color
     FROM community_topics t JOIN users u ON u.id = t.user_id
     WHERE t.community_id = ?
     ORDER BY t.created_at DESC
@@ -115,21 +181,27 @@ router.get('/:id/topics', (req, res) => {
 
 // POST /api/communities/:id/topics
 router.post('/:id/topics', requireAuth, (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, anonymous } = req.body;
   if (!title?.trim() || !content?.trim()) return res.status(400).json({ error: 'Título e conteúdo obrigatórios.' });
-  const community = db.prepare('SELECT id, name FROM communities WHERE id=?').get(req.params.id);
+  const community = db.prepare('SELECT id, name, allow_anonymous FROM communities WHERE id=?').get(req.params.id);
   if (!community) return res.status(404).json({ error: 'Comunidade não encontrada.' });
   const id = randomUUID();
-  db.prepare('INSERT INTO community_topics (id,community_id,user_id,title,content) VALUES (?,?,?,?,?)')
-    .run(id, req.params.id, req.user.id, title.trim(), content.trim());
+  const anonymous_as = (anonymous && community.allow_anonymous) ? 'Anônimo' : null;
+  db.prepare('INSERT INTO community_topics (id,community_id,user_id,title,content,anonymous_as) VALUES (?,?,?,?,?,?)')
+    .run(id, req.params.id, req.user.id, title.trim(), content.trim(), anonymous_as);
 
   const result = db.prepare(`
-    SELECT t.*, u.display_name, u.username, u.avatar_text, u.avatar_color
+    SELECT t.*,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN t.anonymous_as ELSE u.display_name END AS display_name,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.username END AS username,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_text END AS avatar_text,
+      CASE WHEN t.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_color END AS avatar_color
     FROM community_topics t JOIN users u ON u.id=t.user_id WHERE t.id=?
   `).get(id);
 
   // Notificar membros da comunidade (exceto quem criou o tópico)
   const APP_URL = process.env.APP_URL || 'https://kgando.com';
+  const author = anonymous_as || result.display_name;
   const members = db.prepare(
     'SELECT user_id FROM community_members WHERE community_id=? AND user_id!=?'
   ).all(req.params.id, req.user.id);
@@ -137,7 +209,7 @@ router.post('/:id/topics', requireAuth, (req, res) => {
     createNotification({
       userId: user_id,
       type: 'community_topic',
-      fromUserId: req.user.id,
+      fromUserId: anonymous_as ? null : req.user.id,
       entityId: id,
       message: `Novo tópico em ${community.name}: "${title.trim()}"`,
       link: `${APP_URL}/#communities`,
@@ -161,7 +233,11 @@ router.delete('/:cid/topics/:tid', requireAuth, (req, res) => {
 // GET /api/communities/:cid/topics/:tid/replies
 router.get('/:cid/topics/:tid/replies', (req, res) => {
   const rows = db.prepare(`
-    SELECT r.*, u.display_name, u.username, u.avatar_text, u.avatar_color
+    SELECT r.*,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN r.anonymous_as ELSE u.display_name END AS display_name,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.username END AS username,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_text END AS avatar_text,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_color END AS avatar_color
     FROM community_topic_replies r JOIN users u ON u.id = r.user_id
     WHERE r.topic_id = ?
     ORDER BY r.created_at ASC
@@ -171,17 +247,23 @@ router.get('/:cid/topics/:tid/replies', (req, res) => {
 
 // POST /api/communities/:cid/topics/:tid/replies
 router.post('/:cid/topics/:tid/replies', requireAuth, (req, res) => {
-  const { content } = req.body;
+  const { content, anonymous } = req.body;
   if (!content?.trim()) return res.status(400).json({ error: 'Resposta vazia.' });
   const topic = db.prepare('SELECT id, user_id, title FROM community_topics WHERE id=?').get(req.params.tid);
   if (!topic) return res.status(404).json({ error: 'Tópico não encontrado.' });
+  const community = db.prepare('SELECT allow_anonymous FROM communities WHERE id=?').get(req.params.cid);
   const id = randomUUID();
-  db.prepare('INSERT INTO community_topic_replies (id,topic_id,user_id,content) VALUES (?,?,?,?)')
-    .run(id, req.params.tid, req.user.id, content.trim());
+  const anonymous_as = (anonymous && community?.allow_anonymous) ? 'Anônimo' : null;
+  db.prepare('INSERT INTO community_topic_replies (id,topic_id,user_id,content,anonymous_as) VALUES (?,?,?,?,?)')
+    .run(id, req.params.tid, req.user.id, content.trim(), anonymous_as);
   db.prepare('UPDATE community_topics SET replies_count=replies_count+1 WHERE id=?').run(req.params.tid);
 
   const result = db.prepare(`
-    SELECT r.*, u.display_name, u.username, u.avatar_text, u.avatar_color
+    SELECT r.*,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN r.anonymous_as ELSE u.display_name END AS display_name,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.username END AS username,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_text END AS avatar_text,
+      CASE WHEN r.anonymous_as IS NOT NULL THEN NULL ELSE u.avatar_color END AS avatar_color
     FROM community_topic_replies r JOIN users u ON u.id=r.user_id WHERE r.id=?
   `).get(id);
 
@@ -191,7 +273,7 @@ router.post('/:cid/topics/:tid/replies', requireAuth, (req, res) => {
     createNotification({
       userId: topic.user_id,
       type: 'community_reply',
-      fromUserId: req.user.id,
+      fromUserId: anonymous_as ? null : req.user.id,
       entityId: req.params.tid,
       message: `${result.display_name} respondeu no tópico "${topic.title}"!`,
       link: `${APP_URL}/#communities`,

@@ -123,6 +123,21 @@ try {
       emoji      TEXT NOT NULL,
       PRIMARY KEY (user_id, comment_id)
     )`,
+    // Comunidades: privado, anônimo e convites
+    "ALTER TABLE communities ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE communities ADD COLUMN allow_anonymous INTEGER NOT NULL DEFAULT 0",
+    `CREATE TABLE IF NOT EXISTS community_invites (
+      id            TEXT PRIMARY KEY,
+      community_id  TEXT NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+      invited_by    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      invited_user  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status        TEXT NOT NULL DEFAULT 'pending',
+      created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(community_id, invited_user)
+    )`,
+    // anonymous_as em tópicos e replies
+    "ALTER TABLE community_topics ADD COLUMN anonymous_as TEXT DEFAULT NULL",
+    "ALTER TABLE community_topic_replies ADD COLUMN anonymous_as TEXT DEFAULT NULL",
   ];
   for (const sql of migrations) {
     try { db.exec(sql); } catch { /* coluna já existe */ }
