@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Gráficos - Kgando Play Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 20px 0;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        h2 {
+            color: #333;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚽 Gerador de Gráficos - Kgando Play Store</h1>
+
+    <div class="section">
+        <h2>1. Ícone do Aplicativo (512x512 px)</h2>
+        <p class="info">PNG, fundo sólido, obrigatório para Play Store</p>
+        <canvas id="icon" width="512" height="512"></canvas>
+        <button onclick="downloadIcon()">⬇️ Baixar Ícone (icon-512.png)</button>
+    </div>
+
+    <div class="section">
+        <h2>2. Recurso Gráfico / Banner (1024x500 px)</h2>
+        <p class="info">PNG, banner promocional para topo da página na Play Store</p>
+        <canvas id="banner" width="1024" height="500"></canvas>
+        <button onclick="downloadBanner()">⬇️ Baixar Banner (feature-graphic-1024x500.png)</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Screenshots (opcional mas recomendado)</h2>
+        <p class="info">Tire 3-8 screenshots do app no celular (tamanho mínimo 320px). Use o app em kgando.com no celular e tire prints!</p>
+    </div>
+
+    <script>
+        // Desenhar ícone 512x512
+        function drawIcon() {
+            const canvas = document.getElementById('icon');
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo gradiente marrom/bege
+            const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+            gradient.addColorStop(0, '#8B4513');
+            gradient.addColorStop(1, '#D2691E');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Emoji toilet grande
+            ctx.font = 'bold 280px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚽', 256, 200);
+            
+            // Texto "Kgando"
+            ctx.font = 'bold 72px Arial';
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = '#5D3A1A';
+            ctx.lineWidth = 3;
+            ctx.strokeText('Kgando', 256, 420);
+            ctx.fillText('Kgando', 256, 420);
+        }
+        
+        // Desenhar banner 1024x500
+        function drawBanner() {
+            const canvas = document.getElementById('banner');
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo gradiente
+            const gradient = ctx.createLinearGradient(0, 0, 1024, 500);
+            gradient.addColorStop(0, '#8B4513');
+            gradient.addColorStop(0.5, '#A0522D');
+            gradient.addColorStop(1, '#CD853F');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1024, 500);
+            
+            // Emoji grande à esquerda
+            ctx.font = 'bold 240px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚽', 50, 250);
+            
+            // Título
+            ctx.font = 'bold 84px Arial';
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = '#5D3A1A';
+            ctx.lineWidth = 4;
+            ctx.textAlign = 'left';
+            ctx.strokeText('Kgando', 380, 160);
+            ctx.fillText('Kgando', 380, 160);
+            
+            // Subtítulo
+            ctx.font = 'bold 48px Arial';
+            ctx.fillStyle = '#FFE4B5';
+            ctx.fillText('A Rede Social do Trono', 380, 250);
+            
+            // Tagline
+            ctx.font = '36px Arial';
+            ctx.fillStyle = '#FAEBD7';
+            ctx.fillText('Avalie • Compartilhe • Conecte-se', 380, 330);
+        }
+        
+        // Download ícone
+        function downloadIcon() {
+            const canvas = document.getElementById('icon');
+            const link = document.createElement('a');
+            link.download = 'kgando-icon-512.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Download banner
+        function downloadBanner() {
+            const canvas = document.getElementById('banner');
+            const link = document.createElement('a');
+            link.download = 'kgando-feature-graphic-1024x500.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Desenhar ao carregar
+        window.onload = function() {
+            drawIcon();
+            drawBanner();
+        };
+    </script>
+</body>
+</html>
