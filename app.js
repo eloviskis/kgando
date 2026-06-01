@@ -1338,11 +1338,12 @@ async function renderDefaultRightRail(rail) {
   }).join('') || '<p style="font-size:13px;color:var(--muted)">Sem banheiros cadastrados</p>';
 
   const commList = (Array.isArray(comms) ? comms : []).slice(0,4).map(c => `
-    <div class="community-item">
+    <div class="community-item" style="cursor:pointer" onclick="currentPage='community';currentCommunityId=${c.id};renderPage()">
       <div class="community-icon">${c.icon}</div>
       <div class="community-info"><h5>${esc(c.name)}</h5><p>${fmtNum(c.members_count)} membros</p></div>
       <button class="join-btn${c.is_member ? ' joined' : ''}"
-              data-action="join-community" data-id="${c.id}" data-joined="${c.is_member ? 1 : 0}">
+              data-action="join-community" data-id="${c.id}" data-joined="${c.is_member ? 1 : 0}"
+              onclick="event.stopPropagation()">
         ${c.is_member ? 'Entrou' : 'Entrar'}
       </button>
     </div>
