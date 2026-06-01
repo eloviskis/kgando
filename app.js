@@ -450,6 +450,11 @@ async function boot() {
 }
 
 function initApp() {
+  // Ler hash da URL na inicialização para navegar para página correta
+  const hash = location.hash.slice(1);
+  const [page] = hash.split('?');
+  currentPage = page || 'home';
+  
   renderApp();
   updateConnectionStatus();
   // Garante avatar mesmo que DOM ainda esteja sendo montado
