@@ -175,6 +175,7 @@ function getNavItems() { return [
   { id: 'home',        label: t('nav.home'),        icon: '⌂' },
   { id: 'new',         label: t('nav.new'),         icon: '💩' },
   { id: 'bathrooms',   label: t('nav.bathrooms'),   icon: '🚽' },
+  { id: 'map',         label: t('map'),             icon: '🗺️' },
   { id: 'communities', label: t('nav.communities'), icon: '☷' },
   { id: 'people',      label: t('nav.people'),      icon: '👥' },
   { id: 'scraps',      label: t('nav.scraps'),      icon: '✉' },
@@ -184,10 +185,10 @@ function getNavItems() { return [
 ]; }
 // NAV_ITEMS é recalculado cada vez que renderizado, mas precisa existir como const para MOBILE_ITEMS
 const NAV_ITEMS = [
-  { id: 'home' }, { id: 'new' }, { id: 'bathrooms' }, { id: 'communities' },
+  { id: 'home' }, { id: 'new' }, { id: 'bathrooms' }, { id: 'map' }, { id: 'communities' },
   { id: 'people' }, { id: 'scraps' }, { id: 'profile' }, { id: 'ranking' }, { id: 'settings' },
 ];
-const MOBILE_ITEMS = ['home', 'bathrooms', 'new', 'communities', 'profile'];
+const MOBILE_ITEMS = ['home', 'bathrooms', 'new', 'map', 'profile'];
 
 function getQualityOptions() { return [
   { value: 1, icon: '💩',          label: t('quality.1') },
@@ -315,6 +316,15 @@ document.addEventListener('DOMContentLoaded', boot);
 
 async function boot() {
   loadLocale();
+  
+  // Expor i18n globalmente para outros módulos (ex: map.js)
+  window.i18n = { t };
+  
+  // Expor currentUser via getter para outros módulos
+  Object.defineProperty(window, 'currentUser', {
+    get: () => currentUser,
+    configurable: true
+  });
   
   // Espera o DOM estar pronto antes de aplicar traduções
   if (document.readyState === 'loading') {
@@ -1200,6 +1210,9 @@ function navigateTo(page) {
   document.getElementById('pageRoot').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// Expor navegação globalmente para outros módulos
+window.navigateTo = navigateTo;
+
 /* ── Render app shell ───────────────────────────── */
 function renderApp() {
   if (!currentUser) return;
@@ -1416,6 +1429,7 @@ function renderPage() {
     case 'home':        renderHomePage(root);        break;
     case 'new':         renderNewPage(root);          break;
     case 'bathrooms':   renderBathroomsPage(root);    break;
+    case 'map':         renderMapPage(root);          break;
     case 'communities': renderCommunitiesPage(root);  break;
     case 'community':   renderCommunityPage(root);    break;
     case 'scraps':      renderScrapsPage(root);       break;

@@ -40,3 +40,4 @@ deploy/
 # Planos (internos do Cursor)
 *.plan.md
 .keystore-password
+android/fastlane/*.json

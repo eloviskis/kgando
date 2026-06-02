@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS bathrooms (
   id             TEXT PRIMARY KEY,
   name           TEXT NOT NULL,
   neighborhood   TEXT NOT NULL DEFAULT '',
+  latitude       REAL,
+  longitude      REAL,
   type           TEXT NOT NULL DEFAULT 'public',
   rating         REAL NOT NULL DEFAULT 0,
   reviews_count  INTEGER NOT NULL DEFAULT 0,
