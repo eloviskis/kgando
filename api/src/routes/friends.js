@@ -55,7 +55,7 @@ router.post('/:userId', requireAuth, (req, res) => {
   db.prepare('INSERT INTO friends (id,requester_id,addressee_id) VALUES (?,?,?)').run(id, req.user.id, req.params.userId);
   const me = db.prepare('SELECT display_name FROM users WHERE id=?').get(req.user.id);
   const APP_URL = process.env.APP_URL || 'https://kgando.com';
-  createNotification({ userId: req.params.userId, type: 'friend_request', fromUserId: req.user.id, entityId: id, message: `${me?.display_name || 'Alguém'} quer ser seu parça de cocô!`, link: `${APP_URL}/#profile:${req.user.id}` });
+  createNotification({ userId: req.params.userId, type: 'friend_request', fromUserId: req.user.id, entityId: id, message: `${me?.display_name || 'Alguém'} quer ser seu parça de cocô!`, link: `${APP_URL}/#profile?id=${req.user.id}` });
   res.status(201).json({ ok: true, friendship_id: id });
 });
 
@@ -67,7 +67,7 @@ router.put('/:id/accept', requireAuth, (req, res) => {
   db.prepare("UPDATE friends SET status='accepted' WHERE id=?").run(req.params.id);
   const me = db.prepare('SELECT display_name FROM users WHERE id=?').get(req.user.id);
   const APP_URL2 = process.env.APP_URL || 'https://kgando.com';
-  createNotification({ userId: f.requester_id, type: 'friend_accepted', fromUserId: req.user.id, entityId: f.id, message: `${me?.display_name || 'Alguém'} aceitou seu pedido de amizade!`, link: `${APP_URL2}/#profile:${req.user.id}` });
+  createNotification({ userId: f.requester_id, type: 'friend_accepted', fromUserId: req.user.id, entityId: f.id, message: `${me?.display_name || 'Alguém'} aceitou seu pedido de amizade!`, link: `${APP_URL2}/#profile?id=${req.user.id}` });
   res.json({ ok: true });
 });
 

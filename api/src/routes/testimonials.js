@@ -52,7 +52,7 @@ router.post('/:userId', requireAuth, (req, res) => {
     fromUserId: req.user.id,
     entityId: id,
     message: `${result.display_name} escreveu um depoimento para você!`,
-    link: `${APP_URL}/#profile:${req.params.userId}`,
+    link: `${APP_URL}/#profile?id=${req.params.userId}`,
   });
 
   res.status(201).json(result);

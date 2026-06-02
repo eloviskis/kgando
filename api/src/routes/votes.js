@@ -56,7 +56,7 @@ router.post('/:userId', requireAuth, (req, res) => {
       type: 'vote',
       fromUserId: req.user.id,
       message: `${me?.display_name || 'Alguém'} votou em você como ${labels[vote_type] || vote_type}!`,
-      link: `${APP_URL}/#profile:${req.params.userId}`,
+      link: `${APP_URL}/#profile?id=${req.params.userId}`,
     });
   }
   res.json({ ok: true, voted: true });
