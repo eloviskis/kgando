@@ -2892,6 +2892,9 @@ async function renderProfilePage(root, userId) {
 
       ${(() => {
         const parts = [];
+        // Item destaque: Cagão!
+        parts.push(`<div class="about-row about-row--highlight"><span class="about-icon">💩</span><span><strong>Cagão!</strong></span></div>`);
+        
         const moodObj = getMoods().find(m => m.value === user.mood);
         const relObj  = getRelationships().find(r => r.value === user.relationship);
         const zodiac  = getZodiac(user.birthday);
@@ -2904,7 +2907,6 @@ async function renderProfilePage(root, userId) {
           const loc = [user.city, user.country].filter(Boolean).join(', ');
           parts.push(`<div class="about-row"><span class="about-icon">📍</span><span><strong>${t('profile.location')}:</strong> ${esc(loc)}</span></div>`);
         }
-        if (!parts.length) return '';
         return `<div class="profile-section profile-about-section">
           <h3>${t('profile.about')}</h3>
           <div class="about-grid">${parts.join('')}</div>
