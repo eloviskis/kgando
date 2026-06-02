@@ -24,7 +24,7 @@ function loadLocale() {
 }
 
 function t(key, vars) {
-  let str = _locale[key] || key;
+  let str = key in _locale ? _locale[key] : key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       str = str.replace(`{${k}}`, v);
