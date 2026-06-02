@@ -12,8 +12,10 @@ const DEFAULT_PREFS = {
   vote:             { app: true,  email: false },
   review_like:      { app: true,  email: false },
   review_comment:   { app: true,  email: false },
+  comment_reaction: { app: true,  email: false },
   community_topic:  { app: true,  email: false },
   community_reply:  { app: true,  email: false },
+  community_invite: { app: true,  email: false },
 };
 
 // Helper para criar notificação (usado por outras rotas)

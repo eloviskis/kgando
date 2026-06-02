@@ -4661,6 +4661,7 @@ const NOTIF_ICONS = {
   comment_reaction: '😊',
   community_topic: '🏘️',
   community_reply: '↩️',
+  community_invite: '📨',
   default: '🔔',
 };
 
@@ -4809,7 +4810,10 @@ async function handleNotifClick(id, type, entityId, link) {
   else if (type === 'vote') navigateTo('profile');
   else if (type === 'review_like') openReviewFromNotif(entityId, false);
   else if (type === 'review_comment') openReviewFromNotif(entityId, true);
-  else if (type === 'community_topic' || type === 'community_reply') navigateTo('communities');
+  else if (type === 'comment_reaction') openReviewFromNotif(entityId, true);
+  else if (type === 'community_topic') navigateTo('communities');
+  else if (type === 'community_reply') navigateTo('communities');
+  else if (type === 'community_invite') navigateTo('communities');
 }
 
 window.markAllNotifsRead = async function() {

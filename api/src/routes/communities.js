@@ -134,7 +134,7 @@ router.post('/:id/invite', requireAuth, (req, res) => {
     fromUserId: req.user.id,
     entityId: req.params.id,
     message: `Você foi convidado para a comunidade "${c.name}"! Abra as comunidades para participar.`,
-    link: `${APP_URL}/#communities`,
+    link: `${APP_URL}/#community?id=${req.params.id}`,
   });
   res.json({ ok: true, invited: target.display_name });
 });
@@ -253,7 +253,7 @@ router.post('/:id/topics', requireAuth, (req, res) => {
       fromUserId: anonymous_as ? null : req.user.id,
       entityId: id,
       message: `Novo tópico em ${community.name}: "${title.trim()}"`,
-      link: `${APP_URL}/#communities`,
+      link: `${APP_URL}/#community?id=${req.params.id}`,
     });
   }
 
@@ -311,13 +311,14 @@ router.post('/:cid/topics/:tid/replies', requireAuth, (req, res) => {
   // Notificar criador do tópico
   if (topic.user_id !== req.user.id) {
     const APP_URL = process.env.APP_URL || 'https://kgando.com';
+    const communityId = db.prepare('SELECT community_id FROM community_topics WHERE id=?').get(req.params.tid)?.community_id;
     createNotification({
       userId: topic.user_id,
       type: 'community_reply',
       fromUserId: anonymous_as ? null : req.user.id,
       entityId: req.params.tid,
       message: `${result.display_name} respondeu no tópico "${topic.title}"!`,
-      link: `${APP_URL}/#communities`,
+      link: communityId ? `${APP_URL}/#community?id=${communityId}` : `${APP_URL}/#communities`,
     });
   }
 
