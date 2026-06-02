@@ -100,3 +100,18 @@ CREATE INDEX IF NOT EXISTS idx_review_likes_review ON review_likes(review_id);
 CREATE INDEX IF NOT EXISTS idx_review_comments_rev ON review_comments(review_id);
 CREATE INDEX IF NOT EXISTS idx_scraps_to_user      ON scraps(to_user_id, created_at DESC);
 
+-- Notificações
+CREATE TABLE IF NOT EXISTS notifications (
+  id            TEXT PRIMARY KEY,
+  user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type          TEXT NOT NULL,
+  from_user_id  TEXT REFERENCES users(id) ON DELETE CASCADE,
+  entity_id     TEXT,
+  message       TEXT NOT NULL,
+  link          TEXT,
+  read          INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+

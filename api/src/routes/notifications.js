@@ -32,9 +32,9 @@ function createNotification({ userId, type, fromUserId, entityId, message, link 
     // Inserir notificação in-app
     if (pref.app !== false) {
       db.prepare(`
-        INSERT INTO notifications (id, user_id, type, from_user_id, entity_id, message)
-        VALUES (?,?,?,?,?,?)
-      `).run(randomUUID(), userId, type, fromUserId || null, entityId || null, message);
+        INSERT INTO notifications (id, user_id, type, from_user_id, entity_id, message, link)
+        VALUES (?,?,?,?,?,?,?)
+      `).run(randomUUID(), userId, type, fromUserId || null, entityId || null, message, link || null);
     }
 
     // Enviar email

@@ -4741,7 +4741,7 @@ async function renderNotifList() {
       return;
     }
     list.innerHTML = data.notifications.map(n => `
-      <div class="notif-item${n.read ? '' : ' unread'}" data-notif-id="${n.id}" onclick="handleNotifClick('${n.id}','${n.type}','${n.entity_id||''}')">
+      <div class="notif-item${n.read ? '' : ' unread'}" data-notif-id="${n.id}" onclick="handleNotifClick('${n.id}','${n.type}','${n.entity_id||''}','${n.link||''}')">
         <div class="notif-icon">${NOTIF_ICONS[n.type] || NOTIF_ICONS.default}</div>
         <div class="notif-content">
           <p class="notif-message">${esc(n.message)}</p>
@@ -4787,7 +4787,7 @@ async function openReviewFromNotif(reviewId, expandComments) {
   }
 }
 
-async function handleNotifClick(id, type, entityId) {
+async function handleNotifClick(id, type, entityId, link) {
   // Marcar como lida
   apiFetch(`/notifications/${id}/read`, { method: 'PUT' }).catch(() => {});
   const el = document.querySelector(`[data-notif-id="${id}"]`);
@@ -4795,7 +4795,13 @@ async function handleNotifClick(id, type, entityId) {
   loadNotifCount();
   closeNotifPanel();
 
-  // Navegar para o conteúdo relevante
+  // Se tem link específico, usar ele; senão usar lógica baseada no tipo
+  if (link && link !== 'null' && link !== 'undefined') {
+    window.location.href = link;
+    return;
+  }
+
+  // Navegar para o conteúdo relevante (fallback para notificações antigas sem link)
   if (type === 'scrap') navigateTo('scraps');
   else if (type === 'friend_request') navigateTo('profile');
   else if (type === 'friend_accepted') navigateTo('profile');
