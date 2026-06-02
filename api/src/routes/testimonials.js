@@ -15,6 +15,37 @@ router.get('/:userId', (req, res) => {
   res.json(rows);
 });
 
+// GET /api/testimonials/pending/mine — depoimentos pendentes de aprovação (meus)
+router.get('/pending/mine', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT t.*, u.display_name, u.username, u.avatar_text, u.avatar_color
+    FROM testimonials t JOIN users u ON u.id = t.from_user_id
+    WHERE t.to_user_id = ? AND t.approved = 0
+    ORDER BY t.created_at DESC
+  `).all(req.user.id);
+  res.json(rows);
+});
+
+// PUT /api/testimonials/:id/approve — aprovar depoimento
+router.put('/:id/approve', requireAuth, (req, res) => {
+  const t = db.prepare('SELECT * FROM testimonials WHERE id=?').get(req.params.id);
+  if (!t) return res.status(404).json({ error: 'Depoimento não encontrado.' });
+  if (t.to_user_id !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
+  
+  db.prepare('UPDATE testimonials SET approved=1 WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// PUT /api/testimonials/:id/reject — rejeitar/remover depoimento
+router.put('/:id/reject', requireAuth, (req, res) => {
+  const t = db.prepare('SELECT * FROM testimonials WHERE id=?').get(req.params.id);
+  if (!t) return res.status(404).json({ error: 'Depoimento não encontrado.' });
+  if (t.to_user_id !== req.user.id) return res.status(403).json({ error: 'Sem permissão.' });
+  
+  db.prepare('DELETE FROM testimonials WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // POST /api/testimonials/:userId — escrever depoimento
 router.post('/:userId', requireAuth, (req, res) => {
   if (req.params.userId === req.user.id)

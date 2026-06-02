@@ -84,6 +84,18 @@ CREATE TABLE IF NOT EXISTS scraps (
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Depoimentos (Testimonials)
+CREATE TABLE IF NOT EXISTS testimonials (
+  id            TEXT PRIMARY KEY,
+  from_user_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content       TEXT NOT NULL,
+  approved      INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_testimonials_to_user ON testimonials(to_user_id, approved);
+
 -- Convites
 CREATE TABLE IF NOT EXISTS invites (
   code        TEXT PRIMARY KEY,

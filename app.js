@@ -1060,6 +1060,27 @@ function handleClick(e) {
       .catch(err => showToast(err.message));
     return;
   }
+  if (action === 'approve-testimonial') {
+    apiFetch(`/testimonials/${el.dataset.id}/approve`, { method: 'PUT' })
+      .then(() => { 
+        el.closest('.testimonial-card')?.remove();
+        showToast(t('profile.testimonialApproved'));
+        // Recarregar página para atualizar contadores
+        setTimeout(() => navigateTo('profile', { id: currentUser.id }), 500);
+      })
+      .catch(err => showToast(err.message));
+    return;
+  }
+  if (action === 'reject-testimonial') {
+    if (!confirm(t('profile.testimonialRejectConfirm'))) return;
+    apiFetch(`/testimonials/${el.dataset.id}/reject`, { method: 'PUT' })
+      .then(() => { 
+        el.closest('.testimonial-card')?.remove();
+        showToast(t('profile.testimonialRejected'));
+      })
+      .catch(err => showToast(err.message));
+    return;
+  }
   if (action === 'open-community-forum') {
     openCommunityForumModal(el.dataset.id, el.dataset.name);
     return;
@@ -2936,6 +2957,11 @@ async function renderProfilePage(root, userId) {
           <div class="spinner" style="transform:scale(.7)"></div>
         </div>` : ''}
 
+      ${isSelf ? `
+        <div class="profile-section" id="pendingTestimonials">
+          <div class="spinner" style="transform:scale(.7)"></div>
+        </div>` : ''}
+
       <div class="profile-section">
         <h3>💬 Depoimentos (${testimonials.length})</h3>
         <div id="testimonials-list">
@@ -2984,6 +3010,26 @@ async function renderProfilePage(root, userId) {
             <button class="btn-secondary" style="padding:8px 16px;font-size:13px" data-action="remove-friend" data-user-id="${r.id}" type="button">✕</button>
           </div>`).join('');
     }).catch(() => reqEl.innerHTML = '');
+
+    // Carregar depoimentos pendentes
+    const pendEl = document.getElementById('pendingTestimonials');
+    apiFetch('/testimonials/pending/mine').then(pending => {
+      if (!pending.length) { pendEl.innerHTML = ''; return; }
+      pendEl.innerHTML = `<h3>💬 ${t('profile.pendingTestimonials')} (${pending.length})</h3>` +
+        pending.map(t => `
+          <div class="testimonial-card" style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3)">
+            <div class="avatar avatar--small${avCls(t.avatar_text)}" style="${avBg(t.avatar_text,t.avatar_color)}">${avTxt(t.avatar_text)}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${esc(t.display_name)} <span style="color:var(--muted);font-weight:400">@${esc(t.username)}</span></div>
+              <div style="font-size:13px;margin-top:4px;line-height:1.5;color:var(--text)">"${esc(t.content)}"</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">${timeAgo(t.created_at)}</div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="submit-btn" style="width:auto;padding:6px 16px;font-size:12px" data-action="approve-testimonial" data-id="${t.id}" type="button">${t('profile.approve')}</button>
+                <button class="btn-secondary" style="padding:6px 16px;font-size:12px" data-action="reject-testimonial" data-id="${t.id}" type="button">${t('profile.reject')}</button>
+              </div>
+            </div>
+          </div>`).join('');
+    }).catch(() => pendEl.innerHTML = '');
   }
 }
 
