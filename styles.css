@@ -2392,10 +2392,16 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 /* Container principal do mapa */
 .map-page {
-  position: relative;
-  width: 100%;
-  height: calc(100vh - 60px); /* Ajustar conforme altura do header */
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: calc(100vh - var(--topbar-h));
   overflow: hidden;
+  z-index: 100;
+  background: var(--bg);
 }
 
 .map-header {
@@ -2878,7 +2884,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 /* Responsividade mobile */
 @media (max-width: 768px) {
   .map-page {
-    height: calc(100vh - 120px); /* Ajustar para bottom nav */
+    top: var(--topbar-h);
+    bottom: 60px; /* Espaço para bottom nav */
+    height: calc(100vh - var(--topbar-h) - 60px);
   }
 
   .filters-sidebar {
