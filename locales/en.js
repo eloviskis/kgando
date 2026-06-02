@@ -375,6 +375,7 @@ window.LOCALES.en = {
   'profile.votes.confiavel': 'Trustworthy',
   'profile.votes.legal':     'Cool',
   'profile.votes.sexy':      'Sexy',
+  'profile.votes.cagao':     'Pooper',
   'profile.voteAdded':  'Voted! 🎉',
   'profile.voteRemoved': 'Vote removed.',
 

@@ -2839,8 +2839,8 @@ async function renderProfilePage(root, userId) {
       </div>`;
   }
 
-  // Votos Confiável / Legal / Sexy
-  const voteLabels = { confiavel: { label: t('profile.votes.confiavel'), icon: '⭐' }, legal: { label: t('profile.votes.legal'), icon: '😎' }, sexy: { label: t('profile.votes.sexy'), icon: '🔥' } };
+  // Votos Confiável / Legal / Sexy / Cagão
+  const voteLabels = { confiavel: { label: t('profile.votes.confiavel'), icon: '⭐' }, legal: { label: t('profile.votes.legal'), icon: '😎' }, sexy: { label: t('profile.votes.sexy'), icon: '🔥' }, cagao: { label: t('profile.votes.cagao'), icon: '💩' } };
   const votesHTML = Object.entries(voteLabels).map(([type, meta]) => {
     const v = votes[type] || { count: 0, voted: false };
     const disabled = isSelf ? 'disabled' : '';

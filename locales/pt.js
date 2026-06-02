@@ -377,6 +377,7 @@ window.LOCALES.pt = {
   'profile.votes.confiavel': 'Confiável',
   'profile.votes.legal':     'Legal',
   'profile.votes.sexy':      'Sexy',
+  'profile.votes.cagao':     'Cagão',
   'profile.voteAdded':  'Votado! 🎉',
   'profile.voteRemoved': 'Voto removido.',
 

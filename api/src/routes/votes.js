@@ -4,7 +4,7 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { createNotification } = require('./notifications');
 
-const VALID_TYPES = ['confiavel', 'legal', 'sexy'];
+const VALID_TYPES = ['confiavel', 'legal', 'sexy', 'cagao'];
 
 // GET /api/votes/:userId — votos recebidos + meus votos nesse usuário
 router.get('/:userId', (req, res) => {
@@ -50,7 +50,7 @@ router.post('/:userId', requireAuth, (req, res) => {
   if (inserted) {
     const me = db.prepare('SELECT display_name FROM users WHERE id=?').get(req.user.id);
     const APP_URL = process.env.APP_URL || 'https://kgando.com';
-    const labels = { confiavel: 'Confiável', legal: 'Legal', sexy: 'Sexy' };
+    const labels = { confiavel: 'Confiável', legal: 'Legal', sexy: 'Sexy', cagao: 'Cagão' };
     createNotification({
       userId: req.params.userId,
       type: 'vote',
