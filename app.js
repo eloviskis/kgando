@@ -551,6 +551,7 @@ function buildLandingHTML() {
             <button class="landing-cta-primary" type="button" onclick="window._landingAuth('register')">${t('landing.heroCta')}</button>
             <button class="landing-cta-secondary" type="button" onclick="window._landingAuth('login')">${t('landing.cta2')}</button>
             <button id="landingInstallBtn" class="landing-cta-install" type="button" data-action="install-app">${t('landing.installBtn')}</button>
+            <a href="https://play.google.com/store/apps/details?id=com.kgando.app" target="_blank" rel="noopener noreferrer" class="landing-cta-playstore">${t('landing.playstoreBtn')}</a>
           </div>
         </div>
         <div class="landing-hero__visual">
